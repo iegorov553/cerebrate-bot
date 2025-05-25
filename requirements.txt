@@ -3,3 +3,4 @@ gspread
 oauth2client
 APScheduler
 python-dotenv
+nest_asyncio

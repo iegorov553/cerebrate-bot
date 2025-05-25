@@ -1,11 +1,7 @@
 """
 Telegram-bot 'Hour Watcher': asks two accounts every hour and writes replies to Google Sheets.
 
-Requires:
-- Python 3.10+
-- python-telegram-bot==20.3, gspread, oauth2client, APScheduler, python-dotenv
-
-All environment variables are set via Railway dashboard:
+Для Railway, Render, VPS, любой среды где переменные окружения задаются через UI:
 - TELEGRAM_BOT_TOKEN
 - TARGET_USER_IDS
 - SPREADSHEET_ID
@@ -111,18 +107,21 @@ async def main() -> None:
 
 if __name__ == "__main__":
     import sys
+
     if sys.platform.startswith("win") and sys.version_info >= (3, 8):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     try:
-        asyncio.run(main())
-    except RuntimeError as exc:
-        if "already running" in str(exc):
-            import nest_asyncio
-            nest_asyncio.apply()
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(main())
-        else:
-            raise
+        try:
+            asyncio.run(main())
+        except RuntimeError as exc:
+            # Для Railway, Render, Jupyter, Git Bash, VSCode и прочих сред, где event loop уже жив
+            if "already running" in str(exc):
+                import nest_asyncio
+                nest_asyncio.apply()
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(main())
+            else:
+                raise
     except (KeyboardInterrupt, SystemExit):
         logger.info("Остановлено вручную.")
