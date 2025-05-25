@@ -82,13 +82,12 @@ async def ask_question(app: Application) -> None:
             logger.warning("Не удалось отправить сообщение %s: %s", chat_id, exc)
 
 async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Process any reply from target users."""
     user = update.effective_user
     if user is None or update.effective_chat.id not in TARGET_USER_IDS:
         return
 
     text = update.effective_message.text or "<без текста>"
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')  # <--- исправлен формат!
 
     try:
         worksheet.append_row([user.username or user.full_name, timestamp, text])
@@ -100,7 +99,11 @@ async def main() -> None:
     application: Application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(lambda: asyncio.create_task(ask_question(application)), "interval", hours=1)
+    scheduler.add_job(
+        lambda: asyncio.create_task(ask_question(application)),
+        "cron",
+        hour="10-23"
+    )
     scheduler.start()
     logger.info("Бот запущен. Жду сигнала...")
     await application.run_polling()
