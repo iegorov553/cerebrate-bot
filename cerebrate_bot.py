@@ -112,16 +112,9 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     try:
-        try:
-            asyncio.run(main())
-        except RuntimeError as exc:
-            # Для Railway, Render, Jupyter, Git Bash, VSCode и прочих сред, где event loop уже жив
-            if "already running" in str(exc):
-                import nest_asyncio
-                nest_asyncio.apply()
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(main())
-            else:
-                raise
+        import nest_asyncio
+        nest_asyncio.apply()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except (KeyboardInterrupt, SystemExit):
         logger.info("Остановлено вручную.")
