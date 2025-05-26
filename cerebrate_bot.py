@@ -95,12 +95,19 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     except Exception as exc:
         logger.error("Ошибка записи в Google Sheets: %s", exc)
 
+def run_coro_in_loop(coro):
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        loop.create_task(coro)
+    else:
+        loop.run_until_complete(coro)
+
 async def main() -> None:
     application: Application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
-        lambda: asyncio.create_task(ask_question(application)),
+        lambda: run_coro_in_loop(ask_question(application)),
         "cron",
         hour="10-23"
     )
