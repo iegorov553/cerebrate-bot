@@ -1,11 +1,11 @@
 """
-Telegram-bot 'Hour Watcher': asks two accounts every hour and writes replies to Google Sheets.
+Telegram-bot 'Hour Watcher': asks two accounts every hour and writes replies to Supabase.
 
 Для Railway, Render, VPS, любой среды где переменные окружения задаются через UI:
 - TELEGRAM_BOT_TOKEN
 - TARGET_USER_IDS
-- SPREADSHEET_ID
-- CREDS_B64 (Google service account creds.json, base64-encoded)
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
 """
 
 from __future__ import annotations
@@ -13,14 +13,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import base64
-import tempfile
 from datetime import datetime, timezone
 
-import gspread
+from supabase import create_client, Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from gspread import Client as GspreadClient
-from oauth2client.service_account import ServiceAccountCredentials
 from telegram import ForceReply, Update
 from telegram.ext import (
     Application,
@@ -30,12 +26,6 @@ from telegram.ext import (
     filters,
 )
 
-# --- Google credentials from base64 env variable ---
-if "CREDS_B64" in os.environ:
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-    tmp.write(base64.b64decode(os.environ["CREDS_B64"]))
-    tmp.close()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
 
 # --- Logging ---
 logging.basicConfig(
@@ -46,30 +36,19 @@ logger = logging.getLogger(__name__)
 
 # --- Config ---
 BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
-SPREADSHEET_ID: str = os.getenv("SPREADSHEET_ID", "")
+SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 QUESTION: str = "Что ты сейчас делаешь?"
 
 raw_ids = os.getenv("TARGET_USER_IDS", "").split(",")
 TARGET_USER_IDS: list[int] = [int(x.strip()) for x in raw_ids if x.strip()]
 
-if not (BOT_TOKEN and SPREADSHEET_ID and TARGET_USER_IDS):
+if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and TARGET_USER_IDS):
     logger.error("Не заданы обязательные переменные среды. Завершаюсь.")
     raise SystemExit(1)
 
-# --- Google Sheets ---
-_SCOPE = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-]
-
-def _get_gspread_client() -> GspreadClient:
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"], _SCOPE
-    )
-    return gspread.authorize(creds)
-
-gs_client = _get_gspread_client()
-worksheet = gs_client.open_by_key(SPREADSHEET_ID).sheet1
+# --- Supabase ---
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # --- Telegram callbacks ---
 async def ask_question(app: Application) -> None:
@@ -90,10 +69,15 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')  # <--- исправлен формат!
 
     try:
-        worksheet.append_row([user.username or user.full_name, timestamp, text])
+        data = {
+            "tg_name": user.username or user.full_name,
+            "jobs_timestamp": timestamp,
+            "job_text": text
+        }
+        supabase.table("tg_jobs").insert(data).execute()
         logger.info("Записан ответ от %s", user.id)
     except Exception as exc:
-        logger.error("Ошибка записи в Google Sheets: %s", exc)
+        logger.error("Ошибка записи в Supabase: %s", exc)
 
 def run_coro_in_loop(coro):
     loop = asyncio.get_event_loop()

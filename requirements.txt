@@ -1,6 +1,5 @@
 python-telegram-bot==20.3
-gspread
-oauth2client
+supabase
 APScheduler
 python-dotenv
 nest_asyncio
