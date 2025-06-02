@@ -1,5 +1,6 @@
 python-telegram-bot==20.3
-supabase
+supabase==2.0.0
+httpx==0.24.1
 APScheduler
 python-dotenv
 nest_asyncio
