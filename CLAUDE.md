@@ -51,4 +51,4 @@ Set environment variables in a `.env` file and run the bot.
 - Database schema: 
   - `users` table: user management with personalized settings
   - `tg_jobs` table: response logging with timestamps
-- Commands: `/settings` shows current user preferences from database
+- Commands: `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N` for user control

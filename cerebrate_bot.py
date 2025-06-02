@@ -13,7 +13,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime, timezone
+import re
+from datetime import datetime, timezone, time
 
 from supabase import create_client, Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -160,7 +161,51 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
     await update.message.reply_text(settings_text, parse_mode='Markdown')
 
-def run_coro_in_loop(coro):
+async def notify_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Enable notifications for user."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    try:
+        # Ensure user exists and update enabled status
+        await ensure_user_exists(
+            tg_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name
+        )
+        
+        supabase.table("users").update({"enabled": True}).eq("tg_id", user.id).execute()
+        await update.message.reply_text("✅ Оповещения включены!")
+        logger.info("Пользователь %s включил оповещения", user.id)
+    except Exception as exc:
+        logger.error("Ошибка включения оповещений для %s: %s", user.id, exc)
+        await update.message.reply_text("❌ Ошибка при включении оповещений.")
+
+async def notify_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Disable notifications for user."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    try:
+        # Ensure user exists and update enabled status
+        await ensure_user_exists(
+            tg_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name
+        )
+        
+        supabase.table("users").update({"enabled": False}).eq("tg_id", user.id).execute()
+        await update.message.reply_text("❌ Оповещения отключены.")
+        logger.info("Пользователь %s отключил оповещения", user.id)
+    except Exception as exc:
+        logger.error("Ошибка отключения оповещений для %s: %s", user.id, exc)
+        await update.message.reply_text("❌ Ошибка при отключении оповещений.")
+
+async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:\n    \"\"\"Set user time window for notifications. Format: /window HH:MM-HH:MM\"\"\"\n    user = update.effective_user\n    if user is None:\n        return\n\n    if not context.args or len(context.args) != 1:\n        await update.message.reply_text(\n            \"\u274c \u041d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442!\\n\"\n            \"\u041f\u0440\u0438\u043c\u0435\u0440: `/window 09:00-23:00`\", \n            parse_mode='Markdown'\n        )\n        return\n\n    time_range = context.args[0]\n    \n    # Validate format HH:MM-HH:MM\n    pattern = r'^([0-2][0-9]):([0-5][0-9])-([0-2][0-9]):([0-5][0-9])$'\n    match = re.match(pattern, time_range)\n    \n    if not match:\n        await update.message.reply_text(\n            \"\u274c \u041d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442 \u0432\u0440\u0435\u043c\u0435\u043d\u0438!\\n\"\n            \"\u041f\u0440\u0438\u043c\u0435\u0440: `/window 09:00-23:00`\",\n            parse_mode='Markdown'\n        )\n        return\n    \n    start_hour, start_min, end_hour, end_min = map(int, match.groups())\n    \n    # Validate time values\n    if start_hour > 23 or end_hour > 23:\n        await update.message.reply_text(\"\u274c \u0427\u0430\u0441\u044b \u0434\u043e\u043b\u0436\u043d\u044b \u0431\u044b\u0442\u044c \u043e\u0442 00 \u0434\u043e 23!\")\n        return\n    \n    start_time = time(start_hour, start_min)\n    end_time = time(end_hour, end_min)\n    \n    # Calculate duration in minutes\n    start_minutes = start_hour * 60 + start_min\n    end_minutes = end_hour * 60 + end_min\n    \n    # Handle day boundary crossing\n    if end_minutes <= start_minutes:\n        end_minutes += 24 * 60  # Add 24 hours\n    \n    duration_minutes = end_minutes - start_minutes\n    \n    # Validate minimum 1 hour interval\n    if duration_minutes < 60:\n        await update.message.reply_text(\"\u274c \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0439 \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b - 1 \u0447\u0430\u0441!\")\n        return\n    \n    try:\n        # Ensure user exists and update time window\n        await ensure_user_exists(\n            tg_id=user.id,\n            username=user.username,\n            first_name=user.first_name,\n            last_name=user.last_name\n        )\n        \n        supabase.table(\"users\").update({\n            \"window_start\": start_time.strftime('%H:%M:%S'),\n            \"window_end\": end_time.strftime('%H:%M:%S')\n        }).eq(\"tg_id\", user.id).execute()\n        \n        await update.message.reply_text(\n            f\"\u2705 \u0412\u0440\u0435\u043c\u044f \u043e\u043f\u043e\u0432\u0435\u0449\u0435\u043d\u0438\u0439 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e!\\n\"\n            f\"\u23f0 {start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}\"\n        )\n        logger.info(\"\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c %s \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u043b \u0432\u0440\u0435\u043c\u044f: %s-%s\", user.id, start_time, end_time)\n    \n    except Exception as exc:\n        logger.error(\"\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0432\u0440\u0435\u043c\u0435\u043d\u0438 \u0434\u043b\u044f %s: %s\", user.id, exc)\n        await update.message.reply_text(\"\u274c \u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438 \u0432\u0440\u0435\u043c\u0435\u043d\u0438.\")\n\nasync def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:\n    \"\"\"Set user notification frequency in minutes. Format: /freq N\"\"\"\n    user = update.effective_user\n    if user is None:\n        return\n\n    if not context.args or len(context.args) != 1:\n        await update.message.reply_text(\n            \"\u274c \u041d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442!\\n\"\n            \"\u041f\u0440\u0438\u043c\u0435\u0440: `/freq 60` (\u0434\u043b\u044f 60 \u043c\u0438\u043d\u0443\u0442)\",\n            parse_mode='Markdown'\n        )\n        return\n\n    try:\n        interval_min = int(context.args[0])\n        \n        # Validate interval (minimum 5 minutes, maximum 24 hours)\n        if interval_min < 5:\n            await update.message.reply_text(\"\u274c \u041c\u0438\u043d\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0439 \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b - 5 \u043c\u0438\u043d\u0443\u0442!\")\n            return\n        \n        if interval_min > 1440:  # 24 hours\n            await update.message.reply_text(\"\u274c \u041c\u0430\u043a\u0441\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0439 \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b - 1440 \u043c\u0438\u043d\u0443\u0442 (24 \u0447\u0430\u0441\u0430)!\")\n            return\n        \n        # Ensure user exists and update interval\n        await ensure_user_exists(\n            tg_id=user.id,\n            username=user.username,\n            first_name=user.first_name,\n            last_name=user.last_name\n        )\n        \n        supabase.table(\"users\").update({\n            \"interval_min\": interval_min\n        }).eq(\"tg_id\", user.id).execute()\n        \n        # Convert to human readable format\n        if interval_min >= 60:\n            hours = interval_min // 60\n            minutes = interval_min % 60\n            if minutes == 0:\n                interval_text = f\"{hours} \u0447\u0430\u0441(\u043e\u0432)\"\n            else:\n                interval_text = f\"{hours} \u0447\u0430\u0441(\u043e\u0432) {minutes} \u043c\u0438\u043d\u0443\u0442\"\n        else:\n            interval_text = f\"{interval_min} \u043c\u0438\u043d\u0443\u0442\"\n        \n        await update.message.reply_text(\n            f\"\u2705 \u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b \u043e\u043f\u043e\u0432\u0435\u0449\u0435\u043d\u0438\u0439 \u043e\u0431\u043d\u043e\u0432\u043b\u0451\u043d!\\n\"\n            f\"\ud83d\udcca \u041a\u0430\u0436\u0434\u044b\u0435 {interval_text}\"\n        )\n        logger.info(\"\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c %s \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u043b \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b: %s \u043c\u0438\u043d\u0443\u0442\", user.id, interval_min)\n        \n    except ValueError:\n        await update.message.reply_text(\"\u274c \u041d\u0443\u0436\u043d\u043e \u0443\u043a\u0430\u0437\u0430\u0442\u044c \u0447\u0438\u0441\u043b\u043e!\")\n    except Exception as exc:\n        logger.error(\"\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b\u0430 \u0434\u043b\u044f %s: %s\", user.id, exc)\n        await update.message.reply_text(\"\u274c \u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u0438 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0438 \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b\u0430.\")\n\ndef run_coro_in_loop(coro):"
     loop = asyncio.get_event_loop()
     if loop.is_running():
         loop.create_task(coro)
@@ -172,6 +217,10 @@ async def main() -> None:
     
     # Add handlers
     application.add_handler(CommandHandler("settings", settings_command))
+    application.add_handler(CommandHandler("notify_on", notify_on_command))
+    application.add_handler(CommandHandler("notify_off", notify_off_command))
+    application.add_handler(CommandHandler("window", window_command))
+    application.add_handler(CommandHandler("freq", freq_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     
     # Scheduler for asking questions
