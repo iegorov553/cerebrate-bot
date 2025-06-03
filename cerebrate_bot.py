@@ -67,8 +67,7 @@ async def create_friend_request(requester_id: int, addressee_id: int) -> bool:
     try:
         # Check if friendship already exists
         existing = supabase.table("friendships").select("*").or_(
-            f"and(requester_id.eq.{requester_id},addressee_id.eq.{addressee_id}),"
-            f"and(requester_id.eq.{addressee_id},addressee_id.eq.{requester_id})"
+            f"and(requester_id.eq.{requester_id},addressee_id.eq.{addressee_id}),and(requester_id.eq.{addressee_id},addressee_id.eq.{requester_id})"
         ).execute()
         
         if existing.data:
