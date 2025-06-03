@@ -18,7 +18,8 @@ from datetime import datetime, timezone, time
 
 from supabase import create_client, Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from telegram import ForceReply, Update
+from telegram import ForceReply, Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import WebAppInfo
 from telegram.ext import (
     Application,
     ApplicationBuilder,
@@ -81,25 +82,55 @@ async def ensure_user_exists(tg_id: int, username: str = None, first_name: str =
 
 # --- Telegram callbacks ---
 async def ask_question(app: Application) -> None:
-    """Ask the question to all active users."""
+    """Ask the question to all active users based on their individual intervals."""
     try:
-        # Get all enabled users within their time window
-        current_time = datetime.now().time()
-        
+        # Get all enabled users
         result = supabase.table("users").select("*").eq("enabled", True).execute()
+        current_time = datetime.now()
         
         for user in result.data:
+            # Check if user is within their time window
             user_start = datetime.strptime(user['window_start'], '%H:%M:%S').time()
             user_end = datetime.strptime(user['window_end'], '%H:%M:%S').time()
+            current_time_only = current_time.time()
             
-            if user_start <= current_time <= user_end:
+            if not (user_start <= current_time_only <= user_end):
+                continue
+            
+            # Check if enough time has passed since last notification
+            last_sent = user.get('last_notification_sent')
+            interval_minutes = user.get('interval_min', 60)
+            
+            should_send = False
+            if last_sent is None:
+                # First time sending to this user
+                should_send = True
+            else:
+                # Parse last sent time and check interval
+                try:
+                    last_sent_dt = datetime.fromisoformat(last_sent.replace('Z', '+00:00'))
+                    time_diff = current_time - last_sent_dt.replace(tzinfo=None)
+                    if time_diff.total_seconds() >= (interval_minutes * 60):
+                        should_send = True
+                except (ValueError, AttributeError) as exc:
+                    logger.warning("Ошибка парсинга времени для %s: %s", user['tg_id'], exc)
+                    should_send = True
+            
+            if should_send:
                 try:
                     await app.bot.send_message(
                         chat_id=user['tg_id'], 
                         text=QUESTION, 
                         reply_markup=ForceReply()
                     )
-                    logger.info("Отправлен вопрос пользователю %s", user['tg_id'])
+                    
+                    # Update last notification time
+                    supabase.table("users").update({
+                        "last_notification_sent": current_time.isoformat()
+                    }).eq("tg_id", user['tg_id']).execute()
+                    
+                    logger.info("Отправлен вопрос пользователю %s (интервал: %s мин)", 
+                              user['tg_id'], interval_minutes)
                 except Exception as exc:
                     logger.warning("Не удалось отправить сообщение %s: %s", user['tg_id'], exc)
     
@@ -343,6 +374,44 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logger.error("Ошибка обновления интервала для %s: %s", user.id, exc)
         await update.message.reply_text("❌ Ошибка при обновлении интервала.")
 
+async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Open history page in Telegram Web App."""
+    user = update.effective_user
+    if user is None:
+        return
+    
+    # Ensure user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    # Web App URL for Vercel deployment
+    web_app_url = "https://doyobi-diary.vercel.app/history"
+    
+    keyboard = [[InlineKeyboardButton(
+        "📊 Открыть историю активностей", 
+        web_app=WebAppInfo(url=web_app_url)
+    )]]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        "🔍 **Просмотр истории активностей**\n\n"
+        "Нажмите кнопку ниже, чтобы открыть веб-интерфейс с вашей полной историей ответов. "
+        "Вы сможете:\n"
+        "• 📅 Фильтровать по датам\n"
+        "• 🔍 Искать по тексту\n"
+        "• 📊 Просматривать статистику\n"
+        "• 📈 Анализировать активность",
+        reply_markup=reply_markup,
+        parse_mode='Markdown'
+    )
+    
+    logger.info("Пользователь %s открыл историю активностей", user.id)
+
 def run_coro_in_loop(coro):
     loop = asyncio.get_event_loop()
     if loop.is_running():
@@ -359,6 +428,7 @@ async def main() -> None:
     application.add_handler(CommandHandler("notify_off", notify_off_command))
     application.add_handler(CommandHandler("window", window_command))
     application.add_handler(CommandHandler("freq", freq_command))
+    application.add_handler(CommandHandler("history", history_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     
     # Scheduler for asking questions

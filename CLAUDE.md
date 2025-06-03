@@ -41,6 +41,55 @@ python cerebrate_bot.py
 **Test deployment locally:**
 Set environment variables in a `.env` file and run the bot.
 
+## Railway CLI Commands
+
+**Login to Railway:**
+```bash
+railway login
+```
+
+**Deploy to Railway:**
+```bash
+railway up
+```
+
+**View logs:**
+```bash
+railway logs
+```
+
+**Set environment variables:**
+```bash
+railway variables set VARIABLE_NAME=value
+```
+
+## Supabase CLI Commands
+
+**Login to Supabase:**
+```bash
+supabase login
+```
+
+**Initialize project:**
+```bash
+supabase init
+```
+
+**Start local development:**
+```bash
+supabase start
+```
+
+**Generate TypeScript types:**
+```bash
+supabase gen types typescript --local > types/supabase.ts
+```
+
+**Run migrations:**
+```bash
+supabase db push
+```
+
 ## Key Technical Details
 
 - Uses `nest_asyncio` for event loop compatibility in cloud environments
@@ -49,6 +98,22 @@ Set environment variables in a `.env` file and run the bot.
 - **User settings**: Individual time windows, intervals, and enable/disable functionality
 - All text messages (non-commands) are logged to Supabase table `tg_jobs` with username and UTC timestamp
 - Database schema: 
-  - `users` table: user management with personalized settings
-  - `tg_jobs` table: response logging with timestamps
-- Commands: `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N` for user control
+  - `users` table: user management with personalized settings (tg_id, enabled, window_start/end, interval_min, last_notification_sent)
+  - `tg_jobs` table: response logging with timestamps (tg_name, jobs_timestamp, job_text)
+- Commands: `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N`, `/history` for user control
+
+## Web Interface
+
+**Telegram Web App** (`webapp/` directory):
+- **Next.js + TypeScript** frontend with Tailwind CSS
+- **History page** with filtering and search functionality
+- **Vercel deployment** configuration included
+- **Telegram Web Apps SDK** integration for seamless auth
+- Features: date filtering, text search, activity statistics
+
+## Deployment Notes
+
+- и для railway и для supabase я уже привязал проекты
+- Webapp can be deployed to Vercel with environment variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
