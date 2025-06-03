@@ -99,21 +99,30 @@ supabase db push
 - All text messages (non-commands) are logged to Supabase table `tg_jobs` with username and UTC timestamp
 - Database schema: 
   - `users` table: user management with personalized settings (tg_id, enabled, window_start/end, interval_min, last_notification_sent)
-  - `tg_jobs` table: response logging with timestamps (tg_name, jobs_timestamp, job_text)
+  - `tg_jobs` table: response logging with timestamps and user links (tg_name, tg_id, jobs_timestamp, job_text)
 - Commands: `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N`, `/history` for user control
+- RLS policies: Anonymous read access enabled for tg_jobs table
 
 ## Web Interface
 
 **Telegram Web App** (`webapp/` directory):
-- **Next.js + TypeScript** frontend with Tailwind CSS
-- **History page** with filtering and search functionality
+- **Next.js 15 + TypeScript** frontend with Tailwind CSS
+- **History page** with filtering and search functionality (`/history`)
 - **Vercel deployment** configuration included
-- **Telegram Web Apps SDK** integration for seamless auth
-- Features: date filtering, text search, activity statistics
+- **Telegram Web Apps SDK** integration for seamless user authentication
+- **Supabase RLS integration** with proper anonymous access policies
+- **Features**: date filtering (today/week/month/all), text search, activity statistics, responsive design
+- **Data flow**: tg_id-based queries with fallback to username for legacy records
+- **URL**: Configured to work with doyobi-diary.vercel.app domain
 
 ## Deployment Notes
 
 - и для railway и для supabase я уже привязал проекты
-- Webapp can be deployed to Vercel with environment variables:
+- Webapp deployed to Vercel at doyobi-diary.vercel.app with environment variables:
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Critical setup steps completed:
+  - RLS policy "Allow anonymous read access to tg_jobs" created for webapp access
+  - tg_id field added to tg_jobs table for proper user-record linking
+  - Telegram Web App SDK integration working with fallback authentication
+  - Both bot and webapp automatically deploy via GitHub integration
