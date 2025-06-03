@@ -33,26 +33,6 @@ export default function HistoryPage() {
     try {
       setLoading(true);
       
-      // Get user's Telegram username for filtering
-      const { data: userData } = await supabase
-        .from('users')
-        .select('tg_username, tg_first_name, tg_last_name')
-        .eq('tg_id', userId)
-        .single();
-
-      if (!userData) {
-        setError('Пользователь не найден в базе данных');
-        return;
-      }
-
-      const userName = userData.tg_username || 
-                      `${userData.tg_first_name || ''} ${userData.tg_last_name || ''}`.trim();
-
-      if (!userName) {
-        setError('Не удалось определить имя пользователя');
-        return;
-      }
-
       // Calculate date range
       const now = new Date();
       let startDate = new Date();
@@ -73,12 +53,41 @@ export default function HistoryPage() {
           break;
       }
 
-      const { data, error } = await supabase
+      // Search by tg_id directly (preferred method)
+      let query = supabase
         .from('tg_jobs')
         .select('*')
-        .eq('tg_name', userName)
         .gte('jobs_timestamp', startDate.toISOString())
         .order('jobs_timestamp', { ascending: false });
+
+      // Try to find by tg_id first (new records)
+      let { data, error } = await query.eq('tg_id', userId);
+
+      // If no results with tg_id, fallback to searching by name (old records)
+      if (!error && (!data || data.length === 0)) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('tg_username, tg_first_name, tg_last_name')
+          .eq('tg_id', userId)
+          .single();
+
+        if (userData) {
+          const userName = userData.tg_username || 
+                          `${userData.tg_first_name || ''} ${userData.tg_last_name || ''}`.trim();
+          
+          if (userName) {
+            const fallbackQuery = await supabase
+              .from('tg_jobs')
+              .select('*')
+              .eq('tg_name', userName)
+              .gte('jobs_timestamp', startDate.toISOString())
+              .order('jobs_timestamp', { ascending: false });
+            
+            data = fallbackQuery.data;
+            error = fallbackQuery.error;
+          }
+        }
+      }
 
       if (error) throw error;
 

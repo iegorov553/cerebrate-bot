@@ -156,6 +156,7 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     try:
         data = {
             "tg_name": user.username or user.full_name,
+            "tg_id": user.id,
             "jobs_timestamp": timestamp,
             "job_text": text
         }
