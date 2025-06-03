@@ -6,3 +6,4 @@ venv/
 creds.json
 .env
 *.b64
+.vercel
