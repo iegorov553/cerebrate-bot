@@ -51,6 +51,96 @@ if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 # --- Database functions ---
+async def find_user_by_username(username: str) -> dict:
+    """Find user by username in database."""
+    try:
+        # Remove @ if present
+        clean_username = username.lstrip('@')
+        result = supabase.table("users").select("*").eq("tg_username", clean_username).execute()
+        return result.data[0] if result.data else None
+    except Exception as exc:
+        logger.error("Ошибка поиска пользователя %s: %s", username, exc)
+        return None
+
+async def create_friend_request(requester_id: int, addressee_id: int) -> bool:
+    """Create a friend request."""
+    try:
+        # Check if friendship already exists
+        existing = supabase.table("friendships").select("*").or_(
+            f"and(requester_id.eq.{requester_id},addressee_id.eq.{addressee_id}),"
+            f"and(requester_id.eq.{addressee_id},addressee_id.eq.{requester_id})"
+        ).execute()
+        
+        if existing.data:
+            return False  # Already exists
+        
+        # Create new friend request
+        supabase.table("friendships").insert({
+            "requester_id": requester_id,
+            "addressee_id": addressee_id,
+            "status": "pending"
+        }).execute()
+        
+        return True
+    except Exception as exc:
+        logger.error("Ошибка создания запроса в друзья: %s", exc)
+        return False
+
+async def get_friend_requests(user_id: int) -> dict:
+    """Get incoming and outgoing friend requests."""
+    try:
+        # Incoming requests
+        incoming = supabase.table("friendships").select(
+            "*, requester:users!friendships_requester_id_fkey(tg_username, tg_first_name)"
+        ).eq("addressee_id", user_id).eq("status", "pending").execute()
+        
+        # Outgoing requests
+        outgoing = supabase.table("friendships").select(
+            "*, addressee:users!friendships_addressee_id_fkey(tg_username, tg_first_name)"
+        ).eq("requester_id", user_id).eq("status", "pending").execute()
+        
+        return {
+            "incoming": incoming.data or [],
+            "outgoing": outgoing.data or []
+        }
+    except Exception as exc:
+        logger.error("Ошибка получения запросов в друзья: %s", exc)
+        return {"incoming": [], "outgoing": []}
+
+async def update_friend_request(friendship_id: str, status: str) -> bool:
+    """Accept or decline a friend request."""
+    try:
+        supabase.table("friendships").update({
+            "status": status
+        }).eq("friendship_id", friendship_id).execute()
+        return True
+    except Exception as exc:
+        logger.error("Ошибка обновления запроса в друзья: %s", exc)
+        return False
+
+async def get_friends_list(user_id: int) -> list:
+    """Get list of user's friends."""
+    try:
+        # Get accepted friendships where user is either requester or addressee
+        result = supabase.table("friendships").select(
+            "*, requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name), "
+            "addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name)"
+        ).eq("status", "accepted").or_(
+            f"requester_id.eq.{user_id},addressee_id.eq.{user_id}"
+        ).execute()
+        
+        friends = []
+        for friendship in result.data or []:
+            # Add the friend (not the current user)
+            if friendship['requester_id'] == user_id:
+                friends.append(friendship['addressee'])
+            else:
+                friends.append(friendship['requester'])
+        
+        return friends
+    except Exception as exc:
+        logger.error("Ошибка получения списка друзей: %s", exc)
+        return []
 async def ensure_user_exists(tg_id: int, username: str = None, first_name: str = None, last_name: str = None) -> dict:
     """Ensure user exists in database, create if not."""
     try:
@@ -454,6 +544,362 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     logger.info("Пользователь %s открыл историю активностей", user.id)
 
+async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Add a friend by username. Format: /add_friend @username"""
+    user = update.effective_user
+    if user is None:
+        return
+
+    if not context.args or len(context.args) != 1:
+        await update.message.reply_text(
+            "❌ Неправильный формат!\n"
+            "Пример: `/add_friend @username`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    username = context.args[0]
+    
+    # Ensure current user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    # Find the target user
+    target_user = await find_user_by_username(username)
+    if not target_user:
+        await update.message.reply_text(
+            f"❌ Пользователь {username} не найден!\n"
+            "Убедитесь, что он уже использовал бота."
+        )
+        return
+    
+    # Check if trying to add themselves
+    if target_user['tg_id'] == user.id:
+        await update.message.reply_text("❌ Нельзя добавить себя в друзья! 😄")
+        return
+    
+    # Create friend request
+    success = await create_friend_request(user.id, target_user['tg_id'])
+    
+    if success:
+        # Try to notify the target user
+        try:
+            await context.bot.send_message(
+                chat_id=target_user['tg_id'],
+                text=f"🤝 У вас новый запрос в друзья от @{user.username or user.first_name}!\n"
+                     f"Используйте /friend_requests чтобы принять или отклонить."
+            )
+        except Exception:
+            pass  # User might have blocked the bot
+        
+        await update.message.reply_text(
+            f"✅ Запрос в друзья отправлен пользователю {username}!"
+        )
+        logger.info("Пользователь %s отправил запрос в друзья %s", user.id, target_user['tg_id'])
+    else:
+        await update.message.reply_text(
+            f"❌ Не удалось отправить запрос!\n"
+            f"Возможно, вы уже друзья или запрос уже существует."
+        )
+
+async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show incoming and outgoing friend requests."""
+    user = update.effective_user
+    if user is None:
+        return
+    
+    # Ensure user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    requests = await get_friend_requests(user.id)
+    
+    # Build response message
+    message_parts = ["🤝 **Запросы в друзья:**\n"]
+    
+    # Incoming requests
+    if requests['incoming']:
+        message_parts.append("📥 **Входящие запросы:**")
+        for req in requests['incoming']:
+            requester_name = req['requester']['tg_username'] or req['requester']['tg_first_name']
+            message_parts.append(f"• @{requester_name} - `/accept {req['friendship_id'][:8]}` | `/decline {req['friendship_id'][:8]}`")
+        message_parts.append("")
+    
+    # Outgoing requests
+    if requests['outgoing']:
+        message_parts.append("📤 **Исходящие запросы:**")
+        for req in requests['outgoing']:
+            addressee_name = req['addressee']['tg_username'] or req['addressee']['tg_first_name']
+            message_parts.append(f"• @{addressee_name} (ожидает ответа)")
+        message_parts.append("")
+    
+    if not requests['incoming'] and not requests['outgoing']:
+        message_parts.append("📭 Нет активных запросов в друзья.")
+    
+    await update.message.reply_text(
+        "\n".join(message_parts),
+        parse_mode='Markdown'
+    )
+
+async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Accept a friend request. Format: /accept [request_id]"""
+    user = update.effective_user
+    if user is None:
+        return
+
+    if not context.args or len(context.args) != 1:
+        await update.message.reply_text(
+            "❌ Неправильный формат!\n"
+            "Пример: `/accept 12345678`"
+        )
+        return
+    
+    request_id_short = context.args[0]
+    
+    # Find full friendship_id by partial match
+    try:
+        result = supabase.table("friendships").select("*").eq(
+            "addressee_id", user.id
+        ).eq("status", "pending").execute()
+        
+        matching_request = None
+        for req in result.data or []:
+            if req['friendship_id'].startswith(request_id_short):
+                matching_request = req
+                break
+        
+        if not matching_request:
+            await update.message.reply_text("❌ Запрос не найден!")
+            return
+        
+        # Accept the request
+        success = await update_friend_request(matching_request['friendship_id'], "accepted")
+        
+        if success:
+            # Get requester info
+            requester = supabase.table("users").select("*").eq(
+                "tg_id", matching_request['requester_id']
+            ).execute()
+            
+            if requester.data:
+                requester_name = requester.data[0]['tg_username'] or requester.data[0]['tg_first_name']
+                
+                # Notify the requester
+                try:
+                    await context.bot.send_message(
+                        chat_id=matching_request['requester_id'],
+                        text=f"🎉 @{user.username or user.first_name} принял ваш запрос в друзья!\n"
+                             f"Теперь вы можете смотреть активности друг друга через /activities"
+                    )
+                except Exception:
+                    pass
+                
+                await update.message.reply_text(
+                    f"✅ Вы теперь друзья с @{requester_name}! 🎉"
+                )
+                logger.info("Пользователь %s принял запрос от %s", user.id, matching_request['requester_id'])
+            else:
+                await update.message.reply_text("✅ Запрос принят!")
+        else:
+            await update.message.reply_text("❌ Ошибка при принятии запроса.")
+            
+    except Exception as exc:
+        logger.error("Ошибка при принятии запроса: %s", exc)
+        await update.message.reply_text("❌ Ошибка при принятии запроса.")
+
+async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Decline a friend request. Format: /decline [request_id]"""
+    user = update.effective_user
+    if user is None:
+        return
+
+    if not context.args or len(context.args) != 1:
+        await update.message.reply_text(
+            "❌ Неправильный формат!\n"
+            "Пример: `/decline 12345678`"
+        )
+        return
+    
+    request_id_short = context.args[0]
+    
+    # Find and delete the request
+    try:
+        result = supabase.table("friendships").select("*").eq(
+            "addressee_id", user.id
+        ).eq("status", "pending").execute()
+        
+        matching_request = None
+        for req in result.data or []:
+            if req['friendship_id'].startswith(request_id_short):
+                matching_request = req
+                break
+        
+        if not matching_request:
+            await update.message.reply_text("❌ Запрос не найден!")
+            return
+        
+        # Delete the request
+        supabase.table("friendships").delete().eq(
+            "friendship_id", matching_request['friendship_id']
+        ).execute()
+        
+        await update.message.reply_text("❌ Запрос отклонён.")
+        logger.info("Пользователь %s отклонил запрос от %s", user.id, matching_request['requester_id'])
+            
+    except Exception as exc:
+        logger.error("Ошибка при отклонении запроса: %s", exc)
+        await update.message.reply_text("❌ Ошибка при отклонении запроса.")
+
+async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show list of friends."""
+    user = update.effective_user
+    if user is None:
+        return
+    
+    # Ensure user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    friends = await get_friends_list(user.id)
+    
+    if not friends:
+        await update.message.reply_text(
+            "👥 У вас пока нет друзей.\n\n"
+            "Используйте `/add_friend @username` чтобы добавить друзей!",
+            parse_mode='Markdown'
+        )
+        return
+    
+    message_parts = ["👥 **Ваши друзья:**\n"]
+    
+    for friend in friends:
+        friend_name = friend['tg_username'] or friend['tg_first_name']
+        message_parts.append(f"• @{friend_name}")
+    
+    message_parts.extend([
+        "",
+        f"Всего друзей: {len(friends)}",
+        "",
+        "Используйте `/activities @username` чтобы посмотреть активности друга!"
+    ])
+    
+    await update.message.reply_text(
+        "\n".join(message_parts),
+        parse_mode='Markdown'
+    )
+
+async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show activities of self or a friend. Format: /activities [@username]"""
+    user = update.effective_user
+    if user is None:
+        return
+    
+    # Ensure user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    # If no username provided, show own activities via web interface
+    if not context.args:
+        # Redirect to history command for own activities
+        await history_command(update, context)
+        return
+    
+    target_username = context.args[0]
+    
+    # Find target user
+    target_user = await find_user_by_username(target_username)
+    if not target_user:
+        await update.message.reply_text(
+            f"❌ Пользователь {target_username} не найден!\n"
+            "Убедитесь, что он уже использовал бота."
+        )
+        return
+    
+    # Check if they are friends
+    friends = await get_friends_list(user.id)
+    is_friend = any(friend['tg_id'] == target_user['tg_id'] for friend in friends)
+    
+    if not is_friend and target_user['tg_id'] != user.id:
+        await update.message.reply_text(
+            f"🔒 Вы не можете просматривать активности @{target_username}.\n"
+            f"Сначала добавьте в друзья: `/add_friend {target_username}`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    # Get recent activities
+    try:
+        # Get last 10 activities from the last week
+        from datetime import datetime, timedelta
+        week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
+        
+        result = supabase.table("tg_jobs").select("*").eq(
+            "tg_id", target_user['tg_id']
+        ).gte(
+            "jobs_timestamp", week_ago
+        ).order(
+            "jobs_timestamp", desc=True
+        ).limit(10).execute()
+        
+        activities = result.data or []
+        
+        if not activities:
+            target_name = target_user['tg_username'] or target_user['tg_first_name']
+            await update.message.reply_text(
+                f"📝 У @{target_name} нет активностей за последнюю неделю."
+            )
+            return
+        
+        # Format response
+        target_name = target_user['tg_username'] or target_user['tg_first_name']
+        message_parts = [f"📊 **Активности @{target_name} (последние 10):**\n"]
+        
+        for activity in activities:
+            # Format timestamp
+            timestamp = datetime.fromisoformat(activity['jobs_timestamp'].replace('Z', '+00:00'))
+            formatted_time = timestamp.strftime('%d.%m %H:%M')
+            
+            # Truncate long messages
+            text = activity['job_text']
+            if len(text) > 100:
+                text = text[:97] + "..."
+            
+            message_parts.append(f"• {formatted_time}: {text}")
+        
+        message_parts.extend([
+            "",
+            f"Всего записей за неделю: {len(activities)}",
+            "",
+            "🌐 Полная история доступна через /history в веб-интерфейсе"
+        ])
+        
+        await update.message.reply_text(
+            "\n".join(message_parts),
+            parse_mode='Markdown'
+        )
+        
+        logger.info("Пользователь %s просмотрел активности %s", user.id, target_user['tg_id'])
+        
+    except Exception as exc:
+        logger.error("Ошибка получения активностей: %s", exc)
+        await update.message.reply_text("❌ Ошибка при получении активностей.")
+
 def run_coro_in_loop(coro):
     loop = asyncio.get_event_loop()
     if loop.is_running():
@@ -472,6 +918,12 @@ async def main() -> None:
     application.add_handler(CommandHandler("window", window_command))
     application.add_handler(CommandHandler("freq", freq_command))
     application.add_handler(CommandHandler("history", history_command))
+    application.add_handler(CommandHandler("add_friend", add_friend_command))
+    application.add_handler(CommandHandler("friend_requests", friend_requests_command))
+    application.add_handler(CommandHandler("accept", accept_command))
+    application.add_handler(CommandHandler("decline", decline_command))
+    application.add_handler(CommandHandler("friends", friends_command))
+    application.add_handler(CommandHandler("activities", activities_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     
     # Scheduler for asking questions

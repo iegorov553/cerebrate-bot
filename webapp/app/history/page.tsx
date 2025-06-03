@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase, type ActivityRecord } from '@/lib/supabase'
+import { supabase, type ActivityRecord, type FriendRecord, getFriendsList } from '@/lib/supabase'
 import { getTelegramUserId, initTelegramWebApp } from '@/lib/telegram'
 
 export default function HistoryPage() {
@@ -11,6 +11,9 @@ export default function HistoryPage() {
   const [dateFilter, setDateFilter] = useState<string>('week')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [telegramUserId, setTelegramUserId] = useState<number | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [friends, setFriends] = useState<FriendRecord[]>([])  
+  const [selectedUserName, setSelectedUserName] = useState<string>('Мои')
 
   useEffect(() => {
     // Инициализируем Telegram Web App
@@ -19,6 +22,7 @@ export default function HistoryPage() {
     // Получаем ID пользователя
     const userId = getTelegramUserId();
     setTelegramUserId(userId);
+    setSelectedUserId(userId); // По умолчанию показываем свои активности
     
     if (!userId) {
       setError('Не удалось получить данные пользователя Telegram');
@@ -26,10 +30,21 @@ export default function HistoryPage() {
       return;
     }
 
+    // Загружаем список друзей
+    loadFriends(userId);
     fetchActivities(userId);
-  }, [dateFilter]);
+  }, [dateFilter, selectedUserId]);
 
-  const fetchActivities = async (userId: number) => {
+  const loadFriends = async (userId: number) => {
+    try {
+      const friendsList = await getFriendsList(userId);
+      setFriends(friendsList);
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
+
+  const fetchActivities = async (targetUserId: number) => {
     try {
       setLoading(true);
       
@@ -61,14 +76,14 @@ export default function HistoryPage() {
         .order('jobs_timestamp', { ascending: false });
 
       // Try to find by tg_id first (new records)
-      let { data, error } = await query.eq('tg_id', userId);
+      let { data, error } = await query.eq('tg_id', targetUserId);
 
       // If no results with tg_id, fallback to searching by name (old records)
       if (!error && (!data || data.length === 0)) {
         const { data: userData } = await supabase
           .from('users')
           .select('tg_username, tg_first_name, tg_last_name')
-          .eq('tg_id', userId)
+          .eq('tg_id', targetUserId)
           .single();
 
         if (userData) {
@@ -146,13 +161,41 @@ export default function HistoryPage() {
         {/* Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">📊 История активностей</h1>
+          <p className="text-gray-600">Показаны активности: {selectedUserName}</p>
           <p className="text-gray-600">Всего записей: {filteredActivities.length}</p>
           <p className="text-sm text-gray-500">ID: {telegramUserId}</p>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* User Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Чьи активности показать
+              </label>
+              <select
+                value={selectedUserId || ''}
+                onChange={(e) => {
+                  const newUserId = e.target.value ? parseInt(e.target.value) : telegramUserId;
+                  const userName = e.target.options[e.target.selectedIndex].text;
+                  setSelectedUserId(newUserId);
+                  setSelectedUserName(userName);
+                  if (newUserId) {
+                    fetchActivities(newUserId);
+                  }
+                }}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value={telegramUserId || ''}>Мои активности</option>
+                {friends.map((friend) => (
+                  <option key={friend.tg_id} value={friend.tg_id}>
+                    @{friend.tg_username || friend.tg_first_name || 'Безымянный'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
             {/* Date Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
