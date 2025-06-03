@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-QUESTION: str = "Что ты сейчас делаешь?"
+QUESTION: str = "Чё делаешь? 🤔"
 
 if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
     logger.error("Не заданы обязательные переменные среды. Завершаюсь.")
@@ -162,8 +162,49 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         }
         supabase.table("tg_jobs").insert(data).execute()
         logger.info("Записан ответ от %s", user.id)
+        
+        # Send confirmation message
+        await update.message.reply_text("Понял, принял! 👍")
+        
     except Exception as exc:
         logger.error("Ошибка записи в Supabase: %s", exc)
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /start command - register user and send first question."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    # Ensure user exists in database
+    user_data = await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+
+    if not user_data:
+        await update.message.reply_text("❌ Ошибка регистрации пользователя.")
+        return
+
+    # Welcome message
+    welcome_text = f"""🤖 **Привет, {user.first_name or user.username or 'друг'}!**
+
+Я бот, который поможет тебе отслеживать твою активность! 📊
+
+🕐 Буду спрашивать что ты делаешь в рабочее время
+⚙️ Можешь настроить время и частоту через /settings
+📱 Смотри историю через /history
+
+Давай начнём прямо сейчас! 🚀"""
+
+    await update.message.reply_text(welcome_text, parse_mode='Markdown')
+    
+    # Send first question immediately
+    await asyncio.sleep(1)  # Small delay for better UX
+    await update.message.reply_text(QUESTION, reply_markup=ForceReply())
+    
+    logger.info("Новый пользователь зарегистрирован: %s", user.id)
 
 async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show user settings from database."""
@@ -424,6 +465,7 @@ async def main() -> None:
     application: Application = ApplicationBuilder().token(BOT_TOKEN).build()
     
     # Add handlers
+    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(CommandHandler("notify_on", notify_on_command))
     application.add_handler(CommandHandler("notify_off", notify_off_command))
