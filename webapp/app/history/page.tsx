@@ -30,14 +30,22 @@ export default function HistoryPage() {
       return;
     }
 
-    // Загружаем список друзей
+    // Загружаем список друзей только один раз
     loadFriends(userId);
-    fetchActivities(userId);
+  }, []);
+
+  // Отдельный useEffect для загрузки активностей
+  useEffect(() => {
+    if (selectedUserId) {
+      fetchActivities(selectedUserId);
+    }
   }, [dateFilter, selectedUserId]);
 
   const loadFriends = async (userId: number) => {
     try {
+      console.log('Loading friends for user:', userId);
       const friendsList = await getFriendsList(userId);
+      console.log('Loaded friends:', friendsList);
       setFriends(friendsList);
     } catch (error) {
       console.error('Error loading friends:', error);

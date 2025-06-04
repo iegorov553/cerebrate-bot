@@ -38,27 +38,36 @@ export type FriendRecord = {
 export async function getFriendsList(userId: number): Promise<FriendRecord[]> {
   try {
     // Get accepted friendships where user is either requester or addressee
-    const { data, error } = await supabase
+    const { data: friendshipsData, error: friendshipsError } = await supabase
       .from('friendships')
-      .select(`
-        *, 
-        requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name, tg_last_name),
-        addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name, tg_last_name)
-      `)
+      .select('requester_id, addressee_id')
       .eq('status', 'accepted')
       .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
 
-    if (error) throw error;
+    if (friendshipsError) throw friendshipsError;
 
     const friends: FriendRecord[] = [];
+    const friendIds: number[] = [];
     
-    for (const friendship of data || []) {
-      // Add the friend (not the current user)
+    // Collect friend IDs
+    for (const friendship of friendshipsData || []) {
       if (friendship.requester_id === userId) {
-        friends.push(friendship.addressee);
+        friendIds.push(friendship.addressee_id);
       } else {
-        friends.push(friendship.requester);
+        friendIds.push(friendship.requester_id);
       }
+    }
+
+    // Get user info for each friend in batch
+    if (friendIds.length > 0) {
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('tg_id, tg_username, tg_first_name, tg_last_name')
+        .in('tg_id', friendIds);
+
+      if (usersError) throw usersError;
+
+      friends.push(...(usersData || []));
     }
 
     return friends;
