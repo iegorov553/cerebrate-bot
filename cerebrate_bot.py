@@ -721,7 +721,7 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "1. Используйте `/friend_requests` чтобы посмотреть запросы\n"
             "2. Скопируйте команду `/accept` из списка\n"
             "3. Отправьте скопированную команду\n\n"
-            "Пример: `/accept @username`",
+            "Пример: `/accept @username` или `/accept username`",
             parse_mode='Markdown'
         )
         return
@@ -730,9 +730,9 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     try:
         # Check if it's a username (starts with @) or an ID
-        if identifier.startswith('@'):
-            # Find user by username
-            username = identifier[1:]  # Remove @
+        if identifier.startswith('@') or not identifier.isdigit():
+            # Find user by username (remove @ if present)
+            username = identifier[1:] if identifier.startswith('@') else identifier
             target_user = await find_user_by_username(username)
             if not target_user:
                 await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
@@ -818,9 +818,9 @@ async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Find and delete the request
     try:
         # Check if it's a username (starts with @) or an ID
-        if identifier.startswith('@'):
-            # Find user by username
-            username = identifier[1:]  # Remove @
+        if identifier.startswith('@') or not identifier.isdigit():
+            # Find user by username (remove @ if present)
+            username = identifier[1:] if identifier.startswith('@') else identifier
             target_user = await find_user_by_username(username)
             if not target_user:
                 await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
