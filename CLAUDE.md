@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Telegram bot called "Hour Watcher" that:
 - Automatically registers new users when they send any message
-- Sends personalized questions based on user settings ("Что ты сейчас делаешь?")
+- Sends personalized questions based on user settings ("Чё делаешь? 🤔")
 - Records replies to Supabase database with full user management
 - Supports individual user settings for time windows and intervals
 
@@ -35,7 +35,7 @@ pip install -r requirements.txt
 
 **Run the bot:**
 ```bash
-python cerebrate_bot.py
+python3 cerebrate_bot.py
 ```
 
 **Test deployment locally:**
@@ -93,16 +93,19 @@ supabase db push
 ## Key Technical Details
 
 - Uses `nest_asyncio` for event loop compatibility in cloud environments
-- Custom `run_coro_in_loop()` function handles asyncio event loop edge cases for cloud platforms
-- **Auto-registration**: Any user sending a message gets automatically registered with default settings
+- Custom `run_coro_in_loop()` function handles asyncio event loop edge cases for cloud platforms (line 914-919)
+- **Auto-registration**: Any user sending a message gets automatically registered with default settings via `ensure_user_exists()` (line 155-182)
 - **User settings**: Individual time windows, intervals, and enable/disable functionality
+- **Smart scheduling**: Per-user interval checking with `last_notification_sent` tracking to prevent spam
 - All text messages (non-commands) are logged to Supabase table `tg_jobs` with username and UTC timestamp
+- **Friend system**: Complete friendship workflow with request validation and notifications
 - Database schema: 
   - `users` table: user management with personalized settings (tg_id, enabled, window_start/end, interval_min, last_notification_sent)
   - `tg_jobs` table: response logging with timestamps and user links (tg_name, tg_id, jobs_timestamp, job_text)
-  - `friendships` table: friend relationships and requests (requester_id, addressee_id, status, created_at)
+  - `friendships` table: friend relationships and requests (requester_id, addressee_id, status, created_at) with duplicate prevention
 - Commands: `/start`, `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N`, `/history`, `/add_friend`, `/friend_requests`, `/accept`, `/decline`, `/friends`, `/activities` for user control
-- RLS policies: Anonymous read access enabled for tg_jobs table
+- RLS policies: Anonymous read access enabled for tg_jobs and friendships tables
+- Error handling: Comprehensive exception catching with proper logging throughout all functions
 
 ## Web Interface
 

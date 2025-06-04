@@ -1,6 +1,6 @@
 # Hour Watcher Bot
 
-Telegram-бот для отслеживания активности пользователей. Бот автоматически отправляет вопрос "Что ты сейчас делаешь?" каждый час с 10:00 до 23:00 и сохраняет ответы в базу данных Supabase.
+Telegram-бот для отслеживания активности пользователей. Бот автоматически отправляет вопрос "Чё делаешь? 🤔" с настраиваемыми интервалами и временными окнами и сохраняет ответы в базу данных Supabase.
 
 ## Возможности
 
@@ -72,6 +72,7 @@ create table public.users (
   window_start time without time zone not null default '09:00:00',
   window_end time without time zone not null default '23:00:00',
   interval_min integer not null default 60,
+  last_notification_sent timestamp with time zone null,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint users_pkey primary key (user_id),
@@ -151,6 +152,7 @@ CREATE POLICY "Allow anonymous access to friendships" ON friendships
 - `window_start` (time) - Время начала работы бота
 - `window_end` (time) - Время окончания работы бота
 - `interval_min` (integer) - Интервал в минутах между вопросами
+- `last_notification_sent` (timestamptz) - Время последнего отправленного уведомления
 - `created_at` (timestamptz) - Время регистрации
 - `updated_at` (timestamptz) - Время последнего обновления
 
@@ -207,7 +209,7 @@ CREATE POLICY "Allow anonymous access to friendships" ON friendships
      - `NEXT_PUBLIC_SUPABASE_URL`
      - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-2. Обновите URL в боте (`cerebrate_bot.py:392`) на ваш Vercel URL
+2. Обновите URL в боте (`cerebrate_bot.py:535`) на ваш Vercel URL
 
 ## Система друзей
 
