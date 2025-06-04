@@ -671,10 +671,26 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     # Incoming requests
     if requests['incoming']:
         message_parts.append("📥 **Входящие запросы:**")
-        for req in requests['incoming']:
-            requester_name = req['requester']['tg_username'] or req['requester']['tg_first_name']
-            message_parts.append(f"• @{requester_name} - `/accept {req['friendship_id'][:8]}` | `/decline {req['friendship_id'][:8]}`")
-        message_parts.append("")
+        message_parts.append("*Скопируйте команду целиком:*\n")
+        for i, req in enumerate(requests['incoming'], 1):
+            requester_username = req['requester']['tg_username']
+            requester_name = req['requester']['tg_first_name']
+            
+            if requester_username:
+                display_name = f"@{requester_username}"
+                accept_cmd = f"/accept @{requester_username}"
+                decline_cmd = f"/decline @{requester_username}"
+            else:
+                display_name = requester_name or "Unknown"
+                # Fallback to ID if no username
+                short_id = req['friendship_id'][:8]
+                accept_cmd = f"/accept {short_id}"
+                decline_cmd = f"/decline {short_id}"
+            
+            message_parts.append(f"**{i}.** {display_name}")
+            message_parts.append(f"   ✅ `{accept_cmd}`")
+            message_parts.append(f"   ❌ `{decline_cmd}`")
+            message_parts.append("")
     
     # Outgoing requests
     if requests['outgoing']:
@@ -700,28 +716,48 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if not context.args or len(context.args) != 1:
         await update.message.reply_text(
-            "❌ Неправильный формат!\n"
-            "Пример: `/accept 12345678`"
+            "❌ Неправильный формат!\n\n"
+            "Чтобы принять запрос в друзья:\n"
+            "1. Используйте `/friend_requests` чтобы посмотреть запросы\n"
+            "2. Скопируйте команду `/accept` из списка\n"
+            "3. Отправьте скопированную команду\n\n"
+            "Пример: `/accept @username`",
+            parse_mode='Markdown'
         )
         return
     
-    request_id_short = context.args[0]
+    identifier = context.args[0]
     
-    # Find full friendship_id by partial match
-    try:
+    # Check if it's a username (starts with @) or an ID
+    if identifier.startswith('@'):
+        # Find user by username
+        username = identifier[1:]  # Remove @
+        target_user = await find_user_by_username(username)
+        if not target_user:
+            await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
+            return
+        
+        # Find friendship by requester_id
+        result = supabase.table("friendships").select("*").eq(
+            "addressee_id", user.id
+        ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
+        
+        matching_request = result.data[0] if result.data else None
+    else:
+        # Old method with ID
         result = supabase.table("friendships").select("*").eq(
             "addressee_id", user.id
         ).eq("status", "pending").execute()
         
         matching_request = None
         for req in result.data or []:
-            if req['friendship_id'].startswith(request_id_short):
+            if req['friendship_id'].startswith(identifier):
                 matching_request = req
                 break
-        
-        if not matching_request:
-            await update.message.reply_text("❌ Запрос не найден!")
-            return
+    
+    if not matching_request:
+        await update.message.reply_text("❌ Запрос не найден!")
+        return
         
         # Accept the request
         success = await update_friend_request(matching_request['friendship_id'], "accepted")
@@ -766,24 +802,46 @@ async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if not context.args or len(context.args) != 1:
         await update.message.reply_text(
-            "❌ Неправильный формат!\n"
-            "Пример: `/decline 12345678`"
+            "❌ Неправильный формат!\n\n"
+            "Чтобы отклонить запрос в друзья:\n"
+            "1. Используйте `/friend_requests` чтобы посмотреть запросы\n"
+            "2. Скопируйте команду `/decline` из списка\n"
+            "3. Отправьте скопированную команду\n\n"
+            "Пример: `/decline @username`",
+            parse_mode='Markdown'
         )
         return
     
-    request_id_short = context.args[0]
+    identifier = context.args[0]
     
     # Find and delete the request
     try:
-        result = supabase.table("friendships").select("*").eq(
-            "addressee_id", user.id
-        ).eq("status", "pending").execute()
-        
-        matching_request = None
-        for req in result.data or []:
-            if req['friendship_id'].startswith(request_id_short):
-                matching_request = req
-                break
+        # Check if it's a username (starts with @) or an ID
+        if identifier.startswith('@'):
+            # Find user by username
+            username = identifier[1:]  # Remove @
+            target_user = await find_user_by_username(username)
+            if not target_user:
+                await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
+                return
+            
+            # Find friendship by requester_id
+            result = supabase.table("friendships").select("*").eq(
+                "addressee_id", user.id
+            ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
+            
+            matching_request = result.data[0] if result.data else None
+        else:
+            # Old method with ID
+            result = supabase.table("friendships").select("*").eq(
+                "addressee_id", user.id
+            ).eq("status", "pending").execute()
+            
+            matching_request = None
+            for req in result.data or []:
+                if req['friendship_id'].startswith(identifier):
+                    matching_request = req
+                    break
         
         if not matching_request:
             await update.message.reply_text("❌ Запрос не найден!")
