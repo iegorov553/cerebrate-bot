@@ -728,37 +728,38 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     identifier = context.args[0]
     
-    # Check if it's a username (starts with @) or an ID
-    if identifier.startswith('@'):
-        # Find user by username
-        username = identifier[1:]  # Remove @
-        target_user = await find_user_by_username(username)
-        if not target_user:
-            await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
+    try:
+        # Check if it's a username (starts with @) or an ID
+        if identifier.startswith('@'):
+            # Find user by username
+            username = identifier[1:]  # Remove @
+            target_user = await find_user_by_username(username)
+            if not target_user:
+                await update.message.reply_text(f"❌ Пользователь @{username} не найден!")
+                return
+            
+            # Find friendship by requester_id
+            result = supabase.table("friendships").select("*").eq(
+                "addressee_id", user.id
+            ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
+            
+            matching_request = result.data[0] if result.data else None
+        else:
+            # Old method with ID
+            result = supabase.table("friendships").select("*").eq(
+                "addressee_id", user.id
+            ).eq("status", "pending").execute()
+            
+            matching_request = None
+            for req in result.data or []:
+                if req['friendship_id'].startswith(identifier):
+                    matching_request = req
+                    break
+        
+        if not matching_request:
+            await update.message.reply_text("❌ Запрос не найден!")
             return
-        
-        # Find friendship by requester_id
-        result = supabase.table("friendships").select("*").eq(
-            "addressee_id", user.id
-        ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
-        
-        matching_request = result.data[0] if result.data else None
-    else:
-        # Old method with ID
-        result = supabase.table("friendships").select("*").eq(
-            "addressee_id", user.id
-        ).eq("status", "pending").execute()
-        
-        matching_request = None
-        for req in result.data or []:
-            if req['friendship_id'].startswith(identifier):
-                matching_request = req
-                break
-    
-    if not matching_request:
-        await update.message.reply_text("❌ Запрос не найден!")
-        return
-        
+            
         # Accept the request
         success = await update_friend_request(matching_request['friendship_id'], "accepted")
         
