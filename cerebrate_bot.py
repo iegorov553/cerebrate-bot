@@ -243,6 +243,14 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if user is None:
         return
 
+    message = update.effective_message
+    if message is None:
+        return
+
+    message = update.effective_message
+    if message is None:
+        return
+
     # Ensure user exists in database
     await ensure_user_exists(
         tg_id=user.id,
@@ -265,7 +273,7 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logger.info("Записан ответ от %s", user.id)
         
         # Send confirmation message
-        await update.message.reply_text("Понял, принял! 👍")
+        await message.reply_text("Понял, принял! 👍")
         
     except Exception as exc:
         logger.error("Ошибка записи в Supabase: %s", exc)
@@ -274,6 +282,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     """Handle /start command - register user and send first question."""
     user = update.effective_user
     if user is None:
+        return
+
+    message = update.effective_message
+    if message is None:
         return
 
     # Ensure user exists in database
@@ -285,7 +297,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
 
     if not user_data:
-        await update.message.reply_text("❌ Ошибка регистрации пользователя.")
+        await message.reply_text("❌ Ошибка регистрации пользователя.")
         return
 
     # Welcome message
@@ -299,11 +311,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 Давай начнём прямо сейчас! 🚀"""
 
-    await update.message.reply_text(welcome_text, parse_mode='Markdown')
+    await message.reply_text(welcome_text, parse_mode='Markdown')
     
     # Send first question immediately
     await asyncio.sleep(1)  # Small delay for better UX
-    await update.message.reply_text(QUESTION, reply_markup=ForceReply())
+    await message.reply_text(QUESTION, reply_markup=ForceReply())
     
     logger.info("Новый пользователь зарегистрирован: %s", user.id)
 
@@ -311,6 +323,10 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     """Show user settings from database."""
     user = update.effective_user
     if user is None:
+        return
+
+    message = update.effective_message
+    if message is None:
         return
 
     # Ensure user exists
@@ -322,7 +338,7 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
 
     if not user_data:
-        await update.message.reply_text("Ошибка получения настроек.")
+        await message.reply_text("Ошибка получения настроек.")
         return
 
     settings_text = f"""🔧 **Ваши настройки:**
@@ -333,12 +349,16 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 👤 Telegram ID: {user_data['tg_id']}
 📅 Регистрация: {user_data['created_at'][:10]}"""
 
-    await update.message.reply_text(settings_text, parse_mode='Markdown')
+    await message.reply_text(settings_text, parse_mode='Markdown')
 
 async def notify_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Enable notifications for user."""
     user = update.effective_user
     if user is None:
+        return
+
+    message = update.effective_message
+    if message is None:
         return
 
     try:
@@ -351,16 +371,20 @@ async def notify_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         
         supabase.table("users").update({"enabled": True}).eq("tg_id", user.id).execute()
-        await update.message.reply_text("✅ Оповещения включены!")
+        await message.reply_text("✅ Оповещения включены!")
         logger.info("Пользователь %s включил оповещения", user.id)
     except Exception as exc:
         logger.error("Ошибка включения оповещений для %s: %s", user.id, exc)
-        await update.message.reply_text("❌ Ошибка при включении оповещений.")
+        await message.reply_text("❌ Ошибка при включении оповещений.")
 
 async def notify_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Disable notifications for user."""
     user = update.effective_user
     if user is None:
+        return
+
+    message = update.effective_message
+    if message is None:
         return
 
     try:
@@ -373,20 +397,23 @@ async def notify_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         
         supabase.table("users").update({"enabled": False}).eq("tg_id", user.id).execute()
-        await update.message.reply_text("❌ Оповещения отключены.")
+        await message.reply_text("❌ Оповещения отключены.")
         logger.info("Пользователь %s отключил оповещения", user.id)
     except Exception as exc:
         logger.error("Ошибка отключения оповещений для %s: %s", user.id, exc)
-        await update.message.reply_text("❌ Ошибка при отключении оповещений.")
+        await message.reply_text("❌ Ошибка при отключении оповещений.")
 
 async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Set user time window for notifications. Format: /window HH:MM-HH:MM"""
     user = update.effective_user
     if user is None:
         return
+    message = update.effective_message
+    if message is None:
+        return
 
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат!\n"
             "Пример: `/window 09:00-23:00`", 
             parse_mode='Markdown'
@@ -400,7 +427,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     match = re.match(pattern, time_range)
     
     if not match:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат времени!\n"
             "Пример: `/window 09:00-23:00`",
             parse_mode='Markdown'
@@ -411,7 +438,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     # Validate time values
     if start_hour > 23 or end_hour > 23:
-        await update.message.reply_text("❌ Часы должны быть от 00 до 23!")
+        await message.reply_text("❌ Часы должны быть от 00 до 23!")
         return
     
     start_time = time(start_hour, start_min)
@@ -429,7 +456,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     # Validate minimum 1 hour interval
     if duration_minutes < 60:
-        await update.message.reply_text("❌ Минимальный интервал - 1 час!")
+        await message.reply_text("❌ Минимальный интервал - 1 час!")
         return
     
     try:
@@ -446,7 +473,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "window_end": end_time.strftime('%H:%M:%S')
         }).eq("tg_id", user.id).execute()
         
-        await update.message.reply_text(
+        await message.reply_text(
             f"✅ Время оповещений обновлено!\n"
             f"⏰ {start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         )
@@ -454,7 +481,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     except Exception as exc:
         logger.error("Ошибка обновления времени для %s: %s", user.id, exc)
-        await update.message.reply_text("❌ Ошибка при обновлении времени.")
+        await message.reply_text("❌ Ошибка при обновлении времени.")
 
 async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Set user notification frequency in minutes. Format: /freq N"""
@@ -463,7 +490,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат!\n"
             "Пример: `/freq 60` (для 60 минут)",
             parse_mode='Markdown'
@@ -475,11 +502,11 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         
         # Validate interval (minimum 5 minutes, maximum 24 hours)
         if interval_min < 5:
-            await update.message.reply_text("❌ Минимальный интервал - 5 минут!")
+            await message.reply_text("❌ Минимальный интервал - 5 минут!")
             return
         
         if interval_min > 1440:  # 24 hours
-            await update.message.reply_text("❌ Максимальный интервал - 1440 минут (24 часа)!")
+            await message.reply_text("❌ Максимальный интервал - 1440 минут (24 часа)!")
             return
         
         # Ensure user exists and update interval
@@ -505,22 +532,25 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         else:
             interval_text = f"{interval_min} минут"
         
-        await update.message.reply_text(
+        await message.reply_text(
             f"✅ Интервал оповещений обновлён!\n"
             f"📊 Каждые {interval_text}"
         )
         logger.info("Пользователь %s установил интервал: %s минут", user.id, interval_min)
         
     except ValueError:
-        await update.message.reply_text("❌ Нужно указать число!")
+        await message.reply_text("❌ Нужно указать число!")
     except Exception as exc:
         logger.error("Ошибка обновления интервала для %s: %s", user.id, exc)
-        await update.message.reply_text("❌ Ошибка при обновлении интервала.")
+        await message.reply_text("❌ Ошибка при обновлении интервала.")
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Open history page in Telegram Web App."""
     user = update.effective_user
     if user is None:
+        return
+    message = update.effective_message
+    if message is None:
         return
     
     # Ensure user exists
@@ -541,7 +571,7 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.message.reply_text(
+    await message.reply_text(
         "🔍 **Просмотр истории активностей**\n\n"
         "Нажмите кнопку ниже, чтобы открыть веб-интерфейс с вашей полной историей ответов. "
         "Вы сможете:\n"
@@ -560,9 +590,12 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user = update.effective_user
     if user is None:
         return
+    message = update.effective_message
+    if message is None:
+        return
 
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат!\n"
             "Пример: `/add_friend @username`",
             parse_mode='Markdown'
@@ -582,7 +615,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Find the target user
     target_user = await find_user_by_username(username)
     if not target_user:
-        await update.message.reply_text(
+        await message.reply_text(
             f"❌ Пользователь {username} не найден!\n"
             "Убедитесь, что он уже использовал бота."
         )
@@ -590,7 +623,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     # Check if trying to add themselves
     if target_user['tg_id'] == user.id:
-        await update.message.reply_text("❌ Нельзя добавить себя в друзья! 😄")
+        await message.reply_text("❌ Нельзя добавить себя в друзья! 😄")
         return
     
     # Create friend request
@@ -607,12 +640,12 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         except Exception:
             pass  # User might have blocked the bot
         
-        await update.message.reply_text(
+        await message.reply_text(
             f"✅ Запрос в друзья отправлен пользователю {username}!"
         )
         logger.info("Пользователь %s отправил запрос в друзья %s", user.id, target_user['tg_id'])
     else:
-        await update.message.reply_text(
+        await message.reply_text(
             f"❌ Не удалось отправить запрос!\n"
             f"Возможно, вы уже друзья или запрос уже существует."
         )
@@ -621,6 +654,9 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     """Show incoming and outgoing friend requests."""
     user = update.effective_user
     if user is None:
+        return
+    message = update.effective_message
+    if message is None:
         return
     
     # Ensure user exists
@@ -655,7 +691,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     if not requests['incoming'] and not requests['outgoing']:
         message_parts.append("📭 Нет активных запросов в друзья.")
     
-    await update.message.reply_text(
+    await message.reply_text(
         "\n".join(message_parts),
         parse_mode='Markdown'
     )
@@ -665,9 +701,12 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user = update.effective_user
     if user is None:
         return
+    message = update.effective_message
+    if message is None:
+        return
 
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат!\n"
             "Пример: `/accept 12345678`"
         )
@@ -688,7 +727,7 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 break
         
         if not matching_request:
-            await update.message.reply_text("❌ Запрос не найден!")
+            await message.reply_text("❌ Запрос не найден!")
             return
         
         # Accept the request
@@ -713,27 +752,30 @@ async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 except Exception:
                     pass
                 
-                await update.message.reply_text(
+                await message.reply_text(
                     f"✅ Вы теперь друзья с @{requester_name}! 🎉"
                 )
                 logger.info("Пользователь %s принял запрос от %s", user.id, matching_request['requester_id'])
             else:
-                await update.message.reply_text("✅ Запрос принят!")
+                await message.reply_text("✅ Запрос принят!")
         else:
-            await update.message.reply_text("❌ Ошибка при принятии запроса.")
+            await message.reply_text("❌ Ошибка при принятии запроса.")
             
     except Exception as exc:
         logger.error("Ошибка при принятии запроса: %s", exc)
-        await update.message.reply_text("❌ Ошибка при принятии запроса.")
+        await message.reply_text("❌ Ошибка при принятии запроса.")
 
 async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Decline a friend request. Format: /decline [request_id]"""
     user = update.effective_user
     if user is None:
         return
+    message = update.effective_message
+    if message is None:
+        return
 
     if not context.args or len(context.args) != 1:
-        await update.message.reply_text(
+        await message.reply_text(
             "❌ Неправильный формат!\n"
             "Пример: `/decline 12345678`"
         )
@@ -754,7 +796,7 @@ async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 break
         
         if not matching_request:
-            await update.message.reply_text("❌ Запрос не найден!")
+            await message.reply_text("❌ Запрос не найден!")
             return
         
         # Delete the request
@@ -762,17 +804,20 @@ async def decline_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "friendship_id", matching_request['friendship_id']
         ).execute()
         
-        await update.message.reply_text("❌ Запрос отклонён.")
+        await message.reply_text("❌ Запрос отклонён.")
         logger.info("Пользователь %s отклонил запрос от %s", user.id, matching_request['requester_id'])
             
     except Exception as exc:
         logger.error("Ошибка при отклонении запроса: %s", exc)
-        await update.message.reply_text("❌ Ошибка при отклонении запроса.")
+        await message.reply_text("❌ Ошибка при отклонении запроса.")
 
 async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show list of friends."""
     user = update.effective_user
     if user is None:
+        return
+    message = update.effective_message
+    if message is None:
         return
     
     # Ensure user exists
@@ -786,7 +831,7 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     friends = await get_friends_list(user.id)
     
     if not friends:
-        await update.message.reply_text(
+        await message.reply_text(
             "👥 У вас пока нет друзей.\n\n"
             "Используйте `/add_friend @username` чтобы добавить друзей!",
             parse_mode='Markdown'
@@ -806,7 +851,7 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "Используйте `/activities @username` чтобы посмотреть активности друга!"
     ])
     
-    await update.message.reply_text(
+    await message.reply_text(
         "\n".join(message_parts),
         parse_mode='Markdown'
     )
@@ -836,7 +881,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Find target user
     target_user = await find_user_by_username(target_username)
     if not target_user:
-        await update.message.reply_text(
+        await message.reply_text(
             f"❌ Пользователь {target_username} не найден!\n"
             "Убедитесь, что он уже использовал бота."
         )
@@ -847,7 +892,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     is_friend = any(friend['tg_id'] == target_user['tg_id'] for friend in friends)
     
     if not is_friend and target_user['tg_id'] != user.id:
-        await update.message.reply_text(
+        await message.reply_text(
             f"🔒 Вы не можете просматривать активности @{target_username}.\n"
             f"Сначала добавьте в друзья: `/add_friend {target_username}`",
             parse_mode='Markdown'
@@ -872,7 +917,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
         if not activities:
             target_name = target_user['tg_username'] or target_user['tg_first_name']
-            await update.message.reply_text(
+            await message.reply_text(
                 f"📝 У @{target_name} нет активностей за последнюю неделю."
             )
             return
@@ -900,7 +945,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "🌐 Полная история доступна через /history в веб-интерфейсе"
         ])
         
-        await update.message.reply_text(
+        await message.reply_text(
             "\n".join(message_parts),
             parse_mode='Markdown'
         )
@@ -909,7 +954,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
     except Exception as exc:
         logger.error("Ошибка получения активностей: %s", exc)
-        await update.message.reply_text("❌ Ошибка при получении активностей.")
+        await message.reply_text("❌ Ошибка при получении активностей.")
 
 def run_coro_in_loop(coro):
     loop = asyncio.get_event_loop()
