@@ -95,19 +95,45 @@ async def create_friend_request(requester_id: int, addressee_id: int) -> bool:
 async def get_friend_requests(user_id: int) -> dict:
     """Get incoming and outgoing friend requests."""
     try:
-        # Incoming requests
-        incoming = supabase.table("friendships").select(
-            "*, requester:users!friendships_requester_id_fkey(tg_username, tg_first_name)"
+        # Incoming requests (simple query)
+        incoming_result = supabase.table("friendships").select(
+            "friendship_id, requester_id, addressee_id, status, created_at"
         ).eq("addressee_id", user_id).eq("status", "pending").execute()
         
-        # Outgoing requests
-        outgoing = supabase.table("friendships").select(
-            "*, addressee:users!friendships_addressee_id_fkey(tg_username, tg_first_name)"
+        # Outgoing requests (simple query)
+        outgoing_result = supabase.table("friendships").select(
+            "friendship_id, requester_id, addressee_id, status, created_at"
         ).eq("requester_id", user_id).eq("status", "pending").execute()
         
+        # Get user info for incoming requests
+        incoming = []
+        for req in incoming_result.data or []:
+            user_info = supabase.table("users").select(
+                "tg_username, tg_first_name"
+            ).eq("tg_id", req['requester_id']).execute()
+            
+            if user_info.data:
+                req['requester'] = user_info.data[0]
+            else:
+                req['requester'] = {'tg_username': None, 'tg_first_name': 'Unknown'}
+            incoming.append(req)
+        
+        # Get user info for outgoing requests
+        outgoing = []
+        for req in outgoing_result.data or []:
+            user_info = supabase.table("users").select(
+                "tg_username, tg_first_name"
+            ).eq("tg_id", req['addressee_id']).execute()
+            
+            if user_info.data:
+                req['addressee'] = user_info.data[0]
+            else:
+                req['addressee'] = {'tg_username': None, 'tg_first_name': 'Unknown'}
+            outgoing.append(req)
+        
         return {
-            "incoming": incoming.data or [],
-            "outgoing": outgoing.data or []
+            "incoming": incoming,
+            "outgoing": outgoing
         }
     except Exception as exc:
         logger.error("Ошибка получения запросов в друзья: %s", exc)
@@ -129,24 +155,30 @@ async def get_friends_list(user_id: int) -> list:
     try:
         # Get accepted friendships where user is either requester or addressee
         result_requester = supabase.table("friendships").select(
-            "*, requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name), "
-            "addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name)"
+            "requester_id, addressee_id"
         ).eq("status", "accepted").eq("requester_id", user_id).execute()
 
         result_addressee = supabase.table("friendships").select(
-            "*, requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name), "
-            "addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name)"
+            "requester_id, addressee_id"
         ).eq("status", "accepted").eq("addressee_id", user_id).execute()
 
-        result_data = (result_requester.data or []) + (result_addressee.data or [])
+        # Collect friend IDs
+        friend_ids = []
+        for friendship in result_requester.data or []:
+            friend_ids.append(friendship['addressee_id'])
+        
+        for friendship in result_addressee.data or []:
+            friend_ids.append(friendship['requester_id'])
 
+        # Get user info for each friend
         friends = []
-        for friendship in result_data:
-            # Add the friend (not the current user)
-            if friendship['requester_id'] == user_id:
-                friends.append(friendship['addressee'])
-            else:
-                friends.append(friendship['requester'])
+        for friend_id in friend_ids:
+            user_info = supabase.table("users").select(
+                "tg_id, tg_username, tg_first_name"
+            ).eq("tg_id", friend_id).execute()
+            
+            if user_info.data:
+                friends.append(user_info.data[0])
         
         return friends
     except Exception as exc:
