@@ -666,12 +666,12 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     requests = await get_friend_requests(user.id)
     
     # Build response message
-    message_parts = ["🤝 **Запросы в друзья:**\n"]
+    message_parts = ["🤝 Запросы в друзья:\n"]
     
     # Incoming requests
     if requests['incoming']:
-        message_parts.append("📥 **Входящие запросы:**")
-        message_parts.append("*Скопируйте команду целиком:*\n")
+        message_parts.append("📥 Входящие запросы:")
+        message_parts.append("Скопируйте команду целиком:\n")
         for i, req in enumerate(requests['incoming'], 1):
             requester_username = req['requester']['tg_username']
             requester_name = req['requester']['tg_first_name']
@@ -687,14 +687,14 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
                 accept_cmd = f"/accept {short_id}"
                 decline_cmd = f"/decline {short_id}"
             
-            message_parts.append(f"**{i}.** {display_name}")
-            message_parts.append(f"   ✅ `{accept_cmd}`")
-            message_parts.append(f"   ❌ `{decline_cmd}`")
+            message_parts.append(f"{i}. {display_name}")
+            message_parts.append(f"   ✅ {accept_cmd}")
+            message_parts.append(f"   ❌ {decline_cmd}")
             message_parts.append("")
     
     # Outgoing requests
     if requests['outgoing']:
-        message_parts.append("📤 **Исходящие запросы:**")
+        message_parts.append("📤 Исходящие запросы:")
         for req in requests['outgoing']:
             addressee_name = req['addressee']['tg_username'] or req['addressee']['tg_first_name']
             message_parts.append(f"• @{addressee_name} (ожидает ответа)")
@@ -704,8 +704,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
         message_parts.append("📭 Нет активных запросов в друзья.")
     
     await update.message.reply_text(
-        "\n".join(message_parts),
-        parse_mode='Markdown'
+        "\n".join(message_parts)
     )
 
 async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -879,12 +878,11 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if not friends:
         await update.message.reply_text(
             "👥 У вас пока нет друзей.\n\n"
-            "Используйте `/add_friend @username` чтобы добавить друзей!",
-            parse_mode='Markdown'
+            "Используйте /add_friend @username чтобы добавить друзей!"
         )
         return
     
-    message_parts = ["👥 **Ваши друзья:**\n"]
+    message_parts = ["👥 Ваши друзья:\n"]
     
     for friend in friends:
         friend_name = friend['tg_username'] or friend['tg_first_name']
@@ -894,12 +892,11 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "",
         f"Всего друзей: {len(friends)}",
         "",
-        "Используйте `/activities @username` чтобы посмотреть активности друга!"
+        "Используйте /activities @username чтобы посмотреть активности друга!"
     ])
     
     await update.message.reply_text(
-        "\n".join(message_parts),
-        parse_mode='Markdown'
+        "\n".join(message_parts)
     )
 
 async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -940,8 +937,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not is_friend and target_user['tg_id'] != user.id:
         await update.message.reply_text(
             f"🔒 Вы не можете просматривать активности @{target_username}.\n"
-            f"Сначала добавьте в друзья: `/add_friend {target_username}`",
-            parse_mode='Markdown'
+            f"Сначала добавьте в друзья: /add_friend {target_username}"
         )
         return
     
@@ -970,7 +966,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
         # Format response
         target_name = target_user['tg_username'] or target_user['tg_first_name']
-        message_parts = [f"📊 **Активности @{target_name} (последние 10):**\n"]
+        message_parts = [f"📊 Активности @{target_name} (последние 10):\n"]
         
         for activity in activities:
             # Format timestamp
@@ -992,8 +988,7 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ])
         
         await update.message.reply_text(
-            "\n".join(message_parts),
-            parse_mode='Markdown'
+            "\n".join(message_parts)
         )
         
         logger.info("Пользователь %s просмотрел активности %s", user.id, target_user['tg_id'])
