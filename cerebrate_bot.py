@@ -65,12 +65,19 @@ async def find_user_by_username(username: str) -> dict:
 async def create_friend_request(requester_id: int, addressee_id: int) -> bool:
     """Create a friend request."""
     try:
-        # Check if friendship already exists
-        existing = supabase.table("friendships").select("*").or_(
-            f"and(requester_id.eq.{requester_id},addressee_id.eq.{addressee_id}),and(requester_id.eq.{addressee_id},addressee_id.eq.{requester_id})"
+        # Check if friendship already exists in either direction
+        existing1 = supabase.table("friendships").select("*").eq(
+            "requester_id", requester_id
+        ).eq(
+            "addressee_id", addressee_id
         ).execute()
-        
-        if existing.data:
+        existing2 = supabase.table("friendships").select("*").eq(
+            "requester_id", addressee_id
+        ).eq(
+            "addressee_id", requester_id
+        ).execute()
+
+        if (existing1.data or existing2.data):
             return False  # Already exists
         
         # Create new friend request
@@ -121,15 +128,20 @@ async def get_friends_list(user_id: int) -> list:
     """Get list of user's friends."""
     try:
         # Get accepted friendships where user is either requester or addressee
-        result = supabase.table("friendships").select(
+        result_requester = supabase.table("friendships").select(
             "*, requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name), "
             "addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name)"
-        ).eq("status", "accepted").or_(
-            f"requester_id.eq.{user_id},addressee_id.eq.{user_id}"
-        ).execute()
-        
+        ).eq("status", "accepted").eq("requester_id", user_id).execute()
+
+        result_addressee = supabase.table("friendships").select(
+            "*, requester:users!friendships_requester_id_fkey(tg_id, tg_username, tg_first_name), "
+            "addressee:users!friendships_addressee_id_fkey(tg_id, tg_username, tg_first_name)"
+        ).eq("status", "accepted").eq("addressee_id", user_id).execute()
+
+        result_data = (result_requester.data or []) + (result_addressee.data or [])
+
         friends = []
-        for friendship in result.data or []:
+        for friendship in result_data:
             # Add the friend (not the current user)
             if friendship['requester_id'] == user_id:
                 friends.append(friendship['addressee'])
