@@ -671,15 +671,15 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     # Incoming requests
     if requests['incoming']:
         message_parts.append("📥 Входящие запросы:")
-        message_parts.append("Скопируйте команду целиком:\n")
+        message_parts.append("Скопируйте команду целиком кликнув на неё: \n")
         for i, req in enumerate(requests['incoming'], 1):
             requester_username = req['requester']['tg_username']
             requester_name = req['requester']['tg_first_name']
             
             if requester_username:
                 display_name = f"@{requester_username}"
-                accept_cmd = f"/accept @{requester_username}"
-                decline_cmd = f"/decline @{requester_username}"
+                accept_cmd = f"`/accept @{requester_username}"
+                decline_cmd = f"`/decline @{requester_username}"
             else:
                 display_name = requester_name or "Unknown"
                 # Fallback to ID if no username
