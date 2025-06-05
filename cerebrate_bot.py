@@ -678,8 +678,8 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
             
             if requester_username:
                 display_name = f"@{requester_username}"
-                accept_cmd = f"`/accept @{requester_username}"
-                decline_cmd = f"`/decline @{requester_username}"
+                accept_cmd = f"`/accept @{requester_username}`"
+                decline_cmd = f"`/decline @{requester_username}`"
             else:
                 display_name = requester_name or "Unknown"
                 # Fallback to ID if no username
