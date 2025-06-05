@@ -633,8 +633,12 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         try:
             await context.bot.send_message(
                 chat_id=target_user['tg_id'],
-                text=f"🤝 У вас новый запрос в друзья от @{user.username or user.first_name}!\n"
-                     f"Используйте /friend_requests чтобы принять или отклонить."
+                text=f"🤝 У вас новый запрос в друзья от @{user.username or user.first_name}!\n\n"
+                     f"Быстрые действия (кликните для копирования):\n"
+                     f"✅ `/accept @{user.username or user.first_name}`\n"
+                     f"❌ `/decline @{user.username or user.first_name}`\n\n"
+                     f"Или используйте `/friend_requests` для полного списка.",
+                parse_mode='Markdown'
             )
         except Exception:
             pass  # User might have blocked the bot
@@ -684,8 +688,8 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
                 display_name = requester_name or "Unknown"
                 # Fallback to ID if no username
                 short_id = req['friendship_id'][:8]
-                accept_cmd = f"/accept {short_id}"
-                decline_cmd = f"/decline {short_id}"
+                accept_cmd = f"`/accept {short_id}`"
+                decline_cmd = f"`/decline {short_id}`"
             
             message_parts.append(f"{i}. {display_name}")
             message_parts.append(f"   ✅ {accept_cmd}")
@@ -704,7 +708,8 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
         message_parts.append("📭 Нет активных запросов в друзья.")
     
     await update.message.reply_text(
-        "\n".join(message_parts)
+        "\n".join(message_parts),
+        parse_mode='Markdown'
     )
 
 async def accept_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
