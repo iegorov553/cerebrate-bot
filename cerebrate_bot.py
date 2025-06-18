@@ -24,6 +24,7 @@ from telegram.ext import (
     Application,
     ApplicationBuilder,
     CommandHandler,
+    CallbackQueryHandler,
     ContextTypes,
     MessageHandler,
     filters,
@@ -41,6 +42,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+ADMIN_USER_ID: int = int(os.getenv("ADMIN_USER_ID", "0"))
 QUESTION: str = "Чё делаешь? 🤔"
 
 if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
@@ -184,6 +186,693 @@ async def get_friends_list(user_id: int) -> list:
     except Exception as exc:
         logger.error("Ошибка получения списка друзей: %s", exc)
         return []
+
+# --- Admin functions ---
+def is_admin(user_id: int) -> bool:
+    """Check if user is admin."""
+    return ADMIN_USER_ID != 0 and user_id == ADMIN_USER_ID
+
+async def get_user_stats() -> dict:
+    """Get user statistics for admin panel."""
+    try:
+        # Total users
+        total_result = supabase.table("users").select("tg_id", count="exact").execute()
+        total_users = total_result.count
+        
+        # Active users (enabled=true)
+        active_result = supabase.table("users").select("tg_id", count="exact").eq("enabled", True).execute()
+        active_users = active_result.count
+        
+        # New users in last 7 days
+        from datetime import datetime, timedelta
+        week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        new_result = supabase.table("users").select("tg_id", count="exact").gte("created_at", week_ago).execute()
+        new_users = new_result.count
+        
+        return {
+            "total": total_users,
+            "active": active_users,
+            "new_week": new_users
+        }
+    except Exception as exc:
+        logger.error("Ошибка получения статистики пользователей: %s", exc)
+        return {"total": 0, "active": 0, "new_week": 0}
+
+async def send_broadcast_message(app: Application, message_text: str, admin_id: int) -> dict:
+    """Send broadcast message to all users."""
+    try:
+        # Get all users
+        result = supabase.table("users").select("tg_id, tg_username, tg_first_name").execute()
+        users = result.data or []
+        
+        success_count = 0
+        failed_count = 0
+        failed_users = []
+        
+        logger.info("Начало рассылки сообщения для %s пользователей", len(users))
+        
+        for user in users:
+            try:
+                await app.bot.send_message(
+                    chat_id=user['tg_id'],
+                    text=f"📢 **Обновление от администрации**\n\n{message_text}",
+                    parse_mode='Markdown'
+                )
+                success_count += 1
+                
+                # Small delay to avoid rate limiting
+                await asyncio.sleep(0.1)
+                
+            except Exception as exc:
+                failed_count += 1
+                failed_users.append({
+                    "user_id": user['tg_id'],
+                    "username": user.get('tg_username'),
+                    "error": str(exc)
+                })
+                logger.warning("Не удалось отправить сообщение пользователю %s: %s", user['tg_id'], exc)
+        
+        # Send summary to admin
+        summary = f"""📊 **Результат рассылки:**
+
+✅ Успешно доставлено: {success_count}
+❌ Ошибки доставки: {failed_count}
+📨 Всего пользователей: {len(users)}
+
+Рассылка завершена!"""
+        
+        try:
+            await app.bot.send_message(
+                chat_id=admin_id,
+                text=summary,
+                parse_mode='Markdown'
+            )
+        except Exception:
+            pass
+        
+        logger.info("Рассылка завершена: %s успешных, %s ошибок", success_count, failed_count)
+        
+        return {
+            "success": success_count,
+            "failed": failed_count,
+            "total": len(users),
+            "failed_users": failed_users
+        }
+        
+    except Exception as exc:
+        logger.error("Ошибка при рассылке: %s", exc)
+        return {"success": 0, "failed": 0, "total": 0, "failed_users": []}
+
+# --- Keyboard generation functions ---
+def get_main_menu_keyboard(user_id: int = None) -> InlineKeyboardMarkup:
+    """Generate main menu keyboard."""
+    keyboard = [
+        [InlineKeyboardButton("⚙️ Настройки", callback_data="menu_settings")],
+        [InlineKeyboardButton("👥 Друзья", callback_data="menu_friends")],
+        [InlineKeyboardButton("📊 История", callback_data="menu_history")]
+    ]
+    
+    # Add admin panel for admin users
+    if user_id and is_admin(user_id):
+        keyboard.insert(3, [InlineKeyboardButton("📢 Админ панель", callback_data="admin_panel")])
+    
+    keyboard.append([InlineKeyboardButton("❓ Помощь", callback_data="menu_help")])
+    return InlineKeyboardMarkup(keyboard)
+
+async def get_settings_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Generate settings menu keyboard with current user data."""
+    try:
+        # Get user data
+        result = supabase.table("users").select("*").eq("tg_id", user_id).execute()
+        user_data = result.data[0] if result.data else None
+        
+        if not user_data:
+            return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_main")]])
+        
+        # Format current settings
+        status = "ВКЛ" if user_data['enabled'] else "ВЫКЛ"
+        time_window = f"{user_data['window_start'][:5]}-{user_data['window_end'][:5]}"
+        frequency = f"{user_data['interval_min']} мин"
+        
+        keyboard = [
+            [InlineKeyboardButton(f"🔔 Уведомления: {status}", callback_data="set_notifications")],
+            [InlineKeyboardButton(f"⏰ Время: {time_window}", callback_data="set_time_window")],
+            [InlineKeyboardButton(f"📊 Частота: {frequency}", callback_data="set_frequency")],
+            [InlineKeyboardButton("📝 Мои настройки", callback_data="set_view_settings")],
+            [InlineKeyboardButton("← Назад", callback_data="menu_main")]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    except Exception as exc:
+        logger.error("Ошибка генерации клавиатуры настроек: %s", exc)
+        return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_main")]])
+
+async def get_friends_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Generate friends menu keyboard."""
+    try:
+        # Get friend requests count
+        requests = await get_friend_requests(user_id)
+        incoming_count = len(requests['incoming'])
+        
+        # Get friends count
+        friends = await get_friends_list(user_id)
+        friends_count = len(friends)
+        
+        keyboard = [
+            [InlineKeyboardButton("➕ Добавить друга", callback_data="friend_add")],
+            [InlineKeyboardButton(f"📥 Запросы ({incoming_count})", callback_data="friend_requests")],
+            [InlineKeyboardButton(f"👥 Мои друзья ({friends_count})", callback_data="friend_list")],
+            [InlineKeyboardButton("📊 Активности друзей", callback_data="friend_activities")],
+            [InlineKeyboardButton("← Назад", callback_data="menu_main")]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    except Exception as exc:
+        logger.error("Ошибка генерации клавиатуры друзей: %s", exc)
+        return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_main")]])
+
+async def get_friend_requests_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Generate friend requests keyboard with accept/decline buttons."""
+    try:
+        requests = await get_friend_requests(user_id)
+        keyboard = []
+        
+        # Add buttons for each incoming request
+        for req in requests['incoming']:
+            requester_username = req['requester']['tg_username']
+            requester_name = req['requester']['tg_first_name']
+            
+            if requester_username:
+                display_name = f"@{requester_username}"
+                user_identifier = requester_username
+            else:
+                display_name = requester_name or "Unknown"
+                user_identifier = str(req['requester_id'])
+            
+            # Add row with user name
+            keyboard.append([InlineKeyboardButton(f"👤 {display_name}", callback_data="noop")])
+            
+            # Add row with accept/decline buttons
+            keyboard.append([
+                InlineKeyboardButton("✅ Принять", callback_data=f"req_accept_{user_identifier}"),
+                InlineKeyboardButton("❌ Отклонить", callback_data=f"req_decline_{user_identifier}")
+            ])
+        
+        if not requests['incoming']:
+            keyboard.append([InlineKeyboardButton("📭 Нет новых запросов", callback_data="noop")])
+        
+        keyboard.append([InlineKeyboardButton("← Назад", callback_data="menu_friends")])
+        return InlineKeyboardMarkup(keyboard)
+    except Exception as exc:
+        logger.error("Ошибка генерации клавиатуры запросов: %s", exc)
+        return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]])
+
+async def get_admin_panel_keyboard() -> InlineKeyboardMarkup:
+    """Generate admin panel keyboard."""
+    try:
+        stats = await get_user_stats()
+        
+        keyboard = [
+            [InlineKeyboardButton("📢 Рассылка обновления", callback_data="admin_broadcast")],
+            [InlineKeyboardButton(f"📊 Статистика ({stats['total']} польз.)", callback_data="admin_stats")],
+            [InlineKeyboardButton("📝 Тест рассылки", callback_data="admin_test")],
+            [InlineKeyboardButton("← Назад", callback_data="menu_main")]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    except Exception as exc:
+        logger.error("Ошибка генерации админ клавиатуры: %s", exc)
+        return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_main")]])
+
+def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
+    """Generate broadcast confirmation keyboard."""
+    keyboard = [
+        [InlineKeyboardButton("✅ Подтвердить рассылку", callback_data="broadcast_confirm")],
+        [InlineKeyboardButton("❌ Отменить", callback_data="broadcast_cancel")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+# --- Callback Query Handler ---
+async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle inline keyboard button callbacks."""
+    query = update.callback_query
+    user = update.effective_user
+    
+    if not user or not query:
+        return
+    
+    await query.answer()  # Answer the callback query
+    
+    # Ensure user exists
+    await ensure_user_exists(
+        tg_id=user.id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
+    
+    callback_data = query.data
+    
+    try:
+        # Main menu navigation
+        if callback_data == "menu_main":
+            keyboard = get_main_menu_keyboard(user.id)
+            await query.edit_message_text(
+                "🤖 **Hour Watcher Бот**\n\nВыберите действие:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "menu_settings":
+            keyboard = await get_settings_keyboard(user.id)
+            await query.edit_message_text(
+                "⚙️ **Настройки**\n\nВыберите параметр для изменения:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "menu_friends":
+            keyboard = await get_friends_keyboard(user.id)
+            await query.edit_message_text(
+                "👥 **Друзья**\n\nУправление друзьями и запросами:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "menu_history":
+            # Open history web app
+            web_app_url = "https://doyobi-diary.vercel.app/history"
+            keyboard = [[InlineKeyboardButton(
+                "📊 Открыть историю активностей", 
+                web_app=WebAppInfo(url=web_app_url)
+            )], [InlineKeyboardButton("← Назад", callback_data="menu_main")]]
+            
+            await query.edit_message_text(
+                "🔍 **Просмотр истории активностей**\n\n"
+                "Нажмите кнопку ниже, чтобы открыть веб-интерфейс с вашей полной историей ответов.",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "menu_help":
+            help_text = """❓ **Справка по боту**
+
+🤖 **Hour Watcher** - бот для отслеживания активности
+
+**Как это работает:**
+• Бот будет спрашивать "Чё делаешь? 🤔" в указанное время
+• Вы отвечаете, и ответ сохраняется в базу данных
+• Можете просматривать историю и анализировать активность
+
+**Настройки:**
+• ⏰ Время работы - когда бот активен (например 09:00-23:00)
+• 📊 Частота - как часто спрашивать (например каждые 60 минут)
+• 🔔 Включить/выключить уведомления
+
+**Друзья:**
+• Добавляйте друзей и смотрите их активности
+• Отправляйте и принимайте запросы в друзья
+• Просматривайте активности через веб-интерфейс"""
+            
+            keyboard = [[InlineKeyboardButton("← Назад", callback_data="menu_main")]]
+            await query.edit_message_text(
+                help_text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='Markdown'
+            )
+        
+        # Settings callbacks
+        elif callback_data == "set_notifications":
+            # Toggle notifications
+            try:
+                result = supabase.table("users").select("enabled").eq("tg_id", user.id).execute()
+                current_status = result.data[0]['enabled'] if result.data else True
+                new_status = not current_status
+                
+                supabase.table("users").update({"enabled": new_status}).eq("tg_id", user.id).execute()
+                
+                status_text = "включены" if new_status else "отключены"
+                await query.edit_message_text(
+                    f"✅ Уведомления {status_text}!",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К настройкам", callback_data="menu_settings")]])
+                )
+                logger.info("Пользователь %s изменил статус уведомлений: %s", user.id, new_status)
+            except Exception as exc:
+                logger.error("Ошибка изменения статуса уведомлений: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при изменении настроек.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К настройкам", callback_data="menu_settings")]])
+                )
+        
+        elif callback_data == "set_time_window":
+            await query.edit_message_text(
+                "⏰ **Настройка времени**\n\n"
+                "Отправьте новое время в формате: `HH:MM-HH:MM`\n"
+                "Например: `09:00-23:00`",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_settings")]]),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "set_frequency":
+            await query.edit_message_text(
+                "📊 **Настройка частоты**\n\n"
+                "Отправьте новую частоту в минутах.\n"
+                "Например: `60` (для 60 минут)\n"
+                "Минимум: 5 минут, максимум: 1440 минут (24 часа)",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_settings")]]),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "set_view_settings":
+            # Show current settings (same as /settings command)
+            try:
+                result = supabase.table("users").select("*").eq("tg_id", user.id).execute()
+                user_data = result.data[0] if result.data else None
+                
+                if user_data:
+                    settings_text = f"""🔧 **Ваши настройки:**
+
+✅ Статус: {'Включен' if user_data['enabled'] else 'Отключен'}
+⏰ Время работы: {user_data['window_start'][:5]} - {user_data['window_end'][:5]}
+📊 Интервал: {user_data['interval_min']} минут
+👤 Telegram ID: {user_data['tg_id']}
+📅 Регистрация: {user_data['created_at'][:10]}"""
+                else:
+                    settings_text = "❌ Ошибка получения настроек."
+                
+                await query.edit_message_text(
+                    settings_text,
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К настройкам", callback_data="menu_settings")]]),
+                    parse_mode='Markdown'
+                )
+            except Exception as exc:
+                logger.error("Ошибка получения настроек: %s", exc)
+        
+        # Friends callbacks
+        elif callback_data == "friend_add":
+            await query.edit_message_text(
+                "➕ **Добавить друга**\n\n"
+                "Отправьте username друга в формате: `@username`\n"
+                "Например: `@john_doe`",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]]),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "friend_requests":
+            keyboard = await get_friend_requests_keyboard(user.id)
+            await query.edit_message_text(
+                "📥 **Запросы в друзья**\n\nВыберите действие:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "friend_list":
+            friends = await get_friends_list(user.id)
+            
+            if friends:
+                message_parts = ["👥 **Ваши друзья:**\n"]
+                for friend in friends:
+                    friend_name = friend['tg_username'] or friend['tg_first_name']
+                    message_parts.append(f"• @{friend_name}")
+                message_parts.append(f"\nВсего друзей: {len(friends)}")
+                friends_text = "\n".join(message_parts)
+            else:
+                friends_text = "📭 У вас пока нет друзей.\n\nИспользуйте кнопку \"Добавить друга\" чтобы добавить друзей!"
+            
+            await query.edit_message_text(
+                friends_text,
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]]),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "friend_activities":
+            await query.edit_message_text(
+                "📊 **Активности друзей**\n\n"
+                "Отправьте username друга для просмотра активностей: `@username`\n"
+                "Или используйте веб-интерфейс через кнопку \"История\"",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]]),
+                parse_mode='Markdown'
+            )
+        
+        # Friend request callbacks
+        elif callback_data.startswith("req_accept_"):
+            user_identifier = callback_data[11:]  # Remove "req_accept_" prefix
+            
+            # Same logic as accept_command
+            try:
+                if user_identifier.isdigit():
+                    target_user_id = int(user_identifier)
+                    target_user = supabase.table("users").select("*").eq("tg_id", target_user_id).execute()
+                    target_user = target_user.data[0] if target_user.data else None
+                else:
+                    target_user = await find_user_by_username(user_identifier)
+                
+                if not target_user:
+                    await query.edit_message_text(
+                        "❌ Пользователь не найден!",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                    )
+                    return
+                
+                # Find and accept request
+                result = supabase.table("friendships").select("*").eq(
+                    "addressee_id", user.id
+                ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
+                
+                if result.data:
+                    success = await update_friend_request(result.data[0]['friendship_id'], "accepted")
+                    
+                    if success:
+                        # Notify requester
+                        try:
+                            await context.bot.send_message(
+                                chat_id=target_user['tg_id'],
+                                text=f"🎉 @{user.username or user.first_name} принял ваш запрос в друзья!"
+                            )
+                        except Exception:
+                            pass
+                        
+                        await query.edit_message_text(
+                            f"✅ Вы теперь друзья с @{target_user['tg_username'] or target_user['tg_first_name']}! 🎉",
+                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К запросам", callback_data="friend_requests")]])
+                        )
+                        logger.info("Пользователь %s принял запрос от %s", user.id, target_user['tg_id'])
+                    else:
+                        await query.edit_message_text(
+                            "❌ Ошибка при принятии запроса.",
+                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                        )
+                else:
+                    await query.edit_message_text(
+                        "❌ Запрос не найден!",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                    )
+            except Exception as exc:
+                logger.error("Ошибка принятия запроса: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при принятии запроса.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                )
+        
+        elif callback_data.startswith("req_decline_"):
+            user_identifier = callback_data[12:]  # Remove "req_decline_" prefix
+            
+            # Same logic as decline_command
+            try:
+                if user_identifier.isdigit():
+                    target_user_id = int(user_identifier)
+                    target_user = supabase.table("users").select("*").eq("tg_id", target_user_id).execute()
+                    target_user = target_user.data[0] if target_user.data else None
+                else:
+                    target_user = await find_user_by_username(user_identifier)
+                
+                if not target_user:
+                    await query.edit_message_text(
+                        "❌ Пользователь не найден!",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                    )
+                    return
+                
+                # Find and delete request
+                result = supabase.table("friendships").select("*").eq(
+                    "addressee_id", user.id
+                ).eq("requester_id", target_user['tg_id']).eq("status", "pending").execute()
+                
+                if result.data:
+                    supabase.table("friendships").delete().eq(
+                        "friendship_id", result.data[0]['friendship_id']
+                    ).execute()
+                    
+                    await query.edit_message_text(
+                        "❌ Запрос отклонён.",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К запросам", callback_data="friend_requests")]])
+                    )
+                    logger.info("Пользователь %s отклонил запрос от %s", user.id, target_user['tg_id'])
+                else:
+                    await query.edit_message_text(
+                        "❌ Запрос не найден!",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                    )
+            except Exception as exc:
+                logger.error("Ошибка отклонения запроса: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при отклонении запроса.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                )
+        
+        # Admin panel callbacks (only for admin)
+        elif callback_data == "admin_panel":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для доступа к админ панели.")
+                return
+            
+            keyboard = await get_admin_panel_keyboard()
+            await query.edit_message_text(
+                "📢 **Админ панель**\n\nВыберите действие:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+            logger.info("Админ %s открыл админ панель", user.id)
+        
+        elif callback_data == "admin_broadcast":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для выполнения этой команды.")
+                return
+            
+            await query.edit_message_text(
+                "📢 **Рассылка обновления**\n\n"
+                "Отправьте текст сообщения для рассылки всем пользователям.\n"
+                "Используйте Markdown для форматирования.\n\n"
+                "Пример: `Вышло новое обновление! 🎉`",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]]),
+                parse_mode='Markdown'
+            )
+        
+        elif callback_data == "admin_stats":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для выполнения этой команды.")
+                return
+            
+            try:
+                stats = await get_user_stats()
+                
+                stats_text = f"""📊 **Статистика пользователей:**
+
+👥 Всего пользователей: {stats['total']}
+✅ Активных пользователей: {stats['active']}
+🆕 Новых за неделю: {stats['new_week']}
+
+📈 Процент активных: {stats['active']/max(stats['total'], 1)*100:.1f}% (из {stats['total']})"""
+                
+                await query.edit_message_text(
+                    stats_text,
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]]),
+                    parse_mode='Markdown'
+                )
+                logger.info("Админ %s просмотрел статистику", user.id)
+                
+            except Exception as exc:
+                logger.error("Ошибка получения статистики: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при получении статистики.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]])
+                )
+        
+        elif callback_data == "admin_test":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для выполнения этой команды.")
+                return
+            
+            # Send test message to admin
+            test_message = """📢 **Тест рассылки**
+
+Это тестовое сообщение показывает, как будет выглядеть рассылка для пользователей.
+
+✨ Вы можете использовать **Markdown** для форматирования:
+• Жирный текст
+• *Курсив*
+• `Код`
+
+🎉 Всё работает отлично!"""
+            
+            try:
+                await context.bot.send_message(
+                    chat_id=user.id,
+                    text=f"📢 **Обновление от администрации**\n\n{test_message}",
+                    parse_mode='Markdown'
+                )
+                
+                await query.edit_message_text(
+                    "✅ Тестовое сообщение отправлено вам в чат!",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]])
+                )
+                logger.info("Админ %s протестировал рассылку", user.id)
+                
+            except Exception as exc:
+                logger.error("Ошибка отправки тест сообщения: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при отправке тестового сообщения.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]])
+                )
+        
+        elif callback_data == "broadcast_confirm":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для выполнения этой команды.")
+                return
+            
+            message_text = context.user_data.get('broadcast_message')
+            if not message_text:
+                await query.edit_message_text(
+                    "❌ Сообщение для рассылки не найдено. Попробуйте ещё раз.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="admin_panel")]])
+                )
+                return
+            
+            await query.edit_message_text(
+                "📡 **Рассылка началась...**\n\nПожалуйста, подождите. Это может занять несколько минут.",
+                reply_markup=None
+            )
+            
+            # Start broadcast in background
+            import asyncio
+            asyncio.create_task(send_broadcast_message(context.application, message_text, user.id))
+            
+            # Clear stored message
+            context.user_data.pop('broadcast_message', None)
+            logger.info("Админ %s подтвердил рассылку", user.id)
+        
+        elif callback_data == "broadcast_cancel":
+            if not is_admin(user.id):
+                await query.edit_message_text("❌ У вас нет прав для выполнения этой команды.")
+                return
+            
+            # Clear stored message
+            context.user_data.pop('broadcast_message', None)
+            
+            await query.edit_message_text(
+                "❌ Рассылка отменена.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К админ панели", callback_data="admin_panel")]])
+            )
+            logger.info("Админ %s отменил рассылку", user.id)
+        
+        elif callback_data == "noop":
+            # Do nothing for informational buttons
+            pass
+        
+        else:
+            # Unknown callback
+            await query.edit_message_text(
+                "❌ Неизвестная команда.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← В главное меню", callback_data="menu_main")]])
+            )
+            
+    except Exception as exc:
+        logger.error("Ошибка обработки callback: %s", exc)
+        try:
+            await query.edit_message_text(
+                "❌ Произошла ошибка. Попробуйте ещё раз.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← В главное меню", callback_data="menu_main")]])
+            )
+        except Exception:
+            pass
+
 async def ensure_user_exists(tg_id: int, username: str = None, first_name: str = None, last_name: str = None) -> dict:
     """Ensure user exists in database, create if not."""
     try:
@@ -303,7 +992,7 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         logger.error("Ошибка записи в Supabase: %s", exc)
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /start command - register user and send first question."""
+    """Handle /start command - register user and show main menu."""
     user = update.effective_user
     if user is None:
         return
@@ -320,24 +1009,26 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text("❌ Ошибка регистрации пользователя.")
         return
 
-    # Welcome message
+    # Welcome message with main menu
     welcome_text = f"""🤖 **Привет, {user.first_name or user.username or 'друг'}!**
 
 Я бот, который поможет тебе отслеживать твою активность! 📊
 
 🕐 Буду спрашивать что ты делаешь в рабочее время
-⚙️ Можешь настроить время и частоту через /settings
-📱 Смотри историю через /history
+⚙️ Настрой время и частоту в настройках
+📱 Просматривай историю активностей
+👥 Добавляй друзей и смотри их активности
 
-Давай начнём прямо сейчас! 🚀"""
+Выберите действие из меню ниже:"""
 
-    await update.message.reply_text(welcome_text, parse_mode='Markdown')
+    keyboard = get_main_menu_keyboard(user.id)
+    await update.message.reply_text(
+        welcome_text, 
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
     
-    # Send first question immediately
-    await asyncio.sleep(1)  # Small delay for better UX
-    await update.message.reply_text(QUESTION, reply_markup=ForceReply())
-    
-    logger.info("Новый пользователь зарегистрирован: %s", user.id)
+    logger.info("Пользователь %s открыл главное меню", user.id)
 
 async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show user settings from database."""
@@ -1002,6 +1693,68 @@ async def activities_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.error("Ошибка получения активностей: %s", exc)
         await update.message.reply_text("❌ Ошибка при получении активностей.")
 
+async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send broadcast message to all users (admin only)."""
+    user = update.effective_user
+    if not user or not is_admin(user.id):
+        await update.message.reply_text("❌ У вас нет прав для выполнения этой команды.")
+        return
+    
+    if not context.args:
+        await update.message.reply_text(
+            "📢 **Рассылка сообщения**\n\n"
+            "Используйте: `/broadcast <текст сообщения>`\n"
+            "Пример: `/broadcast Вышло новое обновление!`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    message_text = " ".join(context.args)
+    
+    # Show preview and confirmation
+    preview_text = f"""📢 **Предварительный просмотр рассылки:**
+
+{message_text}
+
+⚠️ **Внимание!** Сообщение будет отправлено всем пользователям бота.
+Вы уверены, что хотите продолжить?"""
+    
+    keyboard = get_broadcast_confirm_keyboard()
+    await update.message.reply_text(
+        preview_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+    
+    # Store message text in context for later use
+    context.user_data['broadcast_message'] = message_text
+    logger.info("Админ %s подготовил рассылку: %s", user.id, message_text[:50])
+
+async def broadcast_info_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show user statistics (admin only)."""
+    user = update.effective_user
+    if not user or not is_admin(user.id):
+        await update.message.reply_text("❌ У вас нет прав для выполнения этой команды.")
+        return
+    
+    try:
+        stats = await get_user_stats()
+        
+        stats_text = f"""📊 **Статистика пользователей:**
+
+👥 Всего пользователей: {stats['total']}
+✅ Активных пользователей: {stats['active']}
+🆕 Новых за неделю: {stats['new_week']}
+
+📈 Процент активных: {stats['active']/max(stats['total'], 1)*100:.1f}% (из {stats['total']})"""
+        
+        await update.message.reply_text(stats_text, parse_mode='Markdown')
+        logger.info("Админ %s запросил статистику", user.id)
+        
+    except Exception as exc:
+        logger.error("Ошибка получения статистики: %s", exc)
+        await update.message.reply_text("❌ Ошибка при получении статистики.")
+
 def run_coro_in_loop(coro):
     loop = asyncio.get_event_loop()
     if loop.is_running():
@@ -1026,6 +1779,15 @@ async def main() -> None:
     application.add_handler(CommandHandler("decline", decline_command))
     application.add_handler(CommandHandler("friends", friends_command))
     application.add_handler(CommandHandler("activities", activities_command))
+    
+    # Admin commands
+    application.add_handler(CommandHandler("broadcast", broadcast_command))
+    application.add_handler(CommandHandler("broadcast_info", broadcast_info_command))
+    
+    # Add callback query handler for inline keyboards
+    application.add_handler(CallbackQueryHandler(handle_callback_query))
+    
+    # Add message handler (must be last)
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reply))
     
     # Scheduler for asking questions
