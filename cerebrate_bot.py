@@ -1709,7 +1709,10 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         return
     
-    message_text = " ".join(context.args)
+    # Get full message text preserving line breaks
+    full_text = update.message.text
+    command_start = full_text.find('/broadcast') + len('/broadcast')
+    message_text = full_text[command_start:].strip()
     
     # Show preview and confirmation
     preview_text = f"""📢 **Предварительный просмотр рассылки:**
