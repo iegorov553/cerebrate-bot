@@ -9,15 +9,20 @@ This is a Telegram bot called "Hour Watcher" that:
 - Sends personalized questions based on user settings ("Чё делаешь? 🤔")
 - Records replies to Supabase database with full user management
 - Supports individual user settings for time windows and intervals
+- **NEW: Full inline keyboard interface** with navigation menus
+- **NEW: Admin broadcast system** for sending updates to all users
+- **NEW: Friends discovery** through mutual connections
 
 ## Architecture
 
 **Single-file application** (`cerebrate_bot.py`) with key components:
-- **Telegram integration**: Uses python-telegram-bot library for messaging
+- **Telegram integration**: Uses python-telegram-bot library with CallbackQueryHandler
 - **Supabase integration**: Uses supabase-py for data storage in PostgreSQL (users + responses)
 - **User management**: Automatic registration and settings persistence
 - **Scheduling**: APScheduler with per-user customizable time windows
 - **Event loop handling**: Custom logic for Railway/cloud deployment compatibility
+- **Inline keyboards**: Complete UI replacement with button-based navigation
+- **Admin system**: Broadcast functionality with statistics and user management
 
 ## Environment Variables
 
@@ -25,6 +30,7 @@ Required for deployment:
 - `TELEGRAM_BOT_TOKEN`: Bot token from @BotFather
 - `SUPABASE_URL`: Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key
+- `ADMIN_USER_ID`: Telegram ID of admin user (for broadcast functionality)
 
 ## Development Commands
 
@@ -90,22 +96,91 @@ supabase gen types typescript --local > types/supabase.ts
 supabase db push
 ```
 
+## User Interface
+
+### Main Menu System
+
+**Primary Navigation** (accessible via `/start`):
+- ⚙️ **Settings**: User preferences and configuration
+- 👥 **Friends**: Social features and friend management  
+- 📊 **History**: Activity tracking via web interface
+- 📢 **Admin Panel**: Broadcast system (admin only)
+- ❓ **Help**: Bot documentation and usage guide
+
+### Settings Menu
+- 🔔 **Notifications toggle**: Enable/disable with one click
+- ⏰ **Time window**: Configure active hours (text input)
+- 📊 **Frequency**: Set notification intervals (text input)
+- 📝 **View settings**: Display current configuration
+
+### Friends Menu
+- ➕ **Add friend**: Send friend request (text input)
+- 📥 **Friend requests**: Manage incoming/outgoing requests with counts
+- 👥 **My friends**: List all accepted friends with counts
+- 🔍 **Find friends**: **NEW** Discover friends through mutual connections
+- 📊 **Friend activities**: View friends' recent activities
+
+### Friends Discovery System
+- **Algorithm**: Finds friends of friends excluding existing connections
+- **Display**: Shows mutual friends for each recommendation
+- **Sorting**: By number of mutual friends (descending)
+- **Limit**: Top 10 recommendations
+- **Interface**: Direct add buttons for each recommendation
+
+### Admin Panel (Admin Only)
+- 📢 **Broadcast**: Send messages to all users with preview/confirmation
+- 📊 **Statistics**: User metrics (total/active/new users)
+- 📝 **Test broadcast**: Send test message to admin
+
+## Commands Reference
+
+### User Commands (Still Available)
+- `/start` - Show main menu and register user
+- `/settings` - Show current user settings
+- `/notify_on` / `/notify_off` - Toggle notifications
+- `/window HH:MM-HH:MM` - Set active time window
+- `/freq N` - Set notification frequency in minutes
+- `/history` - Open web interface for activity history
+
+### Friend Commands (Still Available)
+- `/add_friend @username` - Send friend request
+- `/friend_requests` - View pending requests
+- `/accept [@username|ID]` - Accept friend request
+- `/decline [@username|ID]` - Decline friend request
+- `/friends` - List all friends
+- `/activities [@username]` - View friend's recent activities
+
+### Admin Commands
+- `/broadcast <message>` - Send broadcast with confirmation (preserves line breaks)
+- `/broadcast_info` - Show user statistics
+
 ## Key Technical Details
 
+### Core Functions
 - Uses `nest_asyncio` for event loop compatibility in cloud environments
-- Custom `run_coro_in_loop()` function handles asyncio event loop edge cases for cloud platforms (line 914-919)
-- **Auto-registration**: Any user sending a message gets automatically registered with default settings via `ensure_user_exists()` (line 155-182)
+- Custom `run_coro_in_loop()` function handles asyncio event loop edge cases for cloud platforms
+- **Auto-registration**: Any user sending a message gets automatically registered with default settings via `ensure_user_exists()`
 - **User settings**: Individual time windows, intervals, and enable/disable functionality
 - **Smart scheduling**: Per-user interval checking with `last_notification_sent` tracking to prevent spam
-- All text messages (non-commands) are logged to Supabase table `tg_jobs` with username and UTC timestamp
-- **Friend system**: Complete friendship workflow with request validation and notifications
-- Database schema: 
-  - `users` table: user management with personalized settings (tg_id, enabled, window_start/end, interval_min, last_notification_sent)
-  - `tg_jobs` table: response logging with timestamps and user links (tg_name, tg_id, jobs_timestamp, job_text)
-  - `friendships` table: friend relationships and requests (requester_id, addressee_id, status, created_at) with duplicate prevention
-- Commands: `/start`, `/settings`, `/notify_on`, `/notify_off`, `/window HH:MM-HH:MM`, `/freq N`, `/history`, `/add_friend`, `/friend_requests`, `/accept`, `/decline`, `/friends`, `/activities` for user control
+
+### Database Schema
+- **`users` table**: user management with personalized settings (tg_id, enabled, window_start/end, interval_min, last_notification_sent)
+- **`tg_jobs` table**: response logging with timestamps and user links (tg_name, tg_id, jobs_timestamp, job_text)
+- **`friendships` table**: friend relationships and requests (requester_id, addressee_id, status, created_at) with duplicate prevention
+
+### New Features Implementation
+- **Inline keyboards**: Complete CallbackQueryHandler system with navigation
+- **Keyboard generators**: Dynamic button generation with current data (counts, status)
+- **Admin functions**: `is_admin()`, `get_user_stats()`, `send_broadcast_message()`
+- **Friends discovery**: `get_friends_of_friends()` algorithm with mutual friend tracking
+- **Callback routing**: Comprehensive callback_data handling for all UI interactions
+
+### Security & Performance
 - RLS policies: Anonymous read access enabled for tg_jobs and friendships tables
+- Admin verification for all administrative functions
 - Error handling: Comprehensive exception catching with proper logging throughout all functions
+- Rate limiting: 0.1s delay between broadcast messages to avoid API limits
+- Duplicate prevention: Friend request validation and callback data verification
 
 ## Web Interface
 
@@ -122,13 +197,12 @@ supabase db push
 
 ## Friend System
 
-**Минимальная система друзей** для совместного просмотра активностей:
-
-**Commands:**
+### Core Friendship Features
+**Commands (legacy support):**
 - `/add_friend @username` - отправить запрос в друзья
 - `/friend_requests` - посмотреть входящие и исходящие запросы
-- `/accept [short_id]` - принять запрос (используется короткий ID из списка)
-- `/decline [short_id]` - отклонить запрос
+- `/accept [username|ID]` - принять запрос
+- `/decline [username|ID]` - отклонить запрос
 - `/friends` - список всех друзей
 - `/activities [@username]` - просмотр активностей друга (последние 10 за неделю)
 
@@ -142,20 +216,111 @@ supabase db push
 - Loads friends list automatically via Supabase API
 - Seamless switching between own and friends' activities
 
-**Security:**
+### NEW: Friends Discovery System
+**Algorithm:**
+- Scans friends of all user's friends
+- Excludes existing friends and self
+- Groups by mutual friend connections
+- Sorts by number of mutual friends
+- Limits to top 10 recommendations
+
+**Interface:**
+- 🔍 "Find friends" button in friends menu
+- Display format: user info + mutual friends list
+- Direct "Add friend" buttons for each recommendation
+- Navigation back to friends menu
+
+**Features:**
+- Shows up to 3 mutual friends, then "and N more"
+- Handles cases with no recommendations
+- One-click friend requests from recommendations
+- Automatic notifications to recipients
+
+### Security
 - Users can only view activities of accepted friends
 - RLS policies protect friendship data
 - Validation prevents self-friending and duplicate requests
+- Admin-only access to broadcast system
+
+## Admin System
+
+### Broadcast Functionality
+**Access Control:**
+- `ADMIN_USER_ID` environment variable defines admin
+- `is_admin(user_id)` function verifies permissions
+- Admin panel only visible to admin users
+
+**Features:**
+- **Message composition**: Supports multiline messages with Markdown
+- **Preview system**: Shows exactly how message will appear to users
+- **Confirmation flow**: Requires explicit confirmation before sending
+- **Progress tracking**: Real-time delivery status
+- **Statistics**: Success/failure counts with detailed reporting
+- **Test messages**: Send test broadcasts to admin only
+
+**Statistics Dashboard:**
+- Total registered users
+- Active users (notifications enabled)
+- New users in last 7 days
+- Percentage calculations with zero-division protection
+
+### Usage Examples
+```bash
+# Send broadcast
+/broadcast New update available! 🎉
+
+Now with inline buttons and improved interface.
+
+Try /start to see the changes!
+
+# View statistics
+/broadcast_info
+```
 
 ## Deployment Notes
 
-- и для railway и для supabase я уже привязал проекты
-- Webapp deployed to Vercel at doyobi-diary.vercel.app with environment variables:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Critical setup steps completed:
-  - RLS policy "Allow anonymous read access to tg_jobs" created for webapp access
-  - tg_id field added to tg_jobs table for proper user-record linking
-  - friendships table with RLS policies for friend system
-  - Telegram Web App SDK integration working with fallback authentication
-  - Both bot and webapp automatically deploy via GitHub integration
+### Production Environment
+- Railway: Bot hosting with automatic GitHub deployment
+- Supabase: Database with RLS policies configured
+- Vercel: Web app at doyobi-diary.vercel.app
+
+### Required Environment Variables
+```bash
+# Bot configuration
+TELEGRAM_BOT_TOKEN=your_bot_token
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+
+# Admin configuration
+ADMIN_USER_ID=123456789  # Telegram ID of admin user
+
+# Web app (Vercel)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+```
+
+### Critical Setup Steps Completed
+- RLS policy "Allow anonymous read access to tg_jobs" created for webapp access
+- tg_id field added to tg_jobs table for proper user-record linking
+- friendships table with RLS policies for friend system
+- Telegram Web App SDK integration working with fallback authentication
+- Both bot and webapp automatically deploy via GitHub integration
+- CallbackQueryHandler registered for inline keyboard functionality
+- Admin verification system implemented with environment variable
+
+## Migration Notes
+
+### From Command Interface to Inline Keyboards
+- **Backward compatibility**: All text commands still work
+- **Progressive enhancement**: New users see inline interface first
+- **Navigation**: Breadcrumb-style navigation with "Back" buttons
+- **State management**: Dynamic keyboard generation based on current data
+
+### Recent Updates
+1. **Inline keyboard system**: Complete UI overhaul with button navigation
+2. **Admin broadcast**: Mass messaging with confirmation and statistics
+3. **Friends discovery**: Find new friends through mutual connections
+4. **Message formatting**: Fixed multiline support in broadcasts
+5. **Enhanced UX**: Dynamic counters, progress indicators, error handling
+
+The bot now provides a modern, user-friendly interface while maintaining all original functionality through command fallbacks.
