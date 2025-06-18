@@ -187,6 +187,62 @@ async def get_friends_list(user_id: int) -> list:
         logger.error("Ошибка получения списка друзей: %s", exc)
         return []
 
+async def get_friends_of_friends(user_id: int) -> list:
+    """Get friends of friends recommendations."""
+    try:
+        # Get user's current friends
+        current_friends = await get_friends_list(user_id)
+        current_friend_ids = [friend['tg_id'] for friend in current_friends]
+        
+        # Add user's own ID to exclude from recommendations
+        exclude_ids = current_friend_ids + [user_id]
+        
+        recommendations = {}  # {user_id: {'user_info': ..., 'mutual_friends': [...]}}
+        
+        # For each friend, get their friends
+        for friend in current_friends:
+            friend_id = friend['tg_id']
+            friend_name = friend['tg_username'] or friend['tg_first_name']
+            
+            # Get this friend's friends
+            friend_friends = await get_friends_list(friend_id)
+            
+            for friend_of_friend in friend_friends:
+                fof_id = friend_of_friend['tg_id']
+                
+                # Skip if already a friend or is the user themselves
+                if fof_id in exclude_ids:
+                    continue
+                
+                # Add to recommendations
+                if fof_id not in recommendations:
+                    recommendations[fof_id] = {
+                        'user_info': friend_of_friend,
+                        'mutual_friends': []
+                    }
+                
+                # Add mutual friend
+                recommendations[fof_id]['mutual_friends'].append(friend_name)
+        
+        # Convert to list and sort by number of mutual friends
+        result = []
+        for fof_id, data in recommendations.items():
+            result.append({
+                'user_info': data['user_info'],
+                'mutual_friends': data['mutual_friends'],
+                'mutual_count': len(data['mutual_friends'])
+            })
+        
+        # Sort by mutual friends count (descending), then by username
+        result.sort(key=lambda x: (-x['mutual_count'], x['user_info']['tg_username'] or x['user_info']['tg_first_name'] or ''))
+        
+        # Limit to top 10 recommendations
+        return result[:10]
+        
+    except Exception as exc:
+        logger.error("Ошибка получения рекомендаций друзей: %s", exc)
+        return []
+
 # --- Admin functions ---
 def is_admin(user_id: int) -> bool:
     """Check if user is admin."""
@@ -341,6 +397,7 @@ async def get_friends_keyboard(user_id: int) -> InlineKeyboardMarkup:
             [InlineKeyboardButton("➕ Добавить друга", callback_data="friend_add")],
             [InlineKeyboardButton(f"📥 Запросы ({incoming_count})", callback_data="friend_requests")],
             [InlineKeyboardButton(f"👥 Мои друзья ({friends_count})", callback_data="friend_list")],
+            [InlineKeyboardButton("🔍 Найти друзей", callback_data="friends_discover")],
             [InlineKeyboardButton("📊 Активности друзей", callback_data="friend_activities")],
             [InlineKeyboardButton("← Назад", callback_data="menu_main")]
         ]
@@ -408,6 +465,58 @@ def get_broadcast_confirm_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("❌ Отменить", callback_data="broadcast_cancel")]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+async def get_friends_discovery_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Generate friends discovery keyboard with recommendations."""
+    try:
+        recommendations = await get_friends_of_friends(user_id)
+        keyboard = []
+        
+        if not recommendations:
+            keyboard.append([InlineKeyboardButton("😔 Рекомендаций пока нет", callback_data="noop")])
+            keyboard.append([InlineKeyboardButton("💡 Добавьте друзей, чтобы найти больше людей!", callback_data="noop")])
+        else:
+            # Add each recommendation as a separate row
+            for i, rec in enumerate(recommendations):
+                user_info = rec['user_info']
+                mutual_friends = rec['mutual_friends']
+                
+                # Format display name
+                display_name = user_info['tg_username'] or user_info['tg_first_name'] or "Unknown"
+                if user_info['tg_username']:
+                    display_name = f"@{display_name}"
+                
+                # Format mutual friends list
+                if len(mutual_friends) == 1:
+                    mutual_text = f"Общий друг: @{mutual_friends[0]}"
+                elif len(mutual_friends) <= 3:
+                    mutual_names = [f"@{name}" for name in mutual_friends]
+                    mutual_text = f"Общие друзья: {', '.join(mutual_names)}"
+                else:
+                    shown = [f"@{name}" for name in mutual_friends[:2]]
+                    mutual_text = f"Общие друзья: {', '.join(shown)} и ещё {len(mutual_friends)-2}"
+                
+                # Add user info row
+                keyboard.append([InlineKeyboardButton(f"👤 {display_name}", callback_data="noop")])
+                
+                # Add mutual friends info row
+                keyboard.append([InlineKeyboardButton(f"   {mutual_text}", callback_data="noop")])
+                
+                # Add action row
+                keyboard.append([InlineKeyboardButton(f"➕ Добавить в друзья", callback_data=f"discover_add_{user_info['tg_id']}")])
+                
+                # Add separator for better readability (except for last item)
+                if i < len(recommendations) - 1:
+                    keyboard.append([InlineKeyboardButton("─────────────", callback_data="noop")])
+        
+        # Add summary and back button
+        keyboard.append([InlineKeyboardButton("← Назад", callback_data="menu_friends")])
+        
+        return InlineKeyboardMarkup(keyboard)
+        
+    except Exception as exc:
+        logger.error("Ошибка генерации клавиатуры рекомендаций: %s", exc)
+        return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]])
 
 # --- Callback Query Handler ---
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -611,6 +720,41 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
                 parse_mode='Markdown'
             )
         
+        elif callback_data == "friends_discover":
+            try:
+                recommendations = await get_friends_of_friends(user.id)
+                keyboard = await get_friends_discovery_keyboard(user.id)
+                
+                if not recommendations:
+                    message_text = """🔍 **Поиск друзей**
+
+😔 Рекомендаций пока нет.
+
+💡 Чтобы найти новых друзей:
+• Добавьте больше друзей
+• Подождите, пока ваши друзья тоже найдут друзей
+• Попробуйте снова через некоторое время
+
+Рекомендации появятся, когда у ваших друзей будут общие знакомые!"""
+                else:
+                    message_text = f"""🔍 **Друзья друзей**
+
+Найдено {len(recommendations)} пользователей через ваших друзей:"""
+                
+                await query.edit_message_text(
+                    message_text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+                logger.info("Пользователь %s открыл поиск друзей", user.id)
+                
+            except Exception as exc:
+                logger.error("Ошибка поиска друзей для %s: %s", user.id, exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при поиске друзей.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_friends")]])
+                )
+        
         # Friend request callbacks
         elif callback_data.startswith("req_accept_"):
             user_identifier = callback_data[11:]  # Remove "req_accept_" prefix
@@ -715,6 +859,61 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
                 await query.edit_message_text(
                     "❌ Ошибка при отклонении запроса.",
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="friend_requests")]])
+                )
+        
+        # Friend discovery callbacks
+        elif callback_data.startswith("discover_add_"):
+            target_user_id = int(callback_data[13:])  # Remove "discover_add_" prefix
+            
+            try:
+                # Get target user info
+                target_user_result = supabase.table("users").select("*").eq("tg_id", target_user_id).execute()
+                target_user = target_user_result.data[0] if target_user_result.data else None
+                
+                if not target_user:
+                    await query.edit_message_text(
+                        "❌ Пользователь не найден!",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К поиску", callback_data="friends_discover")]])
+                    )
+                    return
+                
+                # Create friend request
+                success = await create_friend_request(user.id, target_user_id)
+                
+                if success:
+                    # Try to notify the target user
+                    try:
+                        await context.bot.send_message(
+                            chat_id=target_user_id,
+                            text=f"🤝 У вас новый запрос в друзья от @{user.username or user.first_name}!\n\n"
+                                 f"Быстрые действия (кликните для копирования):\n"
+                                 f"✅ `/accept @{user.username or user.first_name}`\n"
+                                 f"❌ `/decline @{user.username or user.first_name}`\n\n"
+                                 f"Или используйте `/friend_requests` для полного списка.",
+                            parse_mode='Markdown'
+                        )
+                    except Exception:
+                        pass  # User might have blocked the bot
+                    
+                    target_name = target_user['tg_username'] or target_user['tg_first_name']
+                    await query.edit_message_text(
+                        f"✅ Запрос в друзья отправлен пользователю @{target_name}!\n\n"
+                        f"Они получили уведомление и смогут принять или отклонить ваш запрос.",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К поиску", callback_data="friends_discover")]])
+                    )
+                    logger.info("Пользователь %s отправил запрос из рекомендаций пользователю %s", user.id, target_user_id)
+                else:
+                    await query.edit_message_text(
+                        f"❌ Не удалось отправить запрос!\n"
+                        f"Возможно, вы уже друзья или запрос уже существует.",
+                        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К поиску", callback_data="friends_discover")]])
+                    )
+                    
+            except Exception as exc:
+                logger.error("Ошибка добавления из рекомендаций: %s", exc)
+                await query.edit_message_text(
+                    "❌ Ошибка при отправке запроса.",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("← К поиску", callback_data="friends_discover")]])
                 )
         
         # Admin panel callbacks (only for admin)
