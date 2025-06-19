@@ -30,13 +30,42 @@ from telegram.ext import (
     filters,
 )
 
-
-# --- Logging ---
-logging.basicConfig(
-    format="%(asctime)s | %(levelname)8s | %(name)s: %(message)s",
-    level=logging.INFO,
-)
-logger = logging.getLogger(__name__)
+# --- Monitoring Setup ---
+try:
+    from monitoring import setup_monitoring, get_logger, track_errors, track_errors_async
+    from monitoring import set_user_context, add_bot_context, log_bot_metrics
+    
+    # Initialize monitoring
+    setup_monitoring()
+    logger = get_logger(__name__)
+    
+except ImportError:
+    # Fallback to standard logging if monitoring module is not available
+    logging.basicConfig(
+        format="%(asctime)s | %(levelname)8s | %(name)s: %(message)s",
+        level=logging.INFO,
+    )
+    logger = logging.getLogger(__name__)
+    
+    # Create no-op decorators if monitoring is not available
+    def track_errors(operation_name=None):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def track_errors_async(operation_name=None):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def set_user_context(*args, **kwargs):
+        pass
+    
+    def add_bot_context(*args, **kwargs):
+        pass
+    
+    def log_bot_metrics(*args, **kwargs):
+        pass
 
 # --- Config ---
 BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -305,8 +334,13 @@ async def get_friends_list(user_id: int) -> list:
         logger.error("Ошибка получения списка друзей: %s", exc)
         return []
 
+@track_errors_async("friends_discovery")
 async def get_friends_of_friends(user_id: int) -> list:
     """Оптимизированная функция поиска друзей друзей."""
+    
+    # Log performance metrics
+    log_bot_metrics("friends_discovery_request", 1.0, {"user_id": user_id})
+    
     try:
         # Получаем всех друзей пользователя одним запросом
         current_friend_ids = []
@@ -453,8 +487,16 @@ async def send_single_message(app: Application, user_id: int, message_text: str)
         logger.warning("Не удалось отправить сообщение пользователю %s: %s", user_id, exc)
         return False
 
+@track_errors_async("admin_broadcast")
 async def send_broadcast_message(app: Application, message_text: str, admin_id: int) -> dict:
     """Улучшенная рассылка сообщений с батчами и прогрессом."""
+    
+    # Set admin context for monitoring
+    set_user_context(admin_id, username="admin")
+    add_bot_context(command="broadcast", message_type="admin_broadcast")
+    
+    # Log broadcast initiation
+    log_bot_metrics("broadcast_initiated", 1.0, {"admin_id": admin_id})
     BATCH_SIZE = 10
     DELAY_BETWEEN_BATCHES = 2.0
     DELAY_BETWEEN_MESSAGES = 0.1
@@ -1315,8 +1357,13 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         except Exception:
             pass
 
+@track_errors_async("user_registration")
 async def ensure_user_exists(tg_id: int, username: str = None, first_name: str = None, last_name: str = None) -> dict:
     """Ensure user exists in database, create if not."""
+    
+    # Set user context for monitoring
+    set_user_context(tg_id, username, first_name)
+    
     try:
         # Check if user exists
         result = supabase.table("users").select("*").eq("tg_id", tg_id).execute()

@@ -1,0 +1,16 @@
+[flake8]
+max-line-length = 127
+max-complexity = 10
+exclude = 
+    .git,
+    __pycache__,
+    venv,
+    test_env,
+    webapp/node_modules,
+    .pytest_cache
+ignore = 
+    E203,  # whitespace before ':'
+    W503,  # line break before binary operator
+    E501   # line too long (handled by black)
+per-file-ignores =
+    tests/*:F401,F811  # Allow unused imports in tests
