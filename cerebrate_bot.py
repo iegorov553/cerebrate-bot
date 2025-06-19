@@ -42,7 +42,14 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
 SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_ROLE_KEY: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-ADMIN_USER_ID: int = int(os.getenv("ADMIN_USER_ID", "0"))
+
+# Безопасная обработка ADMIN_USER_ID
+try:
+    ADMIN_USER_ID: int = int(os.getenv("ADMIN_USER_ID", "0"))
+except (ValueError, TypeError):
+    ADMIN_USER_ID: int = 0
+    logger.warning("ADMIN_USER_ID не задан или некорректен, админ функции отключены")
+
 QUESTION: str = "Чё делаешь? 🤔"
 
 if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
@@ -51,6 +58,117 @@ if not (BOT_TOKEN and SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY):
 
 # --- Supabase ---
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+# --- Cache Manager ---
+class CacheManager:
+    """Простой менеджер кеша с поддержкой TTL."""
+    
+    def __init__(self):
+        self._cache = {}
+        self._cache_timeout = {}
+    
+    def get(self, key: str, default=None):
+        """Получить значение из кеша."""
+        if key in self._cache:
+            if datetime.now() < self._cache_timeout[key]:
+                return self._cache[key]
+            else:
+                # Кеш истек, удаляем
+                del self._cache[key]
+                del self._cache_timeout[key]
+        return default
+    
+    def set(self, key: str, value, timeout_seconds: int = 300):
+        """Сохранить значение в кеш с TTL."""
+        from datetime import timedelta
+        self._cache[key] = value
+        self._cache_timeout[key] = datetime.now() + timedelta(seconds=timeout_seconds)
+    
+    def invalidate(self, key: str):
+        """Принудительно удалить значение из кеша."""
+        if key in self._cache:
+            del self._cache[key]
+        if key in self._cache_timeout:
+            del self._cache_timeout[key]
+    
+    def clear(self):
+        """Очистить весь кеш."""
+        self._cache.clear()
+        self._cache_timeout.clear()
+
+# Глобальный экземпляр кеша
+cache = CacheManager()
+
+# --- Utility functions ---
+def safe_parse_datetime(dt_string: str) -> datetime:
+    """Безопасный парсинг datetime строки."""
+    try:
+        if dt_string:
+            return datetime.fromisoformat(dt_string.replace('Z', '+00:00'))
+        return None
+    except (ValueError, AttributeError, TypeError):
+        logger.warning("Не удалось распарсить дату: %s", dt_string)
+        return None
+
+def validate_time_window(time_range: str) -> tuple[bool, str, time, time]:
+    """Улучшенная валидация временного окна."""
+    pattern = r'^([0-2][0-9]):([0-5][0-9])-([0-2][0-9]):([0-5][0-9])$'
+    match = re.match(pattern, time_range)
+    
+    if not match:
+        return False, "Неправильный формат! Используйте HH:MM-HH:MM", None, None
+    
+    start_hour, start_min, end_hour, end_min = map(int, match.groups())
+    
+    if start_hour > 23 or end_hour > 23:
+        return False, "Часы должны быть от 00 до 23!", None, None
+    
+    start_time = time(start_hour, start_min)
+    end_time = time(end_hour, end_min)
+    
+    # Обработка перехода через полночь (не поддерживается в текущей версии)
+    if start_time >= end_time:
+        return False, "Время окончания должно быть позже времени начала!", None, None
+    
+    # Минимум 1 час
+    start_minutes = start_hour * 60 + start_min  
+    end_minutes = end_hour * 60 + end_min
+    
+    if end_minutes - start_minutes < 60:
+        return False, "Минимальная продолжительность - 1 час!", None, None
+    
+    return True, "OK", start_time, end_time
+
+async def get_user_settings_cached(user_id: int, force_refresh: bool = False) -> dict:
+    """Получить настройки пользователя с кешированием."""
+    cache_key = f"user_settings_{user_id}"
+    
+    if not force_refresh:
+        settings = cache.get(cache_key)
+        if settings is not None:
+            return settings
+    
+    # Загружаем из базы данных
+    try:
+        result = supabase.table("users").select("*").eq("tg_id", user_id).execute()
+        settings = result.data[0] if result.data else None
+        
+        if settings:
+            # Кешируем на 5 минут
+            cache.set(cache_key, settings, 300)
+            logger.debug("Настройки пользователя %s загружены и закешированы", user_id)
+        
+        return settings
+        
+    except Exception as exc:
+        logger.error("Ошибка получения настроек пользователя %s: %s", user_id, exc)
+        return None
+
+def invalidate_user_cache(user_id: int):
+    """Очистить кеш настроек пользователя."""
+    cache_key = f"user_settings_{user_id}"
+    cache.invalidate(cache_key)
+    logger.debug("Кеш пользователя %s очищен", user_id)
 
 # --- Database functions ---
 async def find_user_by_username(username: str) -> dict:
@@ -188,55 +306,103 @@ async def get_friends_list(user_id: int) -> list:
         return []
 
 async def get_friends_of_friends(user_id: int) -> list:
-    """Get friends of friends recommendations."""
+    """Оптимизированная функция поиска друзей друзей."""
     try:
-        # Get user's current friends
-        current_friends = await get_friends_list(user_id)
-        current_friend_ids = [friend['tg_id'] for friend in current_friends]
+        # Получаем всех друзей пользователя одним запросом
+        current_friend_ids = []
         
-        # Add user's own ID to exclude from recommendations
+        # Друзья где user_id - requester
+        result1 = supabase.table("friendships").select(
+            "addressee_id"
+        ).eq("requester_id", user_id).eq("status", "accepted").execute()
+        
+        # Друзья где user_id - addressee  
+        result2 = supabase.table("friendships").select(
+            "requester_id"
+        ).eq("addressee_id", user_id).eq("status", "accepted").execute()
+        
+        for friendship in result1.data or []:
+            current_friend_ids.append(friendship['addressee_id'])
+        for friendship in result2.data or []:
+            current_friend_ids.append(friendship['requester_id'])
+        
+        if not current_friend_ids:
+            return []
+        
         exclude_ids = current_friend_ids + [user_id]
         
-        recommendations = {}  # {user_id: {'user_info': ..., 'mutual_friends': [...]}}
+        # Получаем всех друзей всех друзей одним большим запросом
+        # Используем .in_() для эффективного запроса
+        all_friendships = supabase.table("friendships").select(
+            "requester_id, addressee_id"
+        ).eq("status", "accepted").or_(
+            f"requester_id.in.({','.join(map(str, current_friend_ids))}),addressee_id.in.({','.join(map(str, current_friend_ids))})"
+        ).execute()
         
-        # For each friend, get their friends
-        for friend in current_friends:
-            friend_id = friend['tg_id']
-            friend_name = friend['tg_username'] or friend['tg_first_name']
-            
-            # Get this friend's friends
-            friend_friends = await get_friends_list(friend_id)
-            
-            for friend_of_friend in friend_friends:
-                fof_id = friend_of_friend['tg_id']
-                
-                # Skip if already a friend or is the user themselves
-                if fof_id in exclude_ids:
-                    continue
-                
-                # Add to recommendations
-                if fof_id not in recommendations:
-                    recommendations[fof_id] = {
-                        'user_info': friend_of_friend,
-                        'mutual_friends': []
-                    }
-                
-                # Add mutual friend
-                recommendations[fof_id]['mutual_friends'].append(friend_name)
+        # Собираем рекомендации и взаимных друзей
+        recommendations = {}
         
-        # Convert to list and sort by number of mutual friends
+        for friendship in all_friendships.data or []:
+            requester_id = friendship['requester_id']
+            addressee_id = friendship['addressee_id']
+            
+            # Определяем кто из них друг пользователя, а кто потенциальная рекомендация
+            if requester_id in current_friend_ids and addressee_id not in exclude_ids:
+                # addressee_id - рекомендация, requester_id - взаимный друг
+                candidate_id = addressee_id
+                mutual_friend_id = requester_id
+            elif addressee_id in current_friend_ids and requester_id not in exclude_ids:
+                # requester_id - рекомендация, addressee_id - взаимный друг
+                candidate_id = requester_id
+                mutual_friend_id = addressee_id
+            else:
+                continue
+            
+            # Добавляем в рекомендации
+            if candidate_id not in recommendations:
+                recommendations[candidate_id] = set()
+            recommendations[candidate_id].add(mutual_friend_id)
+        
+        if not recommendations:
+            return []
+        
+        # Получаем информацию о пользователях одним запросом
+        all_user_ids = list(recommendations.keys()) + current_friend_ids
+        users_info = supabase.table("users").select(
+            "tg_id, tg_username, tg_first_name"
+        ).in_("tg_id", all_user_ids).execute()
+        
+        # Создаем карту пользователей для быстрого доступа
+        users_map = {user['tg_id']: user for user in users_info.data or []}
+        
+        # Формируем финальный результат
         result = []
-        for fof_id, data in recommendations.items():
+        for candidate_id, mutual_friend_ids in recommendations.items():
+            candidate_info = users_map.get(candidate_id)
+            if not candidate_info:
+                continue
+            
+            # Получаем имена взаимных друзей
+            mutual_friends = []
+            for mutual_id in mutual_friend_ids:
+                mutual_user = users_map.get(mutual_id)
+                if mutual_user:
+                    mutual_name = mutual_user['tg_username'] or mutual_user['tg_first_name'] or f"ID{mutual_id}"
+                    mutual_friends.append(mutual_name)
+            
             result.append({
-                'user_info': data['user_info'],
-                'mutual_friends': data['mutual_friends'],
-                'mutual_count': len(data['mutual_friends'])
+                'user_info': candidate_info,
+                'mutual_friends': mutual_friends,
+                'mutual_count': len(mutual_friends)
             })
         
-        # Sort by mutual friends count (descending), then by username
-        result.sort(key=lambda x: (-x['mutual_count'], x['user_info']['tg_username'] or x['user_info']['tg_first_name'] or ''))
+        # Сортируем по количеству взаимных друзей (убывание), затем по имени
+        result.sort(key=lambda x: (
+            -x['mutual_count'], 
+            (x['user_info']['tg_username'] or x['user_info']['tg_first_name'] or 'zzz_unknown').lower()
+        ))
         
-        # Limit to top 10 recommendations
+        # Ограничиваем до 10 рекомендаций
         return result[:10]
         
     except Exception as exc:
@@ -274,69 +440,145 @@ async def get_user_stats() -> dict:
         logger.error("Ошибка получения статистики пользователей: %s", exc)
         return {"total": 0, "active": 0, "new_week": 0}
 
-async def send_broadcast_message(app: Application, message_text: str, admin_id: int) -> dict:
-    """Send broadcast message to all users."""
+async def send_single_message(app: Application, user_id: int, message_text: str) -> bool:
+    """Отправка одного сообщения пользователю."""
     try:
-        # Get all users
-        result = supabase.table("users").select("tg_id, tg_username, tg_first_name").execute()
-        users = result.data or []
+        await app.bot.send_message(
+            chat_id=user_id,
+            text=f"📢 **Обновление от администрации**\n\n{message_text}",
+            parse_mode='Markdown'
+        )
+        return True
+    except Exception as exc:
+        logger.warning("Не удалось отправить сообщение пользователю %s: %s", user_id, exc)
+        return False
+
+async def send_broadcast_message(app: Application, message_text: str, admin_id: int) -> dict:
+    """Улучшенная рассылка сообщений с батчами и прогрессом."""
+    BATCH_SIZE = 10
+    DELAY_BETWEEN_BATCHES = 2.0
+    DELAY_BETWEEN_MESSAGES = 0.1
+    
+    try:
+        # Получаем всех пользователей
+        result = supabase.table("users").select("tg_id").execute()
+        user_ids = [user['tg_id'] for user in result.data or []]
         
+        total_users = len(user_ids)
+        if total_users == 0:
+            await app.bot.send_message(
+                chat_id=admin_id,
+                text="❌ Нет пользователей для рассылки."
+            )
+            return {"success": 0, "failed": 0, "total": 0}
+        
+        logger.info("Начало рассылки сообщения для %s пользователей", total_users)
+        
+        # Отправляем сообщение о начале рассылки
+        progress_message = await app.bot.send_message(
+            chat_id=admin_id,
+            text=f"📡 **Рассылка началась...**\n\n📊 Прогресс: 0/{total_users} (0 успешно)"
+        )
+        
+        processed = 0
         success_count = 0
         failed_count = 0
         failed_users = []
         
-        logger.info("Начало рассылки сообщения для %s пользователей", len(users))
-        
-        for user in users:
+        # Отправка батчами
+        for i in range(0, total_users, BATCH_SIZE):
+            batch = user_ids[i:i+BATCH_SIZE]
+            
+            # Параллельная отправка в батче
+            tasks = []
+            for user_id in batch:
+                task = asyncio.create_task(
+                    send_single_message(app, user_id, message_text)
+                )
+                tasks.append((task, user_id))
+            
+            # Ожидаем результатов батча
+            for task, user_id in tasks:
+                try:
+                    result = await task
+                    if result:
+                        success_count += 1
+                    else:
+                        failed_count += 1
+                        failed_users.append({"user_id": user_id, "error": "Send failed"})
+                    
+                    processed += 1
+                    
+                    # Небольшая задержка между сообщениями
+                    await asyncio.sleep(DELAY_BETWEEN_MESSAGES)
+                    
+                except Exception as exc:
+                    failed_count += 1
+                    failed_users.append({"user_id": user_id, "error": str(exc)})
+                    processed += 1
+            
+            # Обновляем прогресс каждый батч
             try:
-                await app.bot.send_message(
-                    chat_id=user['tg_id'],
-                    text=f"📢 **Обновление от администрации**\n\n{message_text}",
+                progress_text = f"📡 **Рассылка в процессе...**\n\n📊 Прогресс: {processed}/{total_users} ({success_count} успешно, {failed_count} ошибок)"
+                await app.bot.edit_message_text(
+                    chat_id=admin_id,
+                    message_id=progress_message.message_id,
+                    text=progress_text,
                     parse_mode='Markdown'
                 )
-                success_count += 1
-                
-                # Small delay to avoid rate limiting
-                await asyncio.sleep(0.1)
-                
-            except Exception as exc:
-                failed_count += 1
-                failed_users.append({
-                    "user_id": user['tg_id'],
-                    "username": user.get('tg_username'),
-                    "error": str(exc)
-                })
-                logger.warning("Не удалось отправить сообщение пользователю %s: %s", user['tg_id'], exc)
+            except Exception:
+                pass  # Игнорируем ошибки обновления прогресса
+            
+            # Задержка между батчами (кроме последнего)
+            if i + BATCH_SIZE < total_users:
+                await asyncio.sleep(DELAY_BETWEEN_BATCHES)
         
-        # Send summary to admin
+        # Финальное сообщение с результатами
         summary = f"""📊 **Результат рассылки:**
 
 ✅ Успешно доставлено: {success_count}
 ❌ Ошибки доставки: {failed_count}
-📨 Всего пользователей: {len(users)}
+📨 Всего пользователей: {total_users}
+📈 Успешность: {success_count/max(total_users, 1)*100:.1f}%
 
 Рассылка завершена!"""
         
         try:
-            await app.bot.send_message(
+            await app.bot.edit_message_text(
                 chat_id=admin_id,
+                message_id=progress_message.message_id,
                 text=summary,
                 parse_mode='Markdown'
             )
         except Exception:
-            pass
+            # Если редактирование не удалось, отправляем новое сообщение
+            try:
+                await app.bot.send_message(
+                    chat_id=admin_id,
+                    text=summary,
+                    parse_mode='Markdown'
+                )
+            except Exception:
+                pass
         
-        logger.info("Рассылка завершена: %s успешных, %s ошибок", success_count, failed_count)
+        logger.info("Рассылка завершена: %s успешных, %s ошибок из %s", success_count, failed_count, total_users)
         
         return {
             "success": success_count,
             "failed": failed_count,
-            "total": len(users),
+            "total": total_users,
             "failed_users": failed_users
         }
         
     except Exception as exc:
         logger.error("Ошибка при рассылке: %s", exc)
+        try:
+            await app.bot.send_message(
+                chat_id=admin_id,
+                text=f"❌ **Ошибка рассылки:** {str(exc)}"
+            )
+        except Exception:
+            pass
         return {"success": 0, "failed": 0, "total": 0, "failed_users": []}
 
 # --- Keyboard generation functions ---
@@ -356,11 +598,10 @@ def get_main_menu_keyboard(user_id: int = None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 async def get_settings_keyboard(user_id: int) -> InlineKeyboardMarkup:
-    """Generate settings menu keyboard with current user data."""
+    """Generate settings menu keyboard with current user data (cached)."""
     try:
-        # Get user data
-        result = supabase.table("users").select("*").eq("tg_id", user_id).execute()
-        user_data = result.data[0] if result.data else None
+        # Get user data from cache
+        user_data = await get_user_settings_cached(user_id)
         
         if not user_data:
             return InlineKeyboardMarkup([[InlineKeyboardButton("← Назад", callback_data="menu_main")]])
@@ -611,11 +852,14 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif callback_data == "set_notifications":
             # Toggle notifications
             try:
-                result = supabase.table("users").select("enabled").eq("tg_id", user.id).execute()
-                current_status = result.data[0]['enabled'] if result.data else True
+                user_data = await get_user_settings_cached(user.id)
+                current_status = user_data['enabled'] if user_data else True
                 new_status = not current_status
                 
                 supabase.table("users").update({"enabled": new_status}).eq("tg_id", user.id).execute()
+                
+                # Инвалидируем кеш после обновления
+                invalidate_user_cache(user.id)
                 
                 status_text = "включены" if new_status else "отключены"
                 await query.edit_message_text(
@@ -652,8 +896,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif callback_data == "set_view_settings":
             # Show current settings (same as /settings command)
             try:
-                result = supabase.table("users").select("*").eq("tg_id", user.id).execute()
-                user_data = result.data[0] if result.data else None
+                user_data = await get_user_settings_cached(user.id)
                 
                 if user_data:
                     settings_text = f"""🔧 **Ваши настройки:**
@@ -1127,15 +1370,15 @@ async def ask_question(app: Application) -> None:
                 # First time sending to this user
                 should_send = True
             else:
-                # Parse last sent time and check interval
-                try:
-                    last_sent_dt = datetime.fromisoformat(last_sent.replace('Z', '+00:00'))
+                # Parse last sent time and check interval using safe parser
+                last_sent_dt = safe_parse_datetime(last_sent)
+                if last_sent_dt is None:
+                    # If parsing failed, assume we should send
+                    should_send = True
+                else:
                     time_diff = current_time - last_sent_dt.replace(tzinfo=None)
                     if time_diff.total_seconds() >= (interval_minutes * 60):
                         should_send = True
-                except (ValueError, AttributeError) as exc:
-                    logger.warning("Ошибка парсинга времени для %s: %s", user['tg_id'], exc)
-                    should_send = True
             
             if should_send:
                 try:
@@ -1236,13 +1479,16 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         return
 
     # Ensure user exists
-    user_data = await ensure_user_exists(
+    await ensure_user_exists(
         tg_id=user.id,
         username=user.username,
         first_name=user.first_name,
         last_name=user.last_name
     )
 
+    # Get settings from cache
+    user_data = await get_user_settings_cached(user.id)
+    
     if not user_data:
         await update.message.reply_text("Ошибка получения настроек.")
         return
@@ -1273,6 +1519,10 @@ async def notify_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         
         supabase.table("users").update({"enabled": True}).eq("tg_id", user.id).execute()
+        
+        # Инвалидируем кеш после обновления
+        invalidate_user_cache(user.id)
+        
         await update.message.reply_text("✅ Оповещения включены!")
         logger.info("Пользователь %s включил оповещения", user.id)
     except Exception as exc:
@@ -1295,6 +1545,10 @@ async def notify_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         
         supabase.table("users").update({"enabled": False}).eq("tg_id", user.id).execute()
+        
+        # Инвалидируем кеш после обновления
+        invalidate_user_cache(user.id)
+        
         await update.message.reply_text("❌ Оповещения отключены.")
         logger.info("Пользователь %s отключил оповещения", user.id)
     except Exception as exc:
@@ -1317,41 +1571,15 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     time_range = context.args[0]
     
-    # Validate format HH:MM-HH:MM
-    pattern = r'^([0-2][0-9]):([0-5][0-9])-([0-2][0-9]):([0-5][0-9])$'
-    match = re.match(pattern, time_range)
+    # Use improved validation function
+    is_valid, error_message, start_time, end_time = validate_time_window(time_range)
     
-    if not match:
+    if not is_valid:
         await update.message.reply_text(
-            "❌ Неправильный формат времени!\n"
+            f"❌ {error_message}\n"
             "Пример: `/window 09:00-23:00`",
             parse_mode='Markdown'
         )
-        return
-    
-    start_hour, start_min, end_hour, end_min = map(int, match.groups())
-    
-    # Validate time values
-    if start_hour > 23 or end_hour > 23:
-        await update.message.reply_text("❌ Часы должны быть от 00 до 23!")
-        return
-    
-    start_time = time(start_hour, start_min)
-    end_time = time(end_hour, end_min)
-    
-    # Calculate duration in minutes
-    start_minutes = start_hour * 60 + start_min
-    end_minutes = end_hour * 60 + end_min
-    
-    # Handle day boundary crossing
-    if end_minutes <= start_minutes:
-        end_minutes += 24 * 60  # Add 24 hours
-    
-    duration_minutes = end_minutes - start_minutes
-    
-    # Validate minimum 1 hour interval
-    if duration_minutes < 60:
-        await update.message.reply_text("❌ Минимальный интервал - 1 час!")
         return
     
     try:
@@ -1367,6 +1595,9 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "window_start": start_time.strftime('%H:%M:%S'),
             "window_end": end_time.strftime('%H:%M:%S')
         }).eq("tg_id", user.id).execute()
+        
+        # Инвалидируем кеш после обновления
+        invalidate_user_cache(user.id)
         
         await update.message.reply_text(
             f"✅ Время оповещений обновлено!\n"
@@ -1415,6 +1646,9 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         supabase.table("users").update({
             "interval_min": interval_min
         }).eq("tg_id", user.id).execute()
+        
+        # Инвалидируем кеш после обновления
+        invalidate_user_cache(user.id)
         
         # Convert to human readable format
         if interval_min >= 60:
