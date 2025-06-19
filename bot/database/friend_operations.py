@@ -90,16 +90,23 @@ class FriendOperations:
             ORDER BY f.created_at DESC
             """
             
-            # Execute optimized queries
-            incoming_result = self.db.client.rpc('exec_sql', {
-                'query': incoming_query,
-                'params': [user_id]
-            }).execute()
-            
-            outgoing_result = self.db.client.rpc('exec_sql', {
-                'query': outgoing_query, 
-                'params': [user_id]
-            }).execute()
+            # Execute optimized queries using direct table access
+            # Note: Using fallback method as exec_sql RPC function may not exist
+            try:
+                # Try direct table queries with joins
+                incoming_result = self.db.table("friendships").select(
+                    "*, requester:requester_id(tg_id, tg_username, tg_first_name, tg_last_name)"
+                ).eq("addressee_id", user_id).eq("status", "pending").order("created_at", desc=True).execute()
+                
+                outgoing_result = self.db.table("friendships").select(
+                    "*, addressee:addressee_id(tg_id, tg_username, tg_first_name, tg_last_name)"
+                ).eq("requester_id", user_id).eq("status", "pending").order("created_at", desc=True).execute()
+                
+            except Exception as e:
+                logger.warning(f"Optimized query failed, using fallback: {e}")
+                # Fallback to simple queries
+                incoming_result = self.db.table("friendships").select("*").eq("addressee_id", user_id).eq("status", "pending").execute()
+                outgoing_result = self.db.table("friendships").select("*").eq("requester_id", user_id).eq("status", "pending").execute()
             
             # Format incoming requests
             incoming = []
@@ -250,17 +257,12 @@ class FriendOperations:
             """
             
             try:
-                # Try optimized query first
-                result = self.db.client.rpc('exec_sql', {
-                    'query': friends_query,
-                    'params': [user_id, user_id]
-                }).execute()
-                
-                friends = result.data or []
+                # Use direct table queries instead of RPC
+                friends = self.get_friends_list_fallback(user_id)
                 
             except Exception:
                 # Fallback to original method
-                friends = await self.get_friends_list_fallback(user_id)
+                friends = self.get_friends_list_fallback(user_id)
             
             logger.debug("Friends list fetched", user_id=user_id, count=len(friends))
             return friends
@@ -331,32 +333,13 @@ class FriendOperations:
         try:
             # Try using the optimized SQL function first
             try:
-                result = self.db.client.rpc('get_friends_of_friends_optimized', {
-                    'p_user_id': user_id,
-                    'p_limit': limit
-                }).execute()
-                
-                recommendations = []
-                for rec in result.data or []:
-                    recommendations.append({
-                        'user_info': {
-                            'tg_id': rec['candidate_id'],
-                            'tg_username': rec['candidate_username'],
-                            'tg_first_name': rec['candidate_first_name'],
-                            'tg_last_name': rec['candidate_last_name']
-                        },
-                        'mutual_friends': rec['mutual_friends_list'] or [],
-                        'mutual_count': rec['mutual_friends_count']
-                    })
-                
-                logger.info("Friends discovery completed (optimized SQL)", 
-                           user_id=user_id, recommendations=len(recommendations))
-                return recommendations
+                # Use fallback method as RPC function may not exist in current schema
+                return self.get_friends_of_friends_fallback(user_id, limit)
                 
             except Exception as sql_error:
                 logger.warning("Optimized SQL function failed, using fallback", 
                              user_id=user_id, error=str(sql_error))
-                return await self.get_friends_of_friends_fallback(user_id, limit)
+                return self.get_friends_of_friends_fallback(user_id, limit)
                 
         except Exception as exc:
             logger.error("Error in friends discovery", user_id=user_id, error=str(exc))
@@ -387,6 +370,7 @@ class FriendOperations:
             exclude_ids = current_friend_ids | {user_id}
             
             # Get all friendships of current friends (batch query)
+            # Get friendships where either requester or addressee is in current_friend_ids
             all_friendships = self.db.table("friendships").select(
                 "requester_id, addressee_id"
             ).eq("status", "accepted").or_(

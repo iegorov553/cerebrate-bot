@@ -168,7 +168,7 @@ def track_errors(operation_name: str = None):
     return decorator
 
 
-async def track_errors_async(operation_name: str = None):
+def track_errors_async(operation_name: str = None):
     """Async version of error tracking decorator."""
     def decorator(func):
         async def wrapper(*args, **kwargs):
