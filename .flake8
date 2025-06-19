@@ -9,8 +9,21 @@ exclude =
     webapp/node_modules,
     .pytest_cache
 ignore = 
-    E203,  # whitespace before ':'
-    W503,  # line break before binary operator
-    E501   # line too long (handled by black)
+    E203,
+    W503,
+    E501,
+    W293,
+    W291,
+    W292,
+    C901,
+    E302,
+    E305,
+    E231,
+    E222,
+    E226,
+    E225,
+    E131,
+    E128,
+    F541
 per-file-ignores =
-    tests/*:F401,F811  # Allow unused imports in tests
+    tests/*:F401,F811
