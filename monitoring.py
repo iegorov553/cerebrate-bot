@@ -103,24 +103,31 @@ def configure_structlog():
     # Configure structlog
     structlog.configure(
         processors=[
+            # Filter by log level
+            structlog.stdlib.filter_by_level,
+            # Add log level
+            structlog.stdlib.add_log_level,
+            # Add logger name  
+            structlog.stdlib.add_logger_name,
+            # Process positional arguments
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            # Add timestamp
+            structlog.processors.TimeStamper(fmt="iso"),
+            # Process stack info
+            structlog.processors.StackInfoRenderer(),
+            # Format exceptions
+            structlog.processors.format_exc_info,
             # Add extra fields
             structlog.contextvars.merge_contextvars,
-            # Add timestamp
-            structlog.processors.TimeStamper(fmt="ISO"),
-            # Add log level
-            structlog.processors.add_log_level,
-            # Add logger name
-            structlog.processors.add_logger_name,
-            # Process stack info
-            structlog.processors.CallsiteParameterAdder(
-                parameters=[structlog.processors.CallsiteParameter.FUNC_NAME]
-            ),
-            # Format exceptions
+            # Unicode decoder
+            structlog.processors.UnicodeDecoder(),
+            # Final renderer
             structlog.dev.ConsoleRenderer() if os.getenv("ENVIRONMENT") == "development" 
             else structlog.processors.JSONRenderer()
         ],
-        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-        logger_factory=structlog.WriteLoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        context_class=dict,
         cache_logger_on_first_use=True,
     )
 
