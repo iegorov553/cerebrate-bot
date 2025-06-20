@@ -177,7 +177,10 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
             reply_markup=create_settings_menu()
         )
     elif action == "back":
-        await handle_main_menu(query, context.bot_data['config'], user)
+        # Temporarily hardcode - will fix architecture later
+        from bot.config import Config
+        config = Config.from_env()
+        await handle_main_menu(query, config, user)
 
 
 async def handle_friends_action(query, data: str, db_client: DatabaseClient, user):
@@ -200,7 +203,10 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             reply_markup=create_friends_menu()
         )
     elif action == "back":
-        await handle_main_menu(query, context.bot_data['config'], user)
+        # Temporarily hardcode - will fix architecture later
+        from bot.config import Config
+        config = Config.from_env()
+        await handle_main_menu(query, config, user)
 
 
 def setup_callback_handlers(

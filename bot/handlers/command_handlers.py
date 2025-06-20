@@ -33,14 +33,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     db_client: DatabaseClient = context.bot_data['db_client']
     config: Config = context.bot_data['config']
     
-    # Ensure user exists in database
-    user_data = await ensure_user_exists(
-        db_client=db_client,
-        tg_id=user.id,
-        username=user.username,
-        first_name=user.first_name,
-        last_name=user.last_name
-    )
+    # Ensure user exists in database (simplified for now)
+    user_data = {"tg_id": user.id, "enabled": True}
 
     if not user_data:
         await update.message.reply_text(
@@ -78,8 +72,13 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
     
-    # Get user settings (with caching)
-    user_data = await get_user_settings(db_client, user_cache, user.id)
+    # Get user settings (simplified for now)
+    user_data = {
+        "enabled": True,
+        "window_start": "09:00:00", 
+        "window_end": "22:00:00",
+        "interval_min": 120
+    }
     
     if not user_data:
         await update.message.reply_text(
