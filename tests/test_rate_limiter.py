@@ -3,12 +3,12 @@ Tests for rate limiting functionality.
 """
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import patch
+
+# Mock monitoring before importing modules
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-# Mock monitoring before importing modules
-from unittest.mock import patch, AsyncMock
 
 # Create a proper mock for track_errors that preserves async functionality
 def track_errors_mock(error_type):

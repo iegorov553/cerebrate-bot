@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+
 # Create a proper mock for track_errors that preserves async functionality
 def track_errors_mock(error_type):
     def decorator(func):
