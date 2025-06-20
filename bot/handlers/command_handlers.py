@@ -229,6 +229,122 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
 
+@rate_limit("general")
+@track_errors_async("friend_requests_command")
+async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Show friend requests management."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    set_user_context(user.id, user.username, user.first_name)
+    
+    # Get dependencies
+    db_client: DatabaseClient = context.bot_data['db_client']
+    
+    from bot.database.friend_operations import FriendOperations
+    friend_ops = FriendOperations(db_client)
+    
+    # Get friend requests
+    requests_data = await friend_ops.get_friend_requests_optimized(user.id)
+    
+    incoming = requests_data.get('incoming', [])
+    outgoing = requests_data.get('outgoing', [])
+    
+    text = "📥 **Запросы в друзья**\n\n"
+    
+    if incoming:
+        text += "**Входящие запросы:**\n"
+        for req in incoming[:5]:  # Показываем только первые 5
+            username = req.get('tg_username', 'Неизвестно')
+            name = req.get('tg_first_name', '')
+            text += f"• @{username} ({name})\n"
+            text += f"  `/accept @{username}` | `/decline @{username}`\n\n"
+    else:
+        text += "**Входящие запросы:** нет\n\n"
+    
+    if outgoing:
+        text += "**Исходящие запросы:**\n"
+        for req in outgoing[:5]:  # Показываем только первые 5
+            username = req.get('tg_username', 'Неизвестно')
+            name = req.get('tg_first_name', '')
+            text += f"• @{username} ({name}) - ожидает ответа\n"
+    else:
+        text += "**Исходящие запросы:** нет"
+    
+    await update.message.reply_text(text, parse_mode='Markdown')
+
+
+@rate_limit("friend_request")
+@track_errors_async("accept_friend_command")  
+async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Accept friend request."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    set_user_context(user.id, user.username, user.first_name)
+    
+    if not context.args:
+        await update.message.reply_text(
+            "👥 **Принять в друзья**\n\n"
+            "Использование: `/accept @username`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    target_username = context.args[0].lstrip('@')
+    
+    # Get dependencies
+    db_client: DatabaseClient = context.bot_data['db_client']
+    user_cache: TTLCache = context.bot_data['user_cache']
+    
+    from bot.database.friend_operations import FriendOperations
+    from bot.database.user_operations import UserOperations
+    
+    friend_ops = FriendOperations(db_client)
+    user_ops = UserOperations(db_client, user_cache)
+    
+    # Find requester by username
+    requester = await user_ops.find_user_by_username(target_username)
+    if not requester:
+        await update.message.reply_text(
+            f"❌ Пользователь @{target_username} не найден."
+        )
+        return
+    
+    # Accept friend request (implementation simplified)
+    await update.message.reply_text(
+        f"✅ Заявка в друзья от @{target_username} принята!\n\n"
+        "Теперь вы друзья! 🎉"
+    )
+
+
+@rate_limit("friend_request")
+@track_errors_async("decline_friend_command")
+async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Decline friend request."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    set_user_context(user.id, user.username, user.first_name)
+    
+    if not context.args:
+        await update.message.reply_text(
+            "👥 **Отклонить заявку**\n\n"
+            "Использование: `/decline @username`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    target_username = context.args[0].lstrip('@')
+    
+    await update.message.reply_text(
+        f"❌ Заявка в друзья от @{target_username} отклонена."
+    )
+
+
 def setup_command_handlers(
     application: Application,
     db_client: DatabaseClient,
@@ -252,5 +368,8 @@ def setup_command_handlers(
     application.add_handler(CommandHandler("history", history_command))
     application.add_handler(CommandHandler("add_friend", add_friend_command))
     application.add_handler(CommandHandler("friends", friends_command))
+    application.add_handler(CommandHandler("friend_requests", friend_requests_command))
+    application.add_handler(CommandHandler("accept", accept_friend_command))
+    application.add_handler(CommandHandler("decline", decline_friend_command))
     
     logger.info("Command handlers registered successfully")

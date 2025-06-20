@@ -25,20 +25,38 @@ class DatabaseClient:
                 self.config.supabase_service_role_key
             )
             logger.info("Database client initialized successfully")
+            
+            # Test connection
+            if not self.health_check():
+                logger.warning("Database health check failed on initialization")
+                
         except Exception as e:
             logger.error("Failed to initialize database client", error=str(e))
-            raise
+            # Don't raise here - allow graceful degradation
+            self._client = None
     
     @property
     def client(self) -> Client:
         """Get the Supabase client."""
         if self._client is None:
             self._initialize_client()
+        
+        if self._client is None:
+            raise ConnectionError("Database client not available. Check your Supabase configuration.")
+        
         return self._client
     
     def table(self, table_name: str):
         """Get a table reference."""
-        return self.client.table(table_name)
+        try:
+            return self.client.table(table_name)
+        except ConnectionError:
+            logger.error(f"Cannot access table '{table_name}' - database not connected")
+            raise
+    
+    def is_connected(self) -> bool:
+        """Check if database is connected."""
+        return self._client is not None
     
     def health_check(self) -> bool:
         """Check if database connection is healthy."""

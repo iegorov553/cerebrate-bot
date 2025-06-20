@@ -18,7 +18,6 @@ class TestRateLimiter:
     """Tests for basic RateLimiter class."""
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Mock conflicts need to be resolved")
     async def test_allows_requests_under_limit(self):
         """Test that requests under limit are allowed."""
         limiter = RateLimiter(max_requests=5, window_seconds=60)

@@ -46,6 +46,15 @@ async def create_application() -> Application:
     
     # Initialize core components
     db_client = DatabaseClient(config)
+    
+    # Check database connection
+    if not db_client.is_connected():
+        logger.error("❌ Database connection failed - bot will not function properly")
+        logger.error("Check your SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY")
+        # Continue anyway for debugging, but warn user
+    else:
+        logger.info("✅ Database connection established")
+    
     rate_limiter = MultiTierRateLimiter()
     user_cache = TTLCache(ttl_seconds=config.cache_ttl_seconds)
     

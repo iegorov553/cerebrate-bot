@@ -13,7 +13,8 @@ os.environ.update({
     "TELEGRAM_BOT_TOKEN": "test_token",
     "SUPABASE_URL": "https://test.supabase.co",
     "SUPABASE_SERVICE_ROLE_KEY": "test_key",
-    "ADMIN_USER_ID": "123456789"
+    "ADMIN_USER_ID": "123456789",
+    "WEBAPP_URL": "https://test.vercel.app"
 })
 
 @pytest.fixture(scope="session")

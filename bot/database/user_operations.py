@@ -30,8 +30,9 @@ class UserOperations:
             
             if result.data:
                 user = result.data[0]
-                # Cache the user data
-                self.cache.set(f"user_{tg_id}", user, 300)
+                # Cache the user data if cache is available
+                if self.cache:
+                    self.cache.set(f"user_{tg_id}", user, 300)
                 return user
             
             # Create new user with default settings
@@ -49,8 +50,9 @@ class UserOperations:
             result = self.db.table("users").insert(new_user).execute()
             created_user = result.data[0] if result.data else new_user
             
-            # Cache the new user
-            self.cache.set(f"user_{tg_id}", created_user, 300)
+            # Cache the new user if cache is available
+            if self.cache:
+                self.cache.set(f"user_{tg_id}", created_user, 300)
             
             logger.info("Created new user", user_id=tg_id, username=username)
             return created_user
@@ -64,7 +66,7 @@ class UserOperations:
         """Get user settings with caching."""
         cache_key = f"user_settings_{user_id}"
         
-        if not force_refresh:
+        if not force_refresh and self.cache:
             settings = self.cache.get(cache_key)
             if settings is not None:
                 logger.debug("User settings from cache", user_id=user_id)
@@ -74,7 +76,7 @@ class UserOperations:
             result = self.db.table("users").select("*").eq("tg_id", user_id).execute()
             settings = result.data[0] if result.data else None
             
-            if settings:
+            if settings and self.cache:
                 # Cache for 5 minutes
                 self.cache.set(cache_key, settings, 300)
                 logger.debug("User settings cached", user_id=user_id)
@@ -91,9 +93,10 @@ class UserOperations:
         try:
             result = self.db.table("users").update(updates).eq("tg_id", user_id).execute()
             
-            # Invalidate cache
-            self.cache.invalidate(f"user_settings_{user_id}")
-            self.cache.invalidate(f"user_{user_id}")
+            # Invalidate cache if available
+            if self.cache:
+                self.cache.invalidate(f"user_settings_{user_id}")
+                self.cache.invalidate(f"user_{user_id}")
             
             logger.info("User settings updated", user_id=user_id, updates=list(updates.keys()))
             return True
