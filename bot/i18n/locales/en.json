@@ -1,0 +1,128 @@
+{
+  "menu": {
+    "main_title": "👋 Main Menu",
+    "main_subtitle": "🤖 **Hour Watcher Bot**\nChoose an action:",
+    "settings": "⚙️ Settings",
+    "friends": "👥 Friends", 
+    "history": "📊 History",
+    "admin": "📢 Admin Panel",
+    "help": "❓ Help",
+    "back": "🔙 Back",
+    "back_main": "🔙 Main Menu",
+    "language": "🌍 Language"
+  },
+  
+  "welcome": {
+    "greeting": "👋 Hello, {name}!",
+    "description": "🤖 **Hour Watcher Bot** will help you track your activity.\n\nChoose an action:"
+  },
+  
+  "settings": {
+    "title": "⚙️ Settings",
+    "current_title": "⚙️ **Your settings:**",
+    "notifications": "🔔 Notifications: {status}",
+    "notifications_enabled": "✅ Enabled",
+    "notifications_disabled": "❌ Disabled",
+    "time_window": "⏰ Time: {start} - {end}",
+    "frequency": "📊 Frequency: every {minutes} minutes",
+    "toggle_notifications": "🔔 Toggle Notifications",
+    "set_time_window": "⏰ Set Time Window",
+    "set_frequency": "📊 Set Frequency",
+    "view_settings": "📝 View Current Settings",
+    "language_settings": "🌍 Choose Language",
+    "notifications_enabled_msg": "🔔 Notifications ✅ enabled!\n\nReturning to settings...",
+    "notifications_disabled_msg": "🔔 Notifications ❌ disabled!\n\nReturning to settings...",
+    "error_get": "❌ Failed to get settings.",
+    "error_update": "❌ Error updating settings.",
+    "error_missing": "❌ Failed to get settings. Try /start"
+  },
+  
+  "friends": {
+    "title": "👥 **Friends**",
+    "subtitle": "Manage friends and social connections:",
+    "add": "➕ Add Friend",
+    "requests": "📥 Friend Requests",
+    "list": "👥 My Friends",
+    "discover": "🔍 Find Friends",
+    "activities": "📊 Friend Activities",
+    "add_instruction": "➕ **Add Friend**\n\nSend command:\n`/add_friend @username`",
+    "list_empty": "👥 **Friends List**\n\nYou don't have any friends yet.\nAdd friends using `/add_friend @username` command",
+    "list_title": "👥 **Your friends:**",
+    "list_more": "... and {count} more friends",
+    "request_sent": "✅ Friend request sent to @{username}!",
+    "request_accepted": "✅ Friend request from @{username} accepted!\n\nYou are now friends! 🎉",
+    "request_declined": "❌ Friend request from @{username} declined.",
+    "request_not_found": "❌ Friend request from @{username} not found or already processed.",
+    "user_not_found": "❌ User @{username} not found.",
+    "request_notification_sent": "🎉 @{username} accepted your friend request!",
+    "request_notification_declined": "❌ @{username} declined your friend request."
+  },
+  
+  "history": {
+    "title": "📊 **Activity History**",
+    "subtitle": "Open the web interface to view detailed history:",
+    "open_button": "📊 Open History"
+  },
+  
+  "admin": {
+    "title": "👨‍💼 **Admin Panel**",
+    "subtitle": "Choose an action:",
+    "broadcast": "📢 Broadcast",
+    "statistics": "📊 Statistics",
+    "test_broadcast": "🧪 Test Broadcast",
+    "access_denied": "🔒 **Access Denied**\n\nThis feature is only available to administrators."
+  },
+  
+  "help": {
+    "title": "❓ **Help**",
+    "description": "🤖 **Hour Watcher Bot** helps you track your activity.",
+    "commands_title": "**Main commands:**",
+    "commands": [
+      "• `/start` - Main menu",
+      "• `/settings` - Notification settings", 
+      "• `/add_friend @username` - Add friend",
+      "• `/friends` - Friends list",
+      "• `/history` - Activity history"
+    ],
+    "how_it_works_title": "**How it works:**",
+    "how_it_works": [
+      "1. Send any message to the bot",
+      "2. It will be automatically recorded as activity",
+      "3. Bot will remind you to report your activities",
+      "4. Track statistics in the web interface"
+    ],
+    "friends_title": "**Friends:**",
+    "friends_info": [
+      "• Add friends for social interaction",
+      "• View friends' activities",
+      "• Get new friend recommendations"
+    ]
+  },
+  
+  "language": {
+    "title": "🌍 **Language Selection**",
+    "subtitle": "Choose your preferred language:",
+    "current": "Current language: {language} {flag}",
+    "changed": "✅ Language changed to {language} {flag}",
+    "russian": "🇷🇺 Русский",
+    "english": "🇺🇸 English", 
+    "spanish": "🇪🇸 Español"
+  },
+  
+  "errors": {
+    "general": "❌ An error occurred. Please try again.",
+    "registration": "❌ Registration error. Please try later.",
+    "database": "❌ Database error. Please try later.",
+    "unknown_callback": "❌ Unknown command.",
+    "notification_failed": "⚠️ Failed to send notification to user {user_id}"
+  },
+  
+  "activity": {
+    "logged": "✅ Activity logged",
+    "log_failed": "❌ Failed to log activity"
+  },
+  
+  "notifications": {
+    "reminder": "⏰ Time to report!\n\nWhat have you been doing? Send something to the bot."
+  }
+}

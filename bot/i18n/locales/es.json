@@ -1,0 +1,128 @@
+{
+  "menu": {
+    "main_title": "👋 Menú Principal",
+    "main_subtitle": "🤖 **Hour Watcher Bot**\nElige una acción:",
+    "settings": "⚙️ Configuración",
+    "friends": "👥 Amigos", 
+    "history": "📊 Historial",
+    "admin": "📢 Panel de Admin",
+    "help": "❓ Ayuda",
+    "back": "🔙 Atrás",
+    "back_main": "🔙 Menú Principal",
+    "language": "🌍 Idioma"
+  },
+  
+  "welcome": {
+    "greeting": "👋 ¡Hola, {name}!",
+    "description": "🤖 **Hour Watcher Bot** te ayudará a rastrear tu actividad.\n\nElige una acción:"
+  },
+  
+  "settings": {
+    "title": "⚙️ Configuración",
+    "current_title": "⚙️ **Tu configuración:**",
+    "notifications": "🔔 Notificaciones: {status}",
+    "notifications_enabled": "✅ Activadas",
+    "notifications_disabled": "❌ Desactivadas",
+    "time_window": "⏰ Hora: {start} - {end}",
+    "frequency": "📊 Frecuencia: cada {minutes} minutos",
+    "toggle_notifications": "🔔 Alternar Notificaciones",
+    "set_time_window": "⏰ Establecer Horario",
+    "set_frequency": "📊 Establecer Frecuencia",
+    "view_settings": "📝 Ver Configuración Actual",
+    "language_settings": "🌍 Elegir Idioma",
+    "notifications_enabled_msg": "🔔 ¡Notificaciones ✅ activadas!\n\nVolviendo a configuración...",
+    "notifications_disabled_msg": "🔔 ¡Notificaciones ❌ desactivadas!\n\nVolviendo a configuración...",
+    "error_get": "❌ No se pudo obtener la configuración.",
+    "error_update": "❌ Error al actualizar configuración.",
+    "error_missing": "❌ No se pudo obtener la configuración. Intenta /start"
+  },
+  
+  "friends": {
+    "title": "👥 **Amigos**",
+    "subtitle": "Gestiona amigos y conexiones sociales:",
+    "add": "➕ Agregar Amigo",
+    "requests": "📥 Solicitudes de Amistad",
+    "list": "👥 Mis Amigos",
+    "discover": "🔍 Encontrar Amigos",
+    "activities": "📊 Actividades de Amigos",
+    "add_instruction": "➕ **Agregar Amigo**\n\nEnvía el comando:\n`/add_friend @username`",
+    "list_empty": "👥 **Lista de Amigos**\n\nAún no tienes amigos.\nAgrega amigos usando el comando `/add_friend @username`",
+    "list_title": "👥 **Tus amigos:**",
+    "list_more": "... y {count} amigos más",
+    "request_sent": "✅ ¡Solicitud de amistad enviada a @{username}!",
+    "request_accepted": "✅ ¡Solicitud de amistad de @{username} aceptada!\n\n¡Ahora son amigos! 🎉",
+    "request_declined": "❌ Solicitud de amistad de @{username} rechazada.",
+    "request_not_found": "❌ Solicitud de amistad de @{username} no encontrada o ya procesada.",
+    "user_not_found": "❌ Usuario @{username} no encontrado.",
+    "request_notification_sent": "🎉 ¡@{username} aceptó tu solicitud de amistad!",
+    "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad."
+  },
+  
+  "history": {
+    "title": "📊 **Historial de Actividad**",
+    "subtitle": "Abre la interfaz web para ver el historial detallado:",
+    "open_button": "📊 Abrir Historial"
+  },
+  
+  "admin": {
+    "title": "👨‍💼 **Panel de Administrador**",
+    "subtitle": "Elige una acción:",
+    "broadcast": "📢 Difusión",
+    "statistics": "📊 Estadísticas",
+    "test_broadcast": "🧪 Prueba de Difusión",
+    "access_denied": "🔒 **Acceso Denegado**\n\nEsta función solo está disponible para administradores."
+  },
+  
+  "help": {
+    "title": "❓ **Ayuda**",
+    "description": "🤖 **Hour Watcher Bot** te ayuda a rastrear tu actividad.",
+    "commands_title": "**Comandos principales:**",
+    "commands": [
+      "• `/start` - Menú principal",
+      "• `/settings` - Configuración de notificaciones", 
+      "• `/add_friend @username` - Agregar amigo",
+      "• `/friends` - Lista de amigos",
+      "• `/history` - Historial de actividad"
+    ],
+    "how_it_works_title": "**Cómo funciona:**",
+    "how_it_works": [
+      "1. Envía cualquier mensaje al bot",
+      "2. Se grabará automáticamente como actividad",
+      "3. El bot te recordará reportar tus actividades",
+      "4. Rastrea estadísticas en la interfaz web"
+    ],
+    "friends_title": "**Amigos:**",
+    "friends_info": [
+      "• Agrega amigos para interacción social",
+      "• Ve las actividades de tus amigos",
+      "• Obtén recomendaciones de nuevos amigos"
+    ]
+  },
+  
+  "language": {
+    "title": "🌍 **Selección de Idioma**",
+    "subtitle": "Elige tu idioma preferido:",
+    "current": "Idioma actual: {language} {flag}",
+    "changed": "✅ Idioma cambiado a {language} {flag}",
+    "russian": "🇷🇺 Русский",
+    "english": "🇺🇸 English", 
+    "spanish": "🇪🇸 Español"
+  },
+  
+  "errors": {
+    "general": "❌ Ocurrió un error. Por favor intenta de nuevo.",
+    "registration": "❌ Error de registro. Por favor intenta más tarde.",
+    "database": "❌ Error de base de datos. Por favor intenta más tarde.",
+    "unknown_callback": "❌ Comando desconocido.",
+    "notification_failed": "⚠️ Error al enviar notificación al usuario {user_id}"
+  },
+  
+  "activity": {
+    "logged": "✅ Actividad registrada",
+    "log_failed": "❌ Error al registrar actividad"
+  },
+  
+  "notifications": {
+    "reminder": "⏰ ¡Hora de reportar!\n\n¿Qué has estado haciendo? Envía algo al bot."
+  }
+}

@@ -11,6 +11,7 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.database.user_operations import UserOperations
+from bot.i18n import detect_user_language, get_translator
 from bot.keyboards.keyboard_generators import create_friends_menu, create_main_menu, create_settings_menu
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
@@ -35,6 +36,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     # Get user cache
     user_cache: TTLCache = context.bot_data['user_cache']
     
+    # Detect user language
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+    
     # Ensure user exists in database
     user_ops = UserOperations(db_client, user_cache)
     try:
@@ -42,21 +48,21 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             tg_id=user.id,
             username=user.username,
             first_name=user.first_name,
-            last_name=user.last_name
+            last_name=user.last_name,
+            language=user_language
         )
     except Exception as e:
         logger.error(f"Failed to ensure user exists: {e}")
         await update.message.reply_text(
-            "❌ Ошибка регистрации. Попробуйте позже."
+            translator.translate("errors.registration")
         )
         return
 
     # Create main menu
     keyboard = create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
     
-    welcome_text = f"👋 Привет, {user.first_name}!\n\n" \
-                   f"🤖 **Hour Watcher Bot** поможет отслеживать твою активность.\n\n" \
-                   f"Выбери действие:"
+    welcome_text = f"{translator.translate('welcome.greeting', name=user.first_name)}\n\n" \
+                   f"{translator.translate('welcome.description')}"
 
     await update.message.reply_text(
         welcome_text,

@@ -18,7 +18,8 @@ class UserOperations:
     
     @track_errors_async("user_registration")
     async def ensure_user_exists(self, tg_id: int, username: str = None, 
-                                 first_name: str = None, last_name: str = None) -> Dict[str, Any]:
+                                 first_name: str = None, last_name: str = None,
+                                 language: str = 'ru') -> Dict[str, Any]:
         """Ensure user exists in database, create if not."""
         
         # Set user context for monitoring
@@ -44,7 +45,8 @@ class UserOperations:
                 "enabled": True,
                 "window_start": "09:00:00",
                 "window_end": "23:00:00",
-                "interval_min": 60
+                "interval_min": 60,
+                "language": language
             }
             
             result = self.db.table("users").insert(new_user).execute()

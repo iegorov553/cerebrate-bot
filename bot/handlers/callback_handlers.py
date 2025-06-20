@@ -10,11 +10,27 @@ from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.keyboards.keyboard_generators import create_friends_menu, create_main_menu, create_settings_menu
+from bot.i18n import get_translator
+from bot.keyboards.keyboard_generators import create_friends_menu, create_language_menu, create_main_menu, create_settings_menu
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
 logger = get_logger(__name__)
+
+
+async def get_user_language(user_id: int, db_client: DatabaseClient, user_cache: TTLCache) -> str:
+    """Get user language from database with fallback."""
+    try:
+        from bot.database.user_operations import UserOperations
+        user_ops = UserOperations(db_client, user_cache)
+        user_data = await user_ops.get_user_settings(user_id)
+        
+        if user_data and 'language' in user_data:
+            return user_data['language']
+    except Exception as e:
+        logger.warning(f"Failed to get user language: {e}")
+    
+    return 'ru'  # Default fallback
 
 
 @rate_limit("callback")
@@ -35,6 +51,11 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
     
+    # Setup translator with user's language
+    user_language = await get_user_language(user.id, db_client, user_cache)
+    translator = get_translator()
+    translator.set_language(user_language)
+    
     data = query.data
     
     try:
@@ -48,14 +69,18 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_history(query, config)
         elif data == "menu_admin" or data == "admin_panel":
             await handle_admin_panel(query, config, user)
+        elif data == "menu_language":
+            await handle_language_menu(query, user_language, translator)
+        elif data.startswith("language_"):
+            await handle_language_change(query, data, db_client, user_cache, user, config)
         elif data == "menu_help":
-            await handle_help(query)
+            await handle_help(query, translator)
         elif data.startswith("settings_"):
-            await handle_settings_action(query, data, db_client, user_cache, user, config)
+            await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
-            await handle_friends_action(query, data, db_client, user, config)
+            await handle_friends_action(query, data, db_client, user, config, translator)
         elif data == "back_main":
-            await handle_main_menu(query, config, user)
+            await handle_main_menu(query, config, user, translator)
         else:
             logger.warning(f"Unknown callback data: {data}")
             
@@ -170,32 +195,86 @@ async def handle_admin_panel(query, config: Config, user):
     )
 
 
-async def handle_help(query):
+async def handle_language_menu(query, current_language: str, translator):
+    """Handle language menu display."""
+    keyboard = create_language_menu(current_language, translator)
+    
+    help_text = f"{translator.translate('language.title')}\n\n{translator.translate('language.subtitle')}"
+    
+    await query.edit_message_text(
+        help_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_language_change(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config):
+    """Handle language change."""
+    new_language = data.replace("language_", "")
+    
+    if new_language not in ['ru', 'en', 'es']:
+        return
+    
+    # Update user language in database
+    try:
+        from bot.database.user_operations import UserOperations
+        user_ops = UserOperations(db_client, user_cache)
+        success = await user_ops.update_user_settings(user.id, {'language': new_language})
+        
+        if success:
+            # Update translator
+            translator = get_translator()
+            translator.set_language(new_language)
+            
+            # Get language info
+            lang_info = translator.get_language_info(new_language)
+            
+            await query.edit_message_text(
+                translator.translate('language.changed', 
+                                   language=lang_info['native'], 
+                                   flag=lang_info['flag']),
+                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                parse_mode='Markdown'
+            )
+        else:
+            translator = get_translator()
+            await query.edit_message_text(
+                translator.translate('errors.database'),
+                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                parse_mode='Markdown'
+            )
+    except Exception as e:
+        logger.error(f"Error changing language: {e}")
+        translator = get_translator()
+        await query.edit_message_text(
+            translator.translate('errors.general'),
+            reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+            parse_mode='Markdown'
+        )
+
+
+async def handle_help(query, translator):
     """Handle help menu display."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+        [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
     ])
     
+    # Build help text from translations
+    commands = "\n".join(translator.translate(f"help.commands.{i}") for i in range(5))
+    how_it_works = "\n".join(translator.translate(f"help.how_it_works.{i}") for i in range(4))
+    friends_info = "\n".join(translator.translate(f"help.friends_info.{i}") for i in range(3))
+    
     help_text = (
-        "❓ **Помощь**\n\n"
-        "🤖 **Hour Watcher Bot** помогает отслеживать вашу активность.\n\n"
-        "**Основные команды:**\n"
-        "• `/start` - Главное меню\n"
-        "• `/settings` - Настройки уведомлений\n"
-        "• `/add_friend @username` - Добавить друга\n"
-        "• `/friends` - Список друзей\n"
-        "• `/history` - История активности\n\n"
-        "**Как это работает:**\n"
-        "1. Напишите любое сообщение боту\n"
-        "2. Оно автоматически запишется как активность\n"
-        "3. Бот будет напоминать вам отчитаться о делах\n"
-        "4. Следите за статистикой в веб-интерфейсе\n\n"
-        "**Друзья:**\n"
-        "• Добавляйте друзей для социального взаимодействия\n"
-        "• Смотрите активность друзей\n"
-        "• Получайте рекомендации новых друзей"
+        f"{translator.translate('help.title')}\n\n"
+        f"{translator.translate('help.description')}\n\n"
+        f"{translator.translate('help.commands_title')}\n"
+        f"{commands}\n\n"
+        f"{translator.translate('help.how_it_works_title')}\n"
+        f"{how_it_works}\n\n"
+        f"{translator.translate('help.friends_title')}\n"
+        f"{friends_info}"
     )
     
     await query.edit_message_text(

@@ -13,26 +13,34 @@ class KeyboardGenerator:
     """Dynamic inline keyboard generator."""
     
     @staticmethod
-    def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+    def main_menu(is_admin: bool = False, translator=None) -> InlineKeyboardMarkup:
         """
         Generate main menu keyboard.
         
         Args:
             is_admin: Whether user is admin (shows admin panel)
+            translator: Translator instance for localization
             
         Returns:
             InlineKeyboardMarkup for main menu
         """
+        if translator is None:
+            from bot.i18n import get_translator
+            translator = get_translator()
+            
         keyboard = [
-            [InlineKeyboardButton("⚙️ Settings", callback_data="menu_settings")],
-            [InlineKeyboardButton("👥 Friends", callback_data="menu_friends")],
-            [InlineKeyboardButton("📊 History", callback_data="menu_history")],
+            [InlineKeyboardButton(translator.translate("menu.settings"), callback_data="menu_settings")],
+            [InlineKeyboardButton(translator.translate("menu.friends"), callback_data="menu_friends")],
+            [InlineKeyboardButton(translator.translate("menu.history"), callback_data="menu_history")],
         ]
         
         if is_admin:
-            keyboard.append([InlineKeyboardButton("📢 Admin Panel", callback_data="menu_admin")])
+            keyboard.append([InlineKeyboardButton(translator.translate("menu.admin"), callback_data="menu_admin")])
         
-        keyboard.append([InlineKeyboardButton("❓ Help", callback_data="menu_help")])
+        keyboard.extend([
+            [InlineKeyboardButton(translator.translate("menu.language"), callback_data="menu_language")],
+            [InlineKeyboardButton(translator.translate("menu.help"), callback_data="menu_help")]
+        ])
         
         return InlineKeyboardMarkup(keyboard)
     
@@ -333,6 +341,39 @@ class KeyboardGenerator:
             [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
         ]
         return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def language_menu(current_language: str = 'ru', translator=None) -> InlineKeyboardMarkup:
+        """
+        Generate language selection keyboard.
+        
+        Args:
+            current_language: Currently selected language
+            translator: Translator instance for localization
+            
+        Returns:
+            InlineKeyboardMarkup for language selection
+        """
+        if translator is None:
+            from bot.i18n import get_translator
+            translator = get_translator()
+        
+        keyboard = [
+            [InlineKeyboardButton(
+                "🇷🇺 Русский" + (" ✓" if current_language == 'ru' else ""), 
+                callback_data="language_ru"
+            )],
+            [InlineKeyboardButton(
+                "🇺🇸 English" + (" ✓" if current_language == 'en' else ""), 
+                callback_data="language_en"
+            )],
+            [InlineKeyboardButton(
+                "🇪🇸 Español" + (" ✓" if current_language == 'es' else ""), 
+                callback_data="language_es"
+            )],
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
+        ]
+        return InlineKeyboardMarkup(keyboard)
 
 
 # Convenience functions for common keyboards
@@ -362,3 +403,4 @@ create_main_menu = get_main_menu_keyboard
 create_settings_menu = get_settings_keyboard
 create_friends_menu = get_friends_keyboard
 create_admin_menu = get_admin_keyboard
+create_language_menu = KeyboardGenerator.language_menu
