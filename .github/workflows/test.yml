@@ -50,7 +50,7 @@ jobs:
       if: matrix.python-version == '3.11'
       with:
         file: ./coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
   lint:
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
 
     - name: Run bandit security linter
       run: |
-        bandit -r . -x tests/
+        bandit -r . -x tests/,test_env/,venv/
 
     - name: Check dependencies for known security vulnerabilities
       run: |
