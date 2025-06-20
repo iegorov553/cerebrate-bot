@@ -104,7 +104,7 @@ class TestConfigurationClass:
         """Test config validation logic."""
         # Mock config class
         class MockConfig:
-            def __init__(self, bot_token="", supabase_url="", supabase_key="", admin_id=0):
+            def __init__(self, bot_token="", supabase_url="", supabase_key="", admin_id=0):  # nosec B107
                 self.bot_token = bot_token
                 self.supabase_url = supabase_url
                 self.supabase_service_role_key = supabase_key
