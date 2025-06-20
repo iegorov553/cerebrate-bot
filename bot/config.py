@@ -10,14 +10,14 @@ from typing import Optional
 class Config:
     """Bot configuration class."""
     
-    # Telegram Bot Configuration
+    # Required fields (no defaults)
     bot_token: str
-    admin_user_id: int
-    question_text: str = "Чё делаешь? 🤔"
-    
-    # Supabase Configuration
     supabase_url: str
     supabase_service_role_key: str
+    admin_user_id: int
+    
+    # Optional fields (with defaults)
+    question_text: str = "Чё делаешь? 🤔"
     
     # Cache Configuration
     cache_ttl_seconds: int = 300  # 5 minutes

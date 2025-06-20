@@ -355,3 +355,10 @@ def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0) -> I
 def get_admin_keyboard() -> InlineKeyboardMarkup:
     """Get admin menu keyboard."""
     return KeyboardGenerator.admin_menu()
+
+
+# Aliases for new modular architecture
+create_main_menu = get_main_menu_keyboard
+create_settings_menu = get_settings_keyboard
+create_friends_menu = get_friends_keyboard
+create_admin_menu = get_admin_keyboard

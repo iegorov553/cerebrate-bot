@@ -20,10 +20,10 @@ This file provides comprehensive technical guidance to Claude Code (claude.ai/co
 ### Current State: Hybrid Architecture
 The project is transitioning from a monolithic single-file design to a modern modular architecture:
 
-**Legacy Core** (`cerebrate_bot.py` - 2252 lines):
-- Complete bot functionality in single file
-- All handlers, database operations, and business logic
-- Production-proven stability and reliability
+**New Entry Point** (`main.py`):
+- Modern modular architecture with clean separation of concerns
+- Uses all enterprise-grade components from `bot/` package
+- Fully migrated from legacy monolithic structure
 
 **New Modular System** (`bot/` directory):
 - **Enterprise-grade separation of concerns**
@@ -90,7 +90,7 @@ cp .env.example .env  # Edit with your values
 ### Development Commands
 ```bash
 # Run the bot
-python3 cerebrate_bot.py
+python3 main.py
 
 # Run tests
 python3 -m pytest                    # All tests

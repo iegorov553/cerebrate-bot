@@ -80,7 +80,7 @@
 
 4. **Запуск бота**
    ```bash
-   python3 cerebrate_bot.py
+   python3 main.py
    ```
 
 ### Тестирование
