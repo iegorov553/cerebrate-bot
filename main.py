@@ -9,18 +9,18 @@ Replaces the old monolithic cerebrate_bot.py file.
 import asyncio
 import sys
 
-from telegram.ext import Application, ApplicationBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from telegram.ext import Application, ApplicationBuilder
 
+from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.handlers.error_handler import setup_error_handler
-from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.admin_handlers import setup_admin_handlers
 from bot.handlers.callback_handlers import setup_callback_handlers
-from bot.utils.rate_limiter import MultiTierRateLimiter
-from bot.cache.ttl_cache import TTLCache
+from bot.handlers.command_handlers import setup_command_handlers
+from bot.handlers.error_handler import setup_error_handler
 from bot.services.scheduler_service import SchedulerService
+from bot.utils.rate_limiter import MultiTierRateLimiter
 
 # Monitoring setup
 try:

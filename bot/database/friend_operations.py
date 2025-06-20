@@ -58,37 +58,8 @@ class FriendOperations:
         log_bot_metrics("friend_requests_query", 1.0, {"user_id": user_id})
         
         try:
-            # OPTIMIZED: Single JOIN query for incoming requests
-            incoming_query = """
-            SELECT 
-                f.friendship_id,
-                f.requester_id,
-                f.addressee_id,
-                f.status,
-                f.created_at,
-                u.tg_username as requester_username,
-                u.tg_first_name as requester_first_name
-            FROM friendships f
-            JOIN users u ON u.tg_id = f.requester_id
-            WHERE f.addressee_id = %s AND f.status = 'pending'
-            ORDER BY f.created_at DESC
-            """
-            
-            # OPTIMIZED: Single JOIN query for outgoing requests  
-            outgoing_query = """
-            SELECT 
-                f.friendship_id,
-                f.requester_id,
-                f.addressee_id,
-                f.status,
-                f.created_at,
-                u.tg_username as addressee_username,
-                u.tg_first_name as addressee_first_name
-            FROM friendships f
-            JOIN users u ON u.tg_id = f.addressee_id
-            WHERE f.requester_id = %s AND f.status = 'pending'
-            ORDER BY f.created_at DESC
-            """
+            # Note: SQL queries prepared for future RPC function implementation
+            # Currently using fallback table queries with joins
             
             # Execute optimized queries using direct table access
             # Note: Using fallback method as exec_sql RPC function may not exist
@@ -253,23 +224,8 @@ class FriendOperations:
         log_bot_metrics("friends_list_query", 1.0, {"user_id": user_id})
         
         try:
-            # OPTIMIZED: Single query using UNION to get friends in both directions
-            friends_query = """
-            SELECT DISTINCT
-                u.tg_id,
-                u.tg_username,
-                u.tg_first_name,
-                u.tg_last_name
-            FROM users u
-            WHERE u.tg_id IN (
-                SELECT f.addressee_id FROM friendships f 
-                WHERE f.requester_id = %s AND f.status = 'accepted'
-                UNION
-                SELECT f.requester_id FROM friendships f 
-                WHERE f.addressee_id = %s AND f.status = 'accepted'
-            )
-            ORDER BY u.tg_username, u.tg_first_name
-            """
+            # Note: SQL query prepared for future RPC function implementation
+            # Currently using fallback table queries
             
             try:
                 # Use direct table queries instead of RPC

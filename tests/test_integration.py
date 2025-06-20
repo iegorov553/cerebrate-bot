@@ -34,9 +34,9 @@ class TestBotIntegration:
         with patch('bot.database.client.create_client') as mock_create_client:
             mock_create_client.return_value = mock_supabase
             
-            from bot.database.user_operations import UserOperations
-            from bot.database.client import DatabaseClient
             from bot.config import Config
+            from bot.database.client import DatabaseClient
+            from bot.database.user_operations import UserOperations
             
             config = Config.from_env()
             db_client = DatabaseClient(config)
@@ -65,9 +65,9 @@ class TestBotIntegration:
         with patch('bot.database.client.create_client') as mock_create_client:
             mock_create_client.return_value = mock_supabase
             
-            from bot.database.friend_operations import FriendOperations
-            from bot.database.client import DatabaseClient
             from bot.config import Config
+            from bot.database.client import DatabaseClient
+            from bot.database.friend_operations import FriendOperations
             
             config = Config.from_env()
             db_client = DatabaseClient(config)

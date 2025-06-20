@@ -1,9 +1,11 @@
 """
 Fixed rate limiter tests without mock conflicts.
 """
-import pytest
 import asyncio
-from bot.utils.rate_limiter import RateLimiter, MultiTierRateLimiter
+
+import pytest
+
+from bot.utils.rate_limiter import MultiTierRateLimiter, RateLimiter
 
 
 class TestRateLimiterFixed:

@@ -91,7 +91,7 @@ class UserOperations:
     async def update_user_settings(self, user_id: int, updates: Dict[str, Any]) -> bool:
         """Update user settings and invalidate cache."""
         try:
-            result = self.db.table("users").update(updates).eq("tg_id", user_id).execute()
+            self.db.table("users").update(updates).eq("tg_id", user_id).execute()
             
             # Invalidate cache if available
             if self.cache:
@@ -135,7 +135,7 @@ class UserOperations:
                 "jobs_timestamp": "now()"
             }
             
-            result = self.db.table("tg_jobs").insert(activity_data).execute()
+            self.db.table("tg_jobs").insert(activity_data).execute()
             
             logger.info("Activity logged", user_id=user_id, text_length=len(activity_text))
             return True
@@ -164,7 +164,7 @@ class UserOperations:
         """Update last notification timestamp for user."""
         try:
             # Use PostgreSQL's NOW() function to get current timestamp
-            result = self.db.table("users").update({
+            self.db.table("users").update({
                 "last_notification_sent": "now()"
             }).eq("tg_id", user_id).execute()
             

@@ -4,16 +4,15 @@ Command handlers for the Hour Watcher Bot.
 This module contains all user command handlers (non-admin).
 """
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 
+from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.cache.ttl_cache import TTLCache
-from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from bot.database.user_operations import UserOperations
-from bot.keyboards.keyboard_generators import create_main_menu, create_settings_menu, create_friends_menu
-
+from bot.keyboards.keyboard_generators import create_friends_menu, create_main_menu, create_settings_menu
+from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
 logger = get_logger(__name__)
@@ -39,7 +38,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     # Ensure user exists in database
     user_ops = UserOperations(db_client, user_cache)
     try:
-        user_data = await user_ops.ensure_user_exists(
+        await user_ops.ensure_user_exists(
             tg_id=user.id,
             username=user.username,
             first_name=user.first_name,

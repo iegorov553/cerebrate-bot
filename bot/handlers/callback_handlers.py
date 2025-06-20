@@ -7,14 +7,11 @@ This module handles all callback queries from inline keyboard buttons.
 from telegram import Update
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
+from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.cache.ttl_cache import TTLCache
+from bot.keyboards.keyboard_generators import create_friends_menu, create_main_menu, create_settings_menu
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
-from bot.keyboards.keyboard_generators import (
-    create_main_menu, create_settings_menu, create_friends_menu
-)
-
 from monitoring import get_logger, set_user_context, track_errors_async
 
 logger = get_logger(__name__)
@@ -82,7 +79,7 @@ async def handle_main_menu(query, config: Config, user):
 async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle settings menu display."""
     from bot.database.user_operations import UserOperations
-    
+
     # Get user settings
     user_ops = UserOperations(db_client, user_cache)
     user_data = await user_ops.get_user_settings(user.id)
@@ -141,7 +138,7 @@ async def handle_history(query, config: Config):
 async def handle_admin_panel(query, config: Config, user):
     """Handle admin panel access."""
     from bot.admin.admin_operations import AdminOperations
-    
+
     # Create a temporary admin_ops instance for this check
     admin_ops = AdminOperations(None, config)  # db_client not needed for is_admin check
     
