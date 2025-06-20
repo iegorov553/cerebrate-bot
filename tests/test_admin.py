@@ -8,12 +8,15 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cerebrate_bot import (
-    is_admin,
-    get_user_stats,
-    send_single_message,
-    send_broadcast_message
-)
+# Mock Supabase before importing cerebrate_bot
+with patch('supabase.create_client') as mock_create_client:
+    mock_create_client.return_value = MagicMock()
+    from cerebrate_bot import (
+        is_admin,
+        get_user_stats,
+        send_single_message,
+        send_broadcast_message
+    )
 
 class TestAdminFunctions:
     """Tests for admin-related functions."""

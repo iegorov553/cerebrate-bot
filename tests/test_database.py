@@ -8,14 +8,17 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from cerebrate_bot import (
-    find_user_by_username,
-    create_friend_request,
-    get_friend_requests,
-    update_friend_request,
-    get_friends_list,
-    get_friends_of_friends
-)
+# Mock Supabase before importing cerebrate_bot
+with patch('supabase.create_client') as mock_create_client:
+    mock_create_client.return_value = MagicMock()
+    from cerebrate_bot import (
+        find_user_by_username,
+        create_friend_request,
+        get_friend_requests,
+        update_friend_request,
+        get_friends_list,
+        get_friends_of_friends
+    )
 
 class TestDatabaseFunctions:
     """Tests for database-related functions."""
