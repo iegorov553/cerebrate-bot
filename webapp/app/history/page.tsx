@@ -247,7 +247,7 @@ export default function HistoryPage() {
             </div>
           ) : (
             filteredActivities.map((activity) => (
-              <div key={activity.job_uid} className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+              <div key={activity.id} className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                     {formatDate(activity.jobs_timestamp)}
