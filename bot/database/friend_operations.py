@@ -215,21 +215,36 @@ class FriendOperations:
             return {"incoming": [], "outgoing": []}
 
     @track_errors_async("friend_request_update")
-    async def update_friend_request(self, friendship_id: str, status: str) -> bool:
-        """Accept or decline a friend request."""
+    async def update_friend_request_status(self, requester_id: int, addressee_id: int, status: str) -> bool:
+        """Update friend request status (accept/decline)."""
         try:
-            self.db.table("friendships").update({
+            result = self.db.table("friendships").update({
                 "status": status
-            }).eq("friendship_id", friendship_id).execute()
+            }).eq("requester_id", requester_id).eq("addressee_id", addressee_id).eq("status", "pending").execute()
             
-            logger.info("Friend request updated", 
-                       friendship_id=friendship_id, status=status)
-            return True
+            if result.data:
+                logger.info("Friend request updated", 
+                           requester=requester_id, addressee=addressee_id, status=status)
+                return True
+            else:
+                logger.warning("No pending friend request found", 
+                              requester=requester_id, addressee=addressee_id)
+                return False
             
         except Exception as exc:
             logger.error("Error updating friend request", 
-                        friendship_id=friendship_id, status=status, error=str(exc))
+                        requester=requester_id, addressee=addressee_id, status=status, error=str(exc))
             return False
+    
+    @track_errors_async("friend_request_accept")
+    async def accept_friend_request(self, requester_id: int, addressee_id: int) -> bool:
+        """Accept a friend request."""
+        return await self.update_friend_request_status(requester_id, addressee_id, "accepted")
+    
+    @track_errors_async("friend_request_decline")
+    async def decline_friend_request(self, requester_id: int, addressee_id: int) -> bool:
+        """Decline a friend request."""
+        return await self.update_friend_request_status(requester_id, addressee_id, "declined")
 
     @track_errors_async("friends_list_optimized")
     async def get_friends_list_optimized(self, user_id: int) -> List[Dict[str, Any]]:

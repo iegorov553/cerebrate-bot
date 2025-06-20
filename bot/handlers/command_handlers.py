@@ -33,6 +33,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     db_client: DatabaseClient = context.bot_data['db_client']
     config: Config = context.bot_data['config']
     
+    # Get user cache
+    user_cache: TTLCache = context.bot_data['user_cache']
+    
     # Ensure user exists in database
     user_ops = UserOperations(db_client, user_cache)
     try:
@@ -313,11 +316,26 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
         )
         return
     
-    # Accept friend request (implementation simplified)
-    await update.message.reply_text(
-        f"✅ Заявка в друзья от @{target_username} принята!\n\n"
-        "Теперь вы друзья! 🎉"
-    )
+    # Accept friend request
+    success = await friend_ops.accept_friend_request(requester['tg_id'], user.id)
+    if success:
+        await update.message.reply_text(
+            f"✅ Заявка в друзья от @{target_username} принята!\n\n"
+            "Теперь вы друзья! 🎉"
+        )
+        
+        # Notify requester if possible
+        try:
+            await context.bot.send_message(
+                chat_id=requester['tg_id'],
+                text=f"🎉 @{user.username or user.first_name} принял вашу заявку в друзья!"
+            )
+        except Exception as e:
+            logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
+    else:
+        await update.message.reply_text(
+            f"❌ Заявки в друзья от @{target_username} не найдено или она уже обработана."
+        )
 
 
 @rate_limit("friend_request")
@@ -340,9 +358,43 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
     
     target_username = context.args[0].lstrip('@')
     
-    await update.message.reply_text(
-        f"❌ Заявка в друзья от @{target_username} отклонена."
-    )
+    # Get dependencies
+    db_client: DatabaseClient = context.bot_data['db_client']
+    user_cache: TTLCache = context.bot_data['user_cache']
+    
+    from bot.database.friend_operations import FriendOperations
+    from bot.database.user_operations import UserOperations
+    
+    friend_ops = FriendOperations(db_client)
+    user_ops = UserOperations(db_client, user_cache)
+    
+    # Find requester by username
+    requester = await user_ops.find_user_by_username(target_username)
+    if not requester:
+        await update.message.reply_text(
+            f"❌ Пользователь @{target_username} не найден."
+        )
+        return
+    
+    # Decline friend request
+    success = await friend_ops.decline_friend_request(requester['tg_id'], user.id)
+    if success:
+        await update.message.reply_text(
+            f"❌ Заявка в друзья от @{target_username} отклонена."
+        )
+        
+        # Notify requester if possible
+        try:
+            await context.bot.send_message(
+                chat_id=requester['tg_id'],
+                text=f"❌ @{user.username or user.first_name} отклонил вашу заявку в друзья."
+            )
+        except Exception as e:
+            logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
+    else:
+        await update.message.reply_text(
+            f"❌ Заявки в друзья от @{target_username} не найдено или она уже обработана."
+        )
 
 
 def setup_command_handlers(
