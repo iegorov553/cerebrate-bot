@@ -1,9 +1,54 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
 venv/
+env/
+test_env/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Credentials and config
 creds.json
 .env
 *.b64
+
+# Deployment
 .vercel
+
+# Supabase
+supabase_migrations/.temp/
