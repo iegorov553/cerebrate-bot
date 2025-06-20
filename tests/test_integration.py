@@ -80,9 +80,22 @@ class TestBotIntegration:
             # Mock successful operations
             mock_success_response = MagicMock()
             
+            # Simplify: Mock the database client directly to return empty for select queries
             mock_table = mock_supabase.table.return_value
-            mock_table.select.return_value.eq.return_value.eq.return_value.execute.return_value = mock_empty_response
-            mock_table.insert.return_value.execute.return_value = mock_success_response
+            
+            # Create mock chain for select operations that always returns empty
+            mock_select = MagicMock()
+            mock_eq1 = MagicMock()
+            mock_eq2 = MagicMock() 
+            mock_eq2.execute.return_value = mock_empty_response
+            mock_eq1.eq.return_value = mock_eq2
+            mock_select.eq.return_value = mock_eq1
+            mock_table.select.return_value = mock_select
+            
+            # Mock insert operation  
+            mock_insert = MagicMock()
+            mock_insert.execute.return_value = mock_success_response
+            mock_table.insert.return_value = mock_insert
             
             # Create friend request
             result1 = await friend_ops.create_friend_request(123456789, 987654321)

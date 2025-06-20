@@ -8,8 +8,16 @@ from unittest.mock import patch
 import pytest
 
 # Mock monitoring before importing modules
+from unittest.mock import patch, AsyncMock
+
+# Create a proper mock for track_errors that preserves async functionality
+def track_errors_mock(error_type):
+    def decorator(func):
+        return func  # Return function unchanged
+    return decorator
+
 with patch('monitoring.get_logger'), \
-     patch('monitoring.track_errors'):
+     patch('monitoring.track_errors', track_errors_mock):
     from bot.utils.exceptions import RateLimitExceeded
     from bot.utils.rate_limiter import MultiTierRateLimiter, RateLimiter, rate_limit
 

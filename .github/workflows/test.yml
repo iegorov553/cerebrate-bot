@@ -39,6 +39,7 @@ jobs:
         echo "TELEGRAM_BOT_TOKEN=test_token" >> $GITHUB_ENV
         echo "SUPABASE_URL=https://test.supabase.co" >> $GITHUB_ENV
         echo "SUPABASE_SERVICE_ROLE_KEY=test_key" >> $GITHUB_ENV
+        echo "WEBAPP_URL=https://doyobi-diary.vercel.app" >> $GITHUB_ENV
         echo "ADMIN_USER_ID=123456789" >> $GITHUB_ENV
 
     - name: Run tests with pytest
