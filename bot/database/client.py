@@ -1,7 +1,7 @@
 """
 Database client setup and configuration.
 """
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 from bot.config import Config
 from monitoring import get_logger
@@ -44,7 +44,7 @@ class DatabaseClient:
         """Check if database connection is healthy."""
         try:
             # Simple query to check connectivity
-            result = self.table("users").select("tg_id").limit(1).execute()
+            self.table("users").select("tg_id").limit(1).execute()
             return True
         except Exception as e:
             logger.error("Database health check failed", error=str(e))

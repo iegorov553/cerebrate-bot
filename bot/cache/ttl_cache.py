@@ -7,8 +7,9 @@ and configurable expiration times.
 
 import asyncio
 import time
-from typing import Any, Dict, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
 from bot.utils.cache_manager import get_logger
 
 logger = get_logger(__name__)

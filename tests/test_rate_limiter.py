@@ -1,16 +1,17 @@
 """
 Tests for rate limiting functionality.
 """
-import pytest
 import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+import pytest
+
 # Mock monitoring before importing modules
 with patch('monitoring.get_logger'), \
      patch('monitoring.track_errors'):
-    from bot.utils.rate_limiter import RateLimiter, MultiTierRateLimiter, rate_limit
     from bot.utils.exceptions import RateLimitExceeded
+    from bot.utils.rate_limiter import MultiTierRateLimiter, RateLimiter, rate_limit
 
 
 class TestRateLimiter:
@@ -171,7 +172,7 @@ class TestRateLimitDecorator:
     async def test_decorator_extracts_user_id_from_update(self):
         """Test that decorator can extract user_id from Update object."""
         from unittest.mock import MagicMock
-        
+
         # Mock Update object
         mock_update = MagicMock()
         mock_update.effective_user.id = 456

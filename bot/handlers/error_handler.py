@@ -2,10 +2,11 @@
 Error handling for Telegram bot operations.
 """
 import traceback
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.utils.exceptions import RateLimitExceeded, AdminRequired, ValidationError
+from bot.utils.exceptions import AdminRequired, RateLimitExceeded, ValidationError
 from monitoring import get_logger, set_user_context
 
 logger = get_logger(__name__)
@@ -71,9 +72,9 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             time_msg = f"{minutes} минут"
         
         message = f"🚫 **Превышен лимит запросов**\n\n" \
-                 f"Вы отправляете команды слишком часто.\n" \
-                 f"Попробуйте снова через {time_msg}.\n\n" \
-                 f"Действие: {error.action}"
+                  f"Вы отправляете команды слишком часто.\n" \
+                  f"Попробуйте снова через {time_msg}.\n\n" \
+                  f"Действие: {error.action}"
         
         await context.bot.send_message(
             chat_id=update.effective_chat.id,

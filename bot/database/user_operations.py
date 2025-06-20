@@ -1,10 +1,10 @@
 """
 User-related database operations.
 """
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from bot.utils.cache_manager import CacheManager
-from monitoring import get_logger, track_errors_async, set_user_context
+from monitoring import get_logger, set_user_context, track_errors_async
 
 logger = get_logger(__name__)
 

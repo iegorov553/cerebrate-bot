@@ -1,8 +1,9 @@
 """
 Simplified tests for rate limiting functionality with proper mocking.
 """
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 
 class TestRateLimiterMocked:
@@ -11,7 +12,7 @@ class TestRateLimiterMocked:
     def test_rate_limiter_import(self):
         """Test that rate limiter modules can be imported."""
         try:
-            from bot.utils.rate_limiter import RateLimiter, MultiTierRateLimiter
+            from bot.utils.rate_limiter import MultiTierRateLimiter, RateLimiter
             assert RateLimiter is not None
             assert MultiTierRateLimiter is not None
         except ImportError as e:

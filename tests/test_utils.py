@@ -1,23 +1,21 @@
 """
 Tests for utility functions in the Hour Watcher Bot.
 """
-import pytest
-from datetime import datetime, time
-from unittest.mock import patch, MagicMock
+import os
 
 # Import functions to test (we'll need to adjust imports after refactoring)
 import sys
-import os
+from datetime import datetime, time
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Mock Supabase before importing cerebrate_bot
 with patch('supabase.create_client') as mock_create_client:
     mock_create_client.return_value = MagicMock()
-    from cerebrate_bot import (
-        safe_parse_datetime,
-        validate_time_window,
-        CacheManager
-    )
+    from cerebrate_bot import CacheManager, safe_parse_datetime, validate_time_window
 
 class TestSafeParseDatetime:
     """Tests for safe_parse_datetime function."""

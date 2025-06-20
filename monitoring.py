@@ -1,12 +1,13 @@
 """
 Monitoring and logging configuration for Hour Watcher Bot.
 """
-import os
 import logging
-import structlog
+import os
+
 import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
+import structlog
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 
 def setup_monitoring():

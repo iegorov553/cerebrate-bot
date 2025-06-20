@@ -1,9 +1,10 @@
 """
 Tests for new components without complex imports.
 """
-import pytest
-from datetime import datetime, timedelta
 from collections import deque
+from datetime import datetime, timedelta
+
+import pytest
 
 
 class MockRateLimiter:

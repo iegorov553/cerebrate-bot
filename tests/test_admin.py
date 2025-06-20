@@ -1,22 +1,18 @@
 """
 Tests for admin functions in the Hour Watcher Bot.
 """
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Mock Supabase before importing cerebrate_bot
 with patch('supabase.create_client') as mock_create_client:
     mock_create_client.return_value = MagicMock()
-    from cerebrate_bot import (
-        is_admin,
-        get_user_stats,
-        send_single_message,
-        send_broadcast_message
-    )
+    from cerebrate_bot import get_user_stats, is_admin, send_broadcast_message, send_single_message
 
 class TestAdminFunctions:
     """Tests for admin-related functions."""

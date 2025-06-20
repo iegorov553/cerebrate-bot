@@ -4,7 +4,8 @@ Keyboard generators for Hour Watcher Bot.
 This module provides dynamic inline keyboard generation for the Telegram bot interface.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 

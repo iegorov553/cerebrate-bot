@@ -1,11 +1,12 @@
 """
 Basic utility tests that don't require imports from the main module.
 """
-import pytest
-from datetime import datetime, time, timedelta
-import sys
 import os
+import sys
+from datetime import datetime, time, timedelta
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Mock the supabase client before importing main module
 with patch('supabase.create_client'):
@@ -19,12 +20,7 @@ with patch('supabase.create_client'):
         "ADMIN_USER_ID": "123456789"
     })
     
-    from cerebrate_bot import (
-        safe_parse_datetime,
-        validate_time_window,
-        CacheManager,
-        is_admin
-    )
+    from cerebrate_bot import CacheManager, is_admin, safe_parse_datetime, validate_time_window
 
 class TestSafeParseDatetime:
     """Tests for safe_parse_datetime function."""

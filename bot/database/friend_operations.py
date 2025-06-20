@@ -1,9 +1,9 @@
 """
 Friend-related database operations with optimizations.
 """
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from monitoring import get_logger, track_errors_async, log_bot_metrics
+from monitoring import get_logger, log_bot_metrics, track_errors_async
 
 logger = get_logger(__name__)
 

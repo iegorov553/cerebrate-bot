@@ -2,9 +2,9 @@
 Rate limiting utilities to prevent spam and abuse.
 """
 import asyncio
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
-from collections import defaultdict, deque
 
 from monitoring import get_logger, track_errors
 

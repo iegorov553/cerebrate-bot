@@ -3,7 +3,7 @@ Date and time utility functions.
 """
 import re
 from datetime import datetime, time
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 from monitoring import get_logger, track_errors
 

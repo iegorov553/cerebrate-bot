@@ -14,17 +14,16 @@ import asyncio
 import logging
 import os
 import re
-from datetime import datetime, timezone, time
+from datetime import datetime, time, timezone
 
-from supabase import create_client, Client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from telegram import ForceReply, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram import WebAppInfo
+from supabase import Client, create_client
+from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
 from telegram.ext import (
     Application,
     ApplicationBuilder,
-    CommandHandler,
     CallbackQueryHandler,
+    CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
@@ -32,9 +31,16 @@ from telegram.ext import (
 
 # --- Monitoring Setup ---
 try:
-    from monitoring import setup_monitoring, get_logger, track_errors, track_errors_async
-    from monitoring import set_user_context, add_bot_context, log_bot_metrics
-    
+    from monitoring import (
+        add_bot_context,
+        get_logger,
+        log_bot_metrics,
+        set_user_context,
+        setup_monitoring,
+        track_errors,
+        track_errors_async,
+    )
+
     # Initialize monitoring
     setup_monitoring()
     logger = get_logger(__name__)

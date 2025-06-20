@@ -1,7 +1,7 @@
 """
 Admin operations with optimized database queries.
 """
-from typing import Dict, Any
+from typing import Any, Dict
 
 from bot.config import Config
 from monitoring import get_logger, track_errors_async

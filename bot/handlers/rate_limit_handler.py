@@ -1,7 +1,7 @@
 """
 Rate limiting handler utilities.
 """
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from bot.utils.exceptions import RateLimitExceeded
@@ -46,10 +46,10 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         
         # Create message with emoji and formatting
         message = f"🚫 **Превышен лимит {action_display}**\n\n" \
-                 f"📊 Использовано: {stats['current_count']}/{stats['max_requests']}\n" \
-                 f"⏰ Попробуйте через: {time_msg}\n" \
-                 f"🔄 Окно сброса: {stats['window_seconds']} сек.\n\n" \
-                 f"_Лимиты защищают бот от перегрузки._"
+                  f"📊 Использовано: {stats['current_count']}/{stats['max_requests']}\n" \
+                  f"⏰ Попробуйте через: {time_msg}\n" \
+                  f"🔄 Окно сброса: {stats['window_seconds']} сек.\n\n" \
+                  f"_Лимиты защищают бот от перегрузки._"
         
         # Add helpful keyboard
         keyboard = [

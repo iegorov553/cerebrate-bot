@@ -7,9 +7,9 @@ batching, and error handling.
 
 import asyncio
 import time
-from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
-from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
+
 from telegram import Bot
 from telegram.error import TelegramError
 

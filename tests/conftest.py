@@ -1,11 +1,12 @@
 """
 Pytest configuration and fixtures for the Hour Watcher Bot tests.
 """
-import os
-import pytest
 import asyncio
-from unittest.mock import Mock, MagicMock
-from typing import Generator, AsyncGenerator
+import os
+from typing import AsyncGenerator, Generator
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 # Set test environment variables
 os.environ.update({

@@ -1,10 +1,11 @@
 """
 Tests for database functions in the Hour Watcher Bot.
 """
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -12,12 +13,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 with patch('supabase.create_client') as mock_create_client:
     mock_create_client.return_value = MagicMock()
     from cerebrate_bot import (
-        find_user_by_username,
         create_friend_request,
+        find_user_by_username,
         get_friend_requests,
-        update_friend_request,
         get_friends_list,
-        get_friends_of_friends
+        get_friends_of_friends,
+        update_friend_request,
     )
 
 class TestDatabaseFunctions:

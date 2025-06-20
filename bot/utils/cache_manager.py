@@ -2,7 +2,7 @@
 Cache management utilities.
 """
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from monitoring import get_logger, track_errors
 

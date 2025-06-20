@@ -1,10 +1,11 @@
 """
 Integration tests for the Hour Watcher Bot.
 """
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -53,7 +54,7 @@ class TestBotIntegration:
         """Test complete friend request workflow."""
         with patch('cerebrate_bot.supabase', mock_supabase):
             from cerebrate_bot import create_friend_request, update_friend_request
-            
+
             # Mock no existing friendship
             mock_empty_response = MagicMock()
             mock_empty_response.data = []
@@ -105,7 +106,7 @@ class TestBotIntegration:
     async def test_cache_integration(self):
         """Test cache integration with database functions."""
         from cerebrate_bot import CacheManager, get_user_settings_cached
-        
+
         # Create cache instance
         cache = CacheManager()
         
