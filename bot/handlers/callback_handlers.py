@@ -40,18 +40,22 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     try:
         if data == "main_menu":
             await handle_main_menu(query, config, user)
-        elif data == "settings":
+        elif data == "menu_settings" or data == "settings":
             await handle_settings_menu(query, db_client, user_cache, user)
-        elif data == "friends":
+        elif data == "menu_friends" or data == "friends":
             await handle_friends_menu(query)
-        elif data == "history":
+        elif data == "menu_history" or data == "history":
             await handle_history(query, config)
-        elif data == "admin_panel":
+        elif data == "menu_admin" or data == "admin_panel":
             await handle_admin_panel(query, config, user)
+        elif data == "menu_help":
+            await handle_help(query)
         elif data.startswith("settings_"):
             await handle_settings_action(query, data, db_client, user_cache, user, config)
         elif data.startswith("friends_"):
             await handle_friends_action(query, data, db_client, user, config)
+        elif data == "back_main":
+            await handle_main_menu(query, config, user)
         else:
             logger.warning(f"Unknown callback data: {data}")
             
@@ -166,6 +170,41 @@ async def handle_admin_panel(query, config: Config, user):
     )
 
 
+async def handle_help(query):
+    """Handle help menu display."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+    ])
+    
+    help_text = (
+        "❓ **Помощь**\n\n"
+        "🤖 **Hour Watcher Bot** помогает отслеживать вашу активность.\n\n"
+        "**Основные команды:**\n"
+        "• `/start` - Главное меню\n"
+        "• `/settings` - Настройки уведомлений\n"
+        "• `/add_friend @username` - Добавить друга\n"
+        "• `/friends` - Список друзей\n"
+        "• `/history` - История активности\n\n"
+        "**Как это работает:**\n"
+        "1. Напишите любое сообщение боту\n"
+        "2. Оно автоматически запишется как активность\n"
+        "3. Бот будет напоминать вам отчитаться о делах\n"
+        "4. Следите за статистикой в веб-интерфейсе\n\n"
+        "**Друзья:**\n"
+        "• Добавляйте друзей для социального взаимодействия\n"
+        "• Смотрите активность друзей\n"
+        "• Получайте рекомендации новых друзей"
+    )
+    
+    await query.edit_message_text(
+        help_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
 async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config):
     """Handle settings-related actions."""
     action = data.replace("settings_", "")
@@ -261,6 +300,12 @@ def setup_callback_handlers(
     config: Config
 ) -> None:
     """Setup callback query handlers."""
+    
+    # Store dependencies in bot_data for access in handlers
+    application.bot_data['db_client'] = db_client
+    application.bot_data['user_cache'] = user_cache
+    application.bot_data['rate_limiter'] = rate_limiter
+    application.bot_data['config'] = config
     
     # Register callback query handler
     application.add_handler(CallbackQueryHandler(handle_callback_query))
