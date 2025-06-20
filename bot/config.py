@@ -32,8 +32,8 @@ class Config:
     environment: str = "development"
     release_version: str = "unknown"
     
-    # Web App Configuration
-    webapp_url: str = "https://doyobi-diary.vercel.app"
+    # Web App Configuration (should be set via environment variable)
+    webapp_url: str = ""
     
     @classmethod
     def from_env(cls) -> "Config":
@@ -77,6 +77,8 @@ class Config:
             raise ValueError("SUPABASE_URL is required")
         if not self.supabase_service_role_key:
             raise ValueError("SUPABASE_SERVICE_ROLE_KEY is required")
+        if not self.webapp_url:
+            raise ValueError("WEBAPP_URL is required")
     
     def is_admin_configured(self) -> bool:
         """Check if admin user is configured."""

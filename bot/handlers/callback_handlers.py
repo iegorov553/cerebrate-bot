@@ -52,9 +52,9 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif data == "admin_panel":
             await handle_admin_panel(query, config, user)
         elif data.startswith("settings_"):
-            await handle_settings_action(query, data, db_client, user_cache, user)
+            await handle_settings_action(query, data, db_client, user_cache, user, config)
         elif data.startswith("friends_"):
-            await handle_friends_action(query, data, db_client, user)
+            await handle_friends_action(query, data, db_client, user, config)
         else:
             logger.warning(f"Unknown callback data: {data}")
             
@@ -81,10 +81,11 @@ async def handle_main_menu(query, config: Config, user):
 
 async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle settings menu display."""
-    from bot.database.user_operations import get_user_settings
+    from bot.database.user_operations import UserOperations
     
     # Get user settings
-    user_data = await get_user_settings(db_client, user_cache, user.id)
+    user_ops = UserOperations(db_client, user_cache)
+    user_data = await user_ops.get_user_settings(user.id)
     
     if not user_data:
         await query.edit_message_text(
@@ -139,9 +140,12 @@ async def handle_history(query, config: Config):
 
 async def handle_admin_panel(query, config: Config, user):
     """Handle admin panel access."""
-    from bot.admin.admin_operations import is_admin
+    from bot.admin.admin_operations import AdminOperations
     
-    if not is_admin(user.id, config):
+    # Create a temporary admin_ops instance for this check
+    admin_ops = AdminOperations(None, config)  # db_client not needed for is_admin check
+    
+    if not admin_ops.is_admin(user.id):
         await query.edit_message_text(
             "🔒 **Доступ запрещён**\n\n"
             "Эта функция доступна только администраторам.",
@@ -165,25 +169,47 @@ async def handle_admin_panel(query, config: Config, user):
     )
 
 
-async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user):
+async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config):
     """Handle settings-related actions."""
     action = data.replace("settings_", "")
     
     if action == "toggle_notifications":
-        # TODO: Implement notification toggle
-        await query.edit_message_text(
-            "🔔 Уведомления переключены!\n\n"
-            "Возвращаемся к настройкам...",
-            reply_markup=create_settings_menu()
-        )
+        # Toggle user notifications
+        from bot.database.user_operations import UserOperations
+        user_ops = UserOperations(db_client, user_cache)
+        
+        # Get current settings
+        user_settings = await user_ops.get_user_settings(user.id)
+        if not user_settings:
+            await query.edit_message_text(
+                "❌ Не удалось получить настройки.",
+                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
+            )
+            return
+            
+        # Toggle enabled status
+        new_enabled = not user_settings.get('enabled', True)
+        success = await user_ops.update_user_settings(user.id, {'enabled': new_enabled})
+        
+        if success:
+            status_text = "включены" if new_enabled else "отключены"
+            emoji = "✅" if new_enabled else "❌"
+            await query.edit_message_text(
+                f"🔔 Уведомления {emoji} {status_text}!\n\n"
+                "Возвращаемся к настройкам...",
+                reply_markup=create_settings_menu()
+            )
+        else:
+            await query.edit_message_text(
+                "❌ Ошибка при изменении настроек.",
+                reply_markup=create_settings_menu()
+            )
     elif action == "back":
-        # Temporarily hardcode - will fix architecture later
-        from bot.config import Config
-        config = Config.from_env()
+        # Use config passed as parameter
         await handle_main_menu(query, config, user)
 
 
-async def handle_friends_action(query, data: str, db_client: DatabaseClient, user):
+async def handle_friends_action(query, data: str, db_client: DatabaseClient, user, config: Config):
     """Handle friends-related actions."""
     action = data.replace("friends_", "")
     
@@ -196,16 +222,37 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             parse_mode='Markdown'
         )
     elif action == "list":
-        # TODO: Implement friends list
-        await query.edit_message_text(
-            "👥 **Список друзей**\n\n"
-            "У вас пока нет друзей.",
-            reply_markup=create_friends_menu()
-        )
+        # Get friends list from database
+        from bot.database.friend_operations import FriendOperations
+        friend_ops = FriendOperations(db_client)
+        
+        friends = await friend_ops.get_friends_list_optimized(user.id)
+        
+        if not friends:
+            await query.edit_message_text(
+                "👥 **Список друзей**\n\n"
+                "У вас пока нет друзей.\n"
+                "Добавьте друзей через команду `/add_friend @username`",
+                reply_markup=create_friends_menu(),
+                parse_mode='Markdown'
+            )
+        else:
+            friends_text = "👥 **Ваши друзья:**\n\n"
+            for friend in friends[:10]:  # Показываем максимум 10 друзей
+                username = friend.get('tg_username', '')
+                name = friend.get('tg_first_name', 'Без имени')
+                friends_text += f"• @{username} - {name}\n" if username else f"• {name}\n"
+            
+            if len(friends) > 10:
+                friends_text += f"\n... и ещё {len(friends) - 10} друзей"
+                
+            await query.edit_message_text(
+                friends_text,
+                reply_markup=create_friends_menu(),
+                parse_mode='Markdown'
+            )
     elif action == "back":
-        # Temporarily hardcode - will fix architecture later
-        from bot.config import Config
-        config = Config.from_env()
+        # Use config passed as parameter
         await handle_main_menu(query, config, user)
 
 

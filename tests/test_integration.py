@@ -14,7 +14,7 @@ class TestBotIntegration:
     """Integration tests for bot functionality."""
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Complex integration test with multiple async dependencies")
+    @pytest.mark.skip(reason="Integration tests need architectural updates")
     async def test_user_registration_flow(self, mock_supabase, mock_telegram_update, mock_telegram_context):
         """Test complete user registration flow."""
         # Mock user doesn't exist initially
@@ -32,7 +32,7 @@ class TestBotIntegration:
         ]
         mock_table.insert().execute.return_value = mock_create_response
         
-        with patch('cerebrate_bot.supabase', mock_supabase):
+        with patch('bot.database.client.DatabaseClient') as mock_db:
             from cerebrate_bot import ensure_user_exists
             
             await ensure_user_exists(
@@ -49,10 +49,10 @@ class TestBotIntegration:
         assert create_call_args["tg_username"] == "testuser"
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Complex integration test with multiple async dependencies")
+    @pytest.mark.skip(reason="Integration tests need architectural updates")
     async def test_friend_request_workflow(self, mock_supabase):
         """Test complete friend request workflow."""
-        with patch('cerebrate_bot.supabase', mock_supabase):
+        with patch('bot.database.client.DatabaseClient') as mock_db:
             from cerebrate_bot import create_friend_request, update_friend_request
 
             # Mock no existing friendship
@@ -76,7 +76,7 @@ class TestBotIntegration:
             assert result2 is True
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Complex integration test with multiple async dependencies")
+    @pytest.mark.skip(reason="Integration tests need architectural updates")
     async def test_notification_scheduling_integration(self, mock_supabase):
         """Test notification scheduling with user settings."""
         # Mock user with specific settings
@@ -92,7 +92,7 @@ class TestBotIntegration:
         
         mock_supabase.table().select().eq().execute.return_value = mock_user_response
         
-        with patch('cerebrate_bot.supabase', mock_supabase):
+        with patch('bot.database.client.DatabaseClient') as mock_db:
             from cerebrate_bot import get_user_settings_cached
             
             settings = await get_user_settings_cached(123456789)
@@ -102,7 +102,7 @@ class TestBotIntegration:
             assert settings["interval_min"] == 60
     
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Complex integration test with multiple async dependencies")
+    @pytest.mark.skip(reason="Integration tests need architectural updates")
     async def test_cache_integration(self):
         """Test cache integration with database functions."""
         from cerebrate_bot import CacheManager, get_user_settings_cached

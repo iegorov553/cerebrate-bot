@@ -13,7 +13,8 @@ from telegram.ext import Application
 
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.database.user_operations import get_all_active_users, update_last_notification
+from bot.database.user_operations import UserOperations
+from bot.utils.cache_manager import CacheManager
 from monitoring import get_logger, track_errors_async
 
 logger = get_logger(__name__)
@@ -27,6 +28,9 @@ class SchedulerService:
         self.db_client = db_client
         self.config = config
         self.scheduler = AsyncIOScheduler()
+        # Initialize cache manager for user operations
+        self.cache_manager = CacheManager()
+        self.user_ops = UserOperations(db_client, self.cache_manager)
         
     def start(self) -> None:
         """Start the scheduler service."""
@@ -69,7 +73,7 @@ class SchedulerService:
         """Check which users need notifications and send them."""
         try:
             # Get all active users
-            active_users = await get_all_active_users(self.db_client)
+            active_users = await self.user_ops.get_all_active_users()
             
             if not active_users:
                 logger.debug("No active users found")
@@ -147,7 +151,7 @@ class SchedulerService:
             )
             
             # Update last notification timestamp
-            await update_last_notification(self.db_client, tg_id)
+            await self.user_ops.update_last_notification(tg_id)
             
             logger.info(f"Notification sent to user {tg_id}")
             

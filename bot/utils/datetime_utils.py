@@ -51,3 +51,62 @@ def validate_time_window(time_range: str) -> Tuple[bool, str, Optional[time], Op
         return False, "Минимальная продолжительность - 1 час!", None, None
     
     return True, "OK", start_time, end_time
+
+
+@track_errors("interval_validation")
+def validate_interval(interval_str: str) -> Tuple[bool, str, int]:
+    """
+    Validate notification interval.
+    
+    Args:
+        interval_str: Interval string (should be integer minutes)
+        
+    Returns:
+        Tuple of (is_valid, error_message, interval_value)
+    """
+    try:
+        interval = int(interval_str.strip())
+        
+        if interval < 5:
+            return False, "Интервал не может быть меньше 5 минут", 0
+        
+        if interval > 1440:  # 24 hours
+            return False, "Интервал не может быть больше 24 часов (1440 минут)", 0
+            
+        return True, "", interval
+        
+    except (ValueError, AttributeError):
+        return False, f"Неверный формат интервала: {interval_str}. Введите число (минуты)", 0
+
+
+@track_errors("username_validation")
+def validate_username(username: str) -> Tuple[bool, str]:
+    """
+    Validate Telegram username.
+    
+    Args:
+        username: Username to validate (with or without @)
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not username or not isinstance(username, str):
+        return False, "Имя пользователя не может быть пустым"
+    
+    # Remove @ if present
+    clean_username = username.lstrip('@').strip()
+    
+    if not clean_username:
+        return False, "Имя пользователя не может быть пустым"
+    
+    if len(clean_username) < 5:
+        return False, "Имя пользователя должно содержать минимум 5 символов"
+    
+    if len(clean_username) > 32:
+        return False, "Имя пользователя не может быть длиннее 32 символов"
+    
+    # Check for valid characters (letters, numbers, underscores)
+    if not clean_username.replace('_', '').replace('-', '').isalnum():
+        return False, "Имя пользователя может содержать только буквы, цифры, _ и -"
+    
+    return True, ""

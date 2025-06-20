@@ -33,10 +33,17 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     db_client: DatabaseClient = context.bot_data['db_client']
     config: Config = context.bot_data['config']
     
-    # Ensure user exists in database (simplified for now)
-    user_data = {"tg_id": user.id, "enabled": True}
-
-    if not user_data:
+    # Ensure user exists in database
+    user_ops = UserOperations(db_client, user_cache)
+    try:
+        user_data = await user_ops.ensure_user_exists(
+            tg_id=user.id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name
+        )
+    except Exception as e:
+        logger.error(f"Failed to ensure user exists: {e}")
         await update.message.reply_text(
             "❌ Ошибка регистрации. Попробуйте позже."
         )
@@ -72,13 +79,9 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
     
-    # Get user settings (simplified for now)
-    user_data = {
-        "enabled": True,
-        "window_start": "09:00:00", 
-        "window_end": "22:00:00",
-        "interval_min": 120
-    }
+    # Get user settings from database
+    user_ops = UserOperations(db_client, user_cache)
+    user_data = await user_ops.get_user_settings(user.id)
     
     if not user_data:
         await update.message.reply_text(
@@ -146,17 +149,63 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return
     
-    # Extract username and send friend request
-    target_username = context.args[0].lstrip('@')
+    # Extract and validate username
+    target_username_raw = context.args[0]
+    
+    from bot.utils.datetime_utils import validate_username
+    is_valid, error_msg = validate_username(target_username_raw)
+    if not is_valid:
+        await update.message.reply_text(
+            f"❌ {error_msg}\n\n"
+            "Пример: `/add_friend @username`",
+            parse_mode='Markdown'
+        )
+        return
+    
+    target_username = target_username_raw.lstrip('@')
     
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
+    user_cache: TTLCache = context.bot_data['user_cache']
     
-    # TODO: Implement friend request logic
-    await update.message.reply_text(
-        f"📤 Запрос в друзья отправлен пользователю @{target_username}\n\n"
-        "Ожидайте подтверждения!"
-    )
+    # Implement friend request logic
+    from bot.database.friend_operations import FriendOperations
+    friend_ops = FriendOperations(db_client)
+    user_ops = UserOperations(db_client, user_cache)
+    
+    # Find target user by username
+    target_user = await user_ops.find_user_by_username(target_username)
+    if not target_user:
+        await update.message.reply_text(
+            f"❌ Пользователь @{target_username} не найден.\n\n"
+            "Убедитесь, что пользователь зарегистрирован в боте."
+        )
+        return
+    
+    target_id = target_user['tg_id']
+    
+    # Send friend request (will check for existing friendship internally)
+    success = await friend_ops.create_friend_request(user.id, target_id)
+    if success:
+        await update.message.reply_text(
+            f"📤 Запрос в друзья отправлен пользователю @{target_username}!\n\n"
+            "Ожидайте подтверждения."
+        )
+        
+        # Notify target user if possible
+        try:
+            await context.bot.send_message(
+                chat_id=target_id,
+                text=f"👤 Пользователь @{user.username or user.first_name} хочет добавить вас в друзья!\n\n"
+                     f"Используйте /friend_requests для управления запросами."
+            )
+        except Exception as e:
+            logger.warning(f"Could not notify user {target_id}: {e}")
+            
+    else:
+        await update.message.reply_text(
+            "❌ Ошибка при отправке запроса в друзья. Попробуйте позже."
+        )
 
 
 @rate_limit("general")

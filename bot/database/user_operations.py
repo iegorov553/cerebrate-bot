@@ -140,3 +140,39 @@ class UserOperations:
         except Exception as exc:
             logger.error("Error logging activity", user_id=user_id, error=str(exc))
             return False
+    
+    @track_errors_async("get_all_active_users")
+    async def get_all_active_users(self) -> list:
+        """Get all users with notifications enabled."""
+        try:
+            result = self.db.table("users").select("*").eq("enabled", True).execute()
+            
+            active_users = result.data if result.data else []
+            logger.debug("Retrieved active users", count=len(active_users))
+            
+            return active_users
+            
+        except Exception as exc:
+            logger.error("Error getting active users", error=str(exc))
+            return []
+    
+    @track_errors_async("update_last_notification")
+    async def update_last_notification(self, user_id: int) -> bool:
+        """Update last notification timestamp for user."""
+        try:
+            # Use PostgreSQL's NOW() function to get current timestamp
+            result = self.db.table("users").update({
+                "last_notification_sent": "now()"
+            }).eq("tg_id", user_id).execute()
+            
+            # Invalidate cache for this user (if cache is available)
+            if self.cache:
+                self.cache.invalidate(f"user_settings_{user_id}")
+                self.cache.invalidate(f"user_{user_id}")
+            
+            logger.debug("Updated last notification timestamp", user_id=user_id)
+            return True
+            
+        except Exception as exc:
+            logger.error("Error updating last notification", user_id=user_id, error=str(exc))
+            return False
