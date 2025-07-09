@@ -33,7 +33,7 @@ class UserOperations:
                 user = result.data[0]
                 # Cache the user data if cache is available
                 if self.cache:
-                    self.cache.set(f"user_{tg_id}", user, 300)
+                    await self.cache.set(f"user_{tg_id}", user, 300)
                 return user
             
             # Create new user with default settings
@@ -54,7 +54,7 @@ class UserOperations:
             
             # Cache the new user if cache is available
             if self.cache:
-                self.cache.set(f"user_{tg_id}", created_user, 300)
+                await self.cache.set(f"user_{tg_id}", created_user, 300)
             
             logger.info("Created new user", user_id=tg_id, username=username)
             return created_user
@@ -80,7 +80,7 @@ class UserOperations:
             
             if settings and self.cache:
                 # Cache for 5 minutes
-                self.cache.set(cache_key, settings, 300)
+                await self.cache.set(cache_key, settings, 300)
                 logger.debug("User settings cached", user_id=user_id)
             
             return settings

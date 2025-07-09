@@ -56,8 +56,23 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             logger.info("Activity logged successfully", 
                        user_id=user.id, 
                        message_length=len(message.text))
+            
+            # Send confirmation and new question
+            config: Config = context.bot_data['config']
+            confirmation_text = (
+                f"📝 Записал: *{message.text}*\n\n"
+                f"{config.question_text}"
+            )
+            
+            await message.reply_text(
+                confirmation_text,
+                parse_mode='Markdown'
+            )
         else:
             logger.warning("Failed to log activity", user_id=user.id)
+            await message.reply_text(
+                "❌ Не удалось записать активность. Попробуйте ещё раз."
+            )
             
     except Exception as e:
         logger.error(f"Error handling text message: {e}", user_id=user.id)
