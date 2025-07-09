@@ -85,14 +85,14 @@
   
   "help": {
     "title": "❓ **Ayuda**",
-    "description": "🤖 **Hour Watcher Bot** te ayuda a rastrear tu actividad.",
+    "description": "🤖 **Hour Watcher Bot** te ayuda a rastrear tu actividad con recordatorios inteligentes e interfaz multiidioma.",
     "commands_title": "**Comandos principales:**",
     "commands": [
-      "• `/start` - Menú principal",
+      "• `/start` - Menú principal con botones",
       "• `/settings` - Configuración de notificaciones", 
       "• `/add_friend @username` - Agregar amigo",
-      "• `/friends` - Lista de amigos",
-      "• `/history` - Historial de actividad"
+      "• `/friends` - Gestión de amigos",
+      "• `/history` - Interfaz web con historial"
     ],
     "how_it_works_title": "**Cómo funciona:**",
     "how_it_works": [
@@ -101,11 +101,11 @@
       "3. El bot te recordará reportar tus actividades",
       "4. Rastrea estadísticas en la interfaz web"
     ],
-    "friends_title": "**Amigos:**",
+    "friends_title": "**Sistema de amigos:**",
     "friends_info": [
       "• Agrega amigos para interacción social",
-      "• Ve las actividades de tus amigos",
-      "• Obtén recomendaciones de nuevos amigos"
+      "• Ve las actividades de tus amigos en tiempo real",
+      "• Obtén recomendaciones de nuevos amigos mediante algoritmo"
     ]
   },
   

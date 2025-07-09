@@ -188,7 +188,7 @@ async def handle_history(query, config: Config, db_client: DatabaseClient, user_
     
     web_app = WebAppInfo(url=f"{config.webapp_url}/history")
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📊 {translator.translate('history.open_button', default='Открыть историю')}", web_app=web_app)],
+        [InlineKeyboardButton(translator.translate('history.open_button'), web_app=web_app)],
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
@@ -221,8 +221,8 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📢 {translator.translate('admin.broadcast')}", callback_data="admin_broadcast")],
-        [InlineKeyboardButton(f"📊 {translator.translate('admin.stats')}", callback_data="admin_stats")],
+        [InlineKeyboardButton(translator.translate('admin.broadcast'), callback_data="admin_broadcast")],
+        [InlineKeyboardButton(translator.translate('admin.stats'), callback_data="admin_stats")],
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
@@ -321,9 +321,25 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
     ])
     
     # Build help text from translations
-    commands = "\n".join(translator.translate(f"help.commands.{i}") for i in range(5))
-    how_it_works = "\n".join(translator.translate(f"help.how_it_works.{i}") for i in range(4))
-    friends_info = "\n".join(translator.translate(f"help.friends_info.{i}") for i in range(3))
+    try:
+        # Try new format first
+        commands = "\n".join(translator.translate(f"help.commands.{i}") for i in range(5))
+    except:
+        # Fallback to old format
+        commands_list = translator.translate("help.commands")
+        commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
+    
+    try:
+        how_it_works = "\n".join(translator.translate(f"help.how_it_works.{i}") for i in range(4))
+    except:
+        how_it_works_list = translator.translate("help.how_it_works")
+        how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
+    
+    try:
+        friends_info = "\n".join(translator.translate(f"help.friends_info.{i}") for i in range(3))
+    except:
+        friends_info_list = translator.translate("help.friends_info")
+        friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
     
     help_text = (
         f"{translator.translate('help.title')}\n\n"
