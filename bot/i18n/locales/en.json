@@ -13,8 +13,9 @@
   },
   
   "welcome": {
-    "greeting": "👋 Hello, {name}!",
-    "description": "🤖 **Hour Watcher Bot** will help you track your activity.\n\nChoose an action:"
+    "greeting": "Hello, {name}!",
+    "description": "🤖 **Hour Watcher Bot** will help you track your activity.\n\nChoose an action:",
+    "choose_action": "Choose an action:"
   },
   
   "settings": {
@@ -23,8 +24,9 @@
     "notifications": "🔔 Notifications: {status}",
     "notifications_enabled": "✅ Enabled",
     "notifications_disabled": "❌ Disabled",
-    "time_window": "⏰ Time: {start} - {end}",
-    "frequency": "📊 Frequency: every {minutes} minutes",
+    "time_window": "Time",
+    "frequency": "Frequency",
+    "every_minutes": "every {minutes} minutes",
     "toggle_notifications": "🔔 Toggle Notifications",
     "set_time_window": "⏰ Set Time Window",
     "set_frequency": "📊 Set Frequency",

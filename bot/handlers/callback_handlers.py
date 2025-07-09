@@ -33,6 +33,17 @@ async def get_user_language(user_id: int, db_client: DatabaseClient, user_cache:
     return 'ru'  # Default fallback
 
 
+async def get_user_translator(user_id: int, db_client: DatabaseClient, user_cache: TTLCache):
+    """Get translator configured for user's language."""
+    user_language = await get_user_language(user_id, db_client, user_cache)
+    translator = get_translator()
+    # Create a copy to avoid modifying global translator
+    from bot.i18n.translator import Translator
+    user_translator = Translator()
+    user_translator.set_language(user_language)
+    return user_translator
+
+
 @rate_limit("callback")
 @track_errors_async("handle_callback_query")
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -60,21 +71,21 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     
     try:
         if data == "main_menu":
-            await handle_main_menu(query, config, user)
+            await handle_main_menu(query, config, user, None, db_client, user_cache)
         elif data == "menu_settings" or data == "settings":
             await handle_settings_menu(query, db_client, user_cache, user)
         elif data == "menu_friends" or data == "friends":
-            await handle_friends_menu(query)
+            await handle_friends_menu(query, db_client, user_cache, user)
         elif data == "menu_history" or data == "history":
-            await handle_history(query, config)
+            await handle_history(query, config, db_client, user_cache, user)
         elif data == "menu_admin" or data == "admin_panel":
-            await handle_admin_panel(query, config, user)
+            await handle_admin_panel(query, config, user, db_client, user_cache)
         elif data == "menu_language":
             await handle_language_menu(query, user_language, translator)
         elif data.startswith("language_"):
             await handle_language_change(query, data, db_client, user_cache, user, config)
         elif data == "menu_help":
-            await handle_help(query, translator)
+            await handle_help(query, db_client, user_cache, user)
         elif data.startswith("settings_"):
             await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
@@ -82,7 +93,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif data.startswith("admin_"):
             await handle_admin_action(query, data, db_client, user, config, translator)
         elif data == "back_main":
-            await handle_main_menu(query, config, user, translator)
+            await handle_main_menu(query, config, user, None, db_client, user_cache)
         else:
             logger.warning(f"Unknown callback data: {data}")
             
@@ -94,18 +105,22 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 
-async def handle_main_menu(query, config: Config, user, translator=None):
+async def handle_main_menu(query, config: Config, user, translator=None, db_client=None, user_cache=None):
     """Handle main menu navigation."""
-    if translator is None:
+    if translator is None and db_client and user_cache:
+        translator = await get_user_translator(user.id, db_client, user_cache)
+    elif translator is None:
         from bot.i18n import get_translator
         translator = get_translator()
     
     keyboard = KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
     
+    welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
+    welcome_text += f"🤖 **Hour Watcher Bot**\n"
+    welcome_text += translator.translate('welcome.choose_action')
+    
     await query.edit_message_text(
-        f"👋 Главное меню\n\n"
-        f"🤖 **Hour Watcher Bot**\n"
-        f"Выбери действие:",
+        welcome_text,
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
@@ -115,23 +130,29 @@ async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTL
     """Handle settings menu display."""
     from bot.database.user_operations import UserOperations
 
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
     # Get user settings
     user_ops = UserOperations(db_client, user_cache)
     user_data = await user_ops.get_user_settings(user.id)
     
     if not user_data:
         await query.edit_message_text(
-            "❌ Не удалось получить настройки.",
-            reply_markup=KeyboardGenerator.main_menu()
+            translator.translate('errors.database'),
+            reply_markup=KeyboardGenerator.main_menu(False, translator)
         )
         return
     
     keyboard = create_settings_menu()
     
-    settings_text = f"⚙️ **Настройки**\n\n" \
-                   f"🔔 Уведомления: {'✅ Включены' if user_data['enabled'] else '❌ Отключены'}\n" \
-                   f"⏰ Время: {user_data['window_start']} - {user_data['window_end']}\n" \
-                   f"📊 Частота: каждые {user_data['interval_min']} минут"
+    # Localized settings display
+    enabled_status = translator.translate('settings.notifications_enabled') if user_data['enabled'] else translator.translate('settings.notifications_disabled')
+    
+    settings_text = f"{translator.translate('settings.current_title')}\n\n"
+    settings_text += f"{translator.translate('settings.notifications', status=enabled_status)}\n"
+    settings_text += f"⏰ {translator.translate('settings.time_window')}: {user_data['window_start']} - {user_data['window_end']}\n"
+    settings_text += f"📊 {translator.translate('settings.frequency')}: {translator.translate('settings.every_minutes', minutes=user_data['interval_min'])}"
 
     await query.edit_message_text(
         settings_text,
