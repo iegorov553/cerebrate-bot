@@ -97,8 +97,8 @@ class UserOperations:
             
             # Invalidate cache if available
             if self.cache:
-                self.cache.invalidate(f"user_settings_{user_id}")
-                self.cache.invalidate(f"user_{user_id}")
+                await self.cache.invalidate(f"user_settings_{user_id}")
+                await self.cache.invalidate(f"user_{user_id}")
             
             logger.info("User settings updated", user_id=user_id, updates=list(updates.keys()))
             return True
@@ -119,8 +119,8 @@ class UserOperations:
                         
                         # Invalidate cache if available
                         if self.cache:
-                            self.cache.invalidate(f"user_settings_{user_id}")
-                            self.cache.invalidate(f"user_{user_id}")
+                            await self.cache.invalidate(f"user_settings_{user_id}")
+                            await self.cache.invalidate(f"user_{user_id}")
                         
                         logger.info("User settings updated (without language)", user_id=user_id, updates=list(updates_without_language.keys()))
                         return True

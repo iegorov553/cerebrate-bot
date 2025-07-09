@@ -18,12 +18,12 @@ from monitoring import get_logger, set_user_context, track_errors_async
 logger = get_logger(__name__)
 
 
-async def get_user_language(user_id: int, db_client: DatabaseClient, user_cache: TTLCache) -> str:
+async def get_user_language(user_id: int, db_client: DatabaseClient, user_cache: TTLCache, force_refresh: bool = False) -> str:
     """Get user language from database with fallback."""
     try:
         from bot.database.user_operations import UserOperations
         user_ops = UserOperations(db_client, user_cache)
-        user_data = await user_ops.get_user_settings(user_id)
+        user_data = await user_ops.get_user_settings(user_id, force_refresh=force_refresh)
         
         if user_data and 'language' in user_data:
             return user_data['language']
@@ -33,10 +33,9 @@ async def get_user_language(user_id: int, db_client: DatabaseClient, user_cache:
     return 'ru'  # Default fallback
 
 
-async def get_user_translator(user_id: int, db_client: DatabaseClient, user_cache: TTLCache):
+async def get_user_translator(user_id: int, db_client: DatabaseClient, user_cache: TTLCache, force_refresh: bool = False):
     """Get translator configured for user's language."""
-    user_language = await get_user_language(user_id, db_client, user_cache)
-    translator = get_translator()
+    user_language = await get_user_language(user_id, db_client, user_cache, force_refresh=force_refresh)
     # Create a copy to avoid modifying global translator
     from bot.i18n.translator import Translator
     user_translator = Translator()
@@ -63,7 +62,9 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     user_cache: TTLCache = context.bot_data['user_cache']
     
     # Setup translator with user's language
-    user_language = await get_user_language(user.id, db_client, user_cache)
+    # For language change callbacks, force refresh cache
+    force_refresh = data.startswith("language_") or data == "menu_language"
+    user_language = await get_user_language(user.id, db_client, user_cache, force_refresh=force_refresh)
     from bot.i18n.translator import Translator
     translator = Translator()
     translator.set_language(user_language)
@@ -257,6 +258,11 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
         from bot.database.user_operations import UserOperations
         user_ops = UserOperations(db_client, user_cache)
         success = await user_ops.update_user_settings(user.id, {'language': new_language})
+        
+        # Force cache invalidation after language change
+        if user_cache:
+            await user_cache.invalidate(f"user_settings_{user.id}")
+            await user_cache.invalidate(f"user_{user.id}")
         
         if success:
             # Create new translator with new language (don't modify global one)
