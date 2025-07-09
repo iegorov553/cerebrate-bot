@@ -42,6 +42,7 @@
   "friends": {
     "title": "👥 **Friends**",
     "subtitle": "Manage friends and social connections:",
+    "description": "Manage friends and social connections:",
     "add": "➕ Add Friend",
     "requests": "📥 Friend Requests",
     "list": "👥 My Friends",
@@ -63,6 +64,7 @@
   "history": {
     "title": "📊 **Activity History**",
     "subtitle": "Open the web interface to view detailed history:",
+    "description": "Open the web interface to view detailed history:",
     "open_button": "📊 Open History"
   },
   

@@ -259,7 +259,8 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
         
         if success:
             # Create new translator with new language (don't modify global one)
-            new_translator = get_translator()
+            from bot.i18n.translator import Translator
+            new_translator = Translator()
             new_translator.set_language(new_language)
             
             # Get language info
@@ -274,21 +275,25 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
             )
         else:
             # If language column doesn't exist, just show success message anyway
-            fallback_translator = get_translator()
+            from bot.i18n.translator import Translator
+            fallback_translator = Translator()
             fallback_translator.set_language(new_language)  # Set temporarily for this response
             
             # Get language info
             lang_info = fallback_translator.get_language_info(new_language)
             
             await query.edit_message_text(
-                f"✅ Язык изменён на {lang_info['native']} {lang_info['flag']}\n\n"
+                fallback_translator.translate('language.changed', 
+                                           language=lang_info['native'], 
+                                           flag=lang_info['flag']) + "\n\n"
                 "📝 *Примечание: изменения будут применены после добавления поддержки в базу данных*",
                 reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, fallback_translator),
                 parse_mode='Markdown'
             )
     except Exception as e:
         logger.error(f"Error changing language: {e}")
-        translator = get_translator()
+        from bot.i18n.translator import Translator
+        translator = Translator()
         await query.edit_message_text(
             translator.translate('errors.general'),
             reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),

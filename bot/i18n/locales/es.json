@@ -42,6 +42,7 @@
   "friends": {
     "title": "👥 **Amigos**",
     "subtitle": "Gestiona amigos y conexiones sociales:",
+    "description": "Gestiona amigos y conexiones sociales:",
     "add": "➕ Agregar Amigo",
     "requests": "📥 Solicitudes de Amistad",
     "list": "👥 Mis Amigos",
@@ -63,6 +64,7 @@
   "history": {
     "title": "📊 **Historial de Actividad**",
     "subtitle": "Abre la interfaz web para ver el historial detallado:",
+    "description": "Abre la interfaz web para ver el historial detallado:",
     "open_button": "📊 Abrir Historial"
   },
   
