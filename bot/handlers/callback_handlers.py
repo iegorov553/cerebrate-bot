@@ -61,6 +61,9 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
     
+    # Get callback data first
+    data = query.data
+    
     # Setup translator with user's language
     # For language change callbacks, force refresh cache
     force_refresh = data.startswith("language_") or data == "menu_language"
@@ -68,8 +71,6 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     from bot.i18n.translator import Translator
     translator = Translator()
     translator.set_language(user_language)
-    
-    data = query.data
     
     try:
         if data == "main_menu":
