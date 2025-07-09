@@ -36,7 +36,9 @@
     "notifications_disabled_msg": "🔔 ¡Notificaciones ❌ desactivadas!\n\nVolviendo a configuración...",
     "error_get": "❌ No se pudo obtener la configuración.",
     "error_update": "❌ Error al actualizar configuración.",
-    "error_missing": "❌ No se pudo obtener la configuración. Intenta /start"
+    "error_missing": "❌ No se pudo obtener la configuración. Intenta /start",
+    "time_window_help": "⏰ **Configuración de Horario**\\n\\nEnvía comando:\\n`/window HH:MM-HH:MM`\\n\\nEjemplo: `/window 09:00-22:00`",
+    "frequency_help": "📊 **Configuración de Frecuencia**\\n\\nEnvía comando:\\n`/freq N`\\n\\nDonde N son minutos entre notificaciones\\nEjemplo: `/freq 120` (cada 2 horas)"
   },
   
   "friends": {

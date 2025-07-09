@@ -36,7 +36,9 @@
     "notifications_disabled_msg": "🔔 Notifications ❌ disabled!\n\nReturning to settings...",
     "error_get": "❌ Failed to get settings.",
     "error_update": "❌ Error updating settings.",
-    "error_missing": "❌ Failed to get settings. Try /start"
+    "error_missing": "❌ Failed to get settings. Try /start",
+    "time_window_help": "⏰ **Time Window Settings**\\n\\nSend command:\\n`/window HH:MM-HH:MM`\\n\\nExample: `/window 09:00-22:00`",
+    "frequency_help": "📊 **Notification Frequency Settings**\\n\\nSend command:\\n`/freq N`\\n\\nWhere N is minutes between notifications\\nExample: `/freq 120` (every 2 hours)"
   },
   
   "friends": {

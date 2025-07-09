@@ -64,7 +64,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     
     # Setup translator with user's language
     user_language = await get_user_language(user.id, db_client, user_cache)
-    translator = get_translator()
+    from bot.i18n.translator import Translator
+    translator = Translator()
     translator.set_language(user_language)
     
     data = query.data
@@ -89,7 +90,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif data.startswith("settings_"):
             await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
-            await handle_friends_action(query, data, db_client, user, config, translator)
+            await handle_friends_action(query, data, db_client, user, config, translator, user_cache)
         elif data.startswith("admin_"):
             await handle_admin_action(query, data, db_client, user, config, translator, user_cache)
         elif data == "back_main":
@@ -338,8 +339,7 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
 async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
     """Handle settings-related actions."""
     if translator is None:
-        from bot.i18n import get_translator
-        translator = get_translator()
+        translator = await get_user_translator(user.id, db_client, user_cache)
     
     action = data.replace("settings_", "")
     
@@ -352,7 +352,7 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
         user_settings = await user_ops.get_user_settings(user.id)
         if not user_settings:
             await query.edit_message_text(
-                "❌ Не удалось получить настройки.",
+                translator.translate('settings.error_get'),
                 reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
             )
             return
@@ -362,16 +362,18 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
         success = await user_ops.update_user_settings(user.id, {'enabled': new_enabled})
         
         if success:
-            status_text = "включены" if new_enabled else "отключены"
-            emoji = "✅" if new_enabled else "❌"
+            if new_enabled:
+                message = translator.translate('settings.notifications_enabled_msg')
+            else:
+                message = translator.translate('settings.notifications_disabled_msg')
+            
             await query.edit_message_text(
-                f"🔔 Уведомления {emoji} {status_text}!\n\n"
-                "Возвращаемся к настройкам...",
+                message,
                 reply_markup=create_settings_menu()
             )
         else:
             await query.edit_message_text(
-                "❌ Ошибка при изменении настроек.",
+                translator.translate('settings.error_update'),
                 reply_markup=create_settings_menu()
             )
     elif action == "back":
@@ -379,20 +381,13 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
         await handle_main_menu(query, config, user, translator, db_client, user_cache)
     elif action == "time_window":
         await query.edit_message_text(
-            "⏰ **Настройка времени уведомлений**\n\n"
-            "Отправьте команду:\n"
-            "`/window HH:MM-HH:MM`\n\n"
-            "Например: `/window 09:00-22:00`",
+            translator.translate('settings.time_window_help'),
             reply_markup=create_settings_menu(),
             parse_mode='Markdown'
         )
     elif action == "frequency":
         await query.edit_message_text(
-            "📊 **Настройка частоты уведомлений**\n\n"
-            "Отправьте команду:\n"
-            "`/freq N`\n\n"
-            "Где N - количество минут между уведомлениями\n"
-            "Например: `/freq 120` (каждые 2 часа)",
+            translator.translate('settings.frequency_help'),
             reply_markup=create_settings_menu(),
             parse_mode='Markdown'
         )
@@ -400,11 +395,14 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
         await handle_settings_menu(query, db_client, user_cache, user)
 
 
-async def handle_friends_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None):
+async def handle_friends_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None, user_cache=None):
     """Handle friends-related actions."""
     if translator is None:
-        from bot.i18n import get_translator
-        translator = get_translator()
+        if user_cache:
+            translator = await get_user_translator(user.id, db_client, user_cache)
+        else:
+            from bot.i18n.translator import Translator
+            translator = Translator()
     
     action = data.replace("friends_", "")
     
