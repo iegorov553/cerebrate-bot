@@ -91,7 +91,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif data.startswith("friends_"):
             await handle_friends_action(query, data, db_client, user, config, translator)
         elif data.startswith("admin_"):
-            await handle_admin_action(query, data, db_client, user, config, translator)
+            await handle_admin_action(query, data, db_client, user, config, translator, user_cache)
         elif data == "back_main":
             await handle_main_menu(query, config, user, None, db_client, user_cache)
         else:
@@ -161,62 +161,71 @@ async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTL
     )
 
 
-async def handle_friends_menu(query):
+async def handle_friends_menu(query, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle friends menu display."""
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
     keyboard = create_friends_menu()
     
     await query.edit_message_text(
-        "👥 **Друзья**\n\n"
-        "Управление друзьями и социальными связями:",
+        f"👥 **{translator.translate('menu.friends')}**\n\n"
+        f"{translator.translate('friends.description', default='Управление друзьями и социальными связями:')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
 
 
-async def handle_history(query, config: Config):
+async def handle_history(query, config: Config, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle history web app opening."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
     
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
     web_app = WebAppInfo(url=f"{config.webapp_url}/history")
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📊 Открыть историю", web_app=web_app)],
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+        [InlineKeyboardButton(f"📊 {translator.translate('history.open_button', default='Открыть историю')}", web_app=web_app)],
+        [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
     await query.edit_message_text(
-        "📊 **История активности**\n\n"
-        "Откройте веб-интерфейс для просмотра детальной истории:",
+        f"📊 **{translator.translate('menu.history')}**\n\n"
+        f"{translator.translate('history.description', default='Откройте веб-интерфейс для просмотра детальной истории:')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
 
 
-async def handle_admin_panel(query, config: Config, user):
+async def handle_admin_panel(query, config: Config, user, db_client: DatabaseClient, user_cache: TTLCache):
     """Handle admin panel access."""
     from bot.admin.admin_operations import AdminOperations
 
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
     # Create a temporary admin_ops instance for this check
     admin_ops = AdminOperations(None, config)  # db_client not needed for is_admin check
     
     if not admin_ops.is_admin(user.id):
         await query.edit_message_text(
-            "🔒 **Доступ запрещён**\n\n"
-            "Эта функция доступна только администраторам.",
-            reply_markup=KeyboardGenerator.main_menu()
+            f"🔒 **{translator.translate('admin.access_denied', default='Доступ запрещён')}**\n\n"
+            f"{translator.translate('admin.admin_only', default='Эта функция доступна только администраторам.')}",
+            reply_markup=KeyboardGenerator.main_menu(False, translator)
         )
         return
     
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📢 Рассылка", callback_data="admin_broadcast")],
-        [InlineKeyboardButton("📊 Статистика", callback_data="admin_stats")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="main_menu")]
+        [InlineKeyboardButton(f"📢 {translator.translate('admin.broadcast', default='Рассылка')}", callback_data="admin_broadcast")],
+        [InlineKeyboardButton(f"📊 {translator.translate('admin.stats', default='Статистика')}", callback_data="admin_stats")],
+        [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
     await query.edit_message_text(
-        "👨‍💼 **Админ-панель**\n\n"
-        "Выберите действие:",
+        f"👨‍💼 **{translator.translate('admin.panel', default='Админ-панель')}**\n\n"
+        f"{translator.translate('admin.choose_action', default='Выберите действие:')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
@@ -287,9 +296,12 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
         )
 
 
-async def handle_help(query, translator):
+async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle help menu display."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
     
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
@@ -359,7 +371,7 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
             )
     elif action == "back":
         # Use config passed as parameter
-        await handle_main_menu(query, config, user, translator)
+        await handle_main_menu(query, config, user, translator, db_client, user_cache)
     elif action == "time_window":
         await query.edit_message_text(
             "⏰ **Настройка времени уведомлений**\n\n"
@@ -431,7 +443,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             )
     elif action == "back":
         # Use config passed as parameter
-        await handle_main_menu(query, config, user, translator)
+        await handle_main_menu(query, config, user, translator, db_client, user_cache)
     elif action == "requests":
         await query.edit_message_text(
             "📥 **Запросы в друзья**\n\n"
@@ -461,11 +473,14 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
         )
 
 
-async def handle_admin_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None):
+async def handle_admin_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None, user_cache=None):
     """Handle admin-related actions."""
     if translator is None:
-        from bot.i18n import get_translator
-        translator = get_translator()
+        if user_cache:
+            translator = await get_user_translator(user.id, db_client, user_cache)
+        else:
+            from bot.i18n import get_translator
+            translator = get_translator()
     
     from bot.admin.admin_operations import AdminOperations
     admin_ops = AdminOperations(db_client, config)
