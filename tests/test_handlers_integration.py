@@ -139,7 +139,8 @@ class TestHandlerIntegration:
                 'enabled': True,
                 'window_start': '09:00:00',
                 'window_end': '22:00:00',
-                'interval_min': 120
+                'interval_min': 120,
+                'language': 'ru'
             }
             
             with patch('bot.database.user_operations.UserOperations') as mock_user_ops_class:
@@ -156,8 +157,10 @@ class TestHandlerIntegration:
                 # Verify message was edited (settings menu shown)
                 callback_query.edit_message_text.assert_called_once()
                 
-                # Verify settings were fetched
-                mock_user_ops.get_user_settings.assert_called_once_with(123456789)
+                # Verify settings were fetched (now called multiple times due to language loading)
+                # Called once for get_user_language and once for handle_settings_menu
+                assert mock_user_ops.get_user_settings.call_count >= 2
+                mock_user_ops.get_user_settings.assert_any_call(123456789)
 
     @pytest.mark.asyncio
     async def test_message_activity_logging(self):
