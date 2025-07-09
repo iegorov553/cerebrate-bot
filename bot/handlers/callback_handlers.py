@@ -212,8 +212,8 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
     
     if not admin_ops.is_admin(user.id):
         await query.edit_message_text(
-            f"🔒 **{translator.translate('admin.access_denied', default='Доступ запрещён')}**\n\n"
-            f"{translator.translate('admin.admin_only', default='Эта функция доступна только администраторам.')}",
+            f"🔒 **{translator.translate('admin.access_denied')}**\n\n"
+            f"{translator.translate('admin.admin_only')}",
             reply_markup=KeyboardGenerator.main_menu(False, translator)
         )
         return
@@ -221,14 +221,14 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📢 {translator.translate('admin.broadcast', default='Рассылка')}", callback_data="admin_broadcast")],
-        [InlineKeyboardButton(f"📊 {translator.translate('admin.stats', default='Статистика')}", callback_data="admin_stats")],
+        [InlineKeyboardButton(f"📢 {translator.translate('admin.broadcast')}", callback_data="admin_broadcast")],
+        [InlineKeyboardButton(f"📊 {translator.translate('admin.stats')}", callback_data="admin_stats")],
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
     await query.edit_message_text(
-        f"👨‍💼 **{translator.translate('admin.panel', default='Админ-панель')}**\n\n"
-        f"{translator.translate('admin.choose_action', default='Выберите действие:')}",
+        f"👨‍💼 **{translator.translate('admin.panel')}**\n\n"
+        f"{translator.translate('admin.choose_action')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )

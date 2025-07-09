@@ -73,10 +73,14 @@
   "admin": {
     "title": "👨‍💼 **Admin Panel**",
     "subtitle": "Choose an action:",
+    "panel": "Admin Panel",
+    "choose_action": "Choose an action:",
     "broadcast": "📢 Broadcast",
+    "stats": "📊 Statistics",
     "statistics": "📊 Statistics",
     "test_broadcast": "🧪 Test Broadcast",
-    "access_denied": "🔒 **Access Denied**\n\nThis feature is only available to administrators."
+    "access_denied": "Access Denied",
+    "admin_only": "This feature is only available to administrators."
   },
   
   "help": {
