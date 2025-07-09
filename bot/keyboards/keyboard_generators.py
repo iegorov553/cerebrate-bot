@@ -25,8 +25,8 @@ class KeyboardGenerator:
             InlineKeyboardMarkup for main menu
         """
         if translator is None:
-            from bot.i18n import get_translator
-            translator = get_translator()
+            from bot.i18n.translator import Translator
+            translator = Translator()
             
         keyboard = [
             [InlineKeyboardButton(translator.translate("menu.settings"), callback_data="menu_settings")],
@@ -45,21 +45,26 @@ class KeyboardGenerator:
         return InlineKeyboardMarkup(keyboard)
     
     @staticmethod
-    def settings_menu() -> InlineKeyboardMarkup:
+    def settings_menu(translator=None) -> InlineKeyboardMarkup:
         """Generate settings menu keyboard."""
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+            
         keyboard = [
-            [InlineKeyboardButton("🔔 Toggle Notifications", callback_data="settings_toggle_notifications")],
-            [InlineKeyboardButton("⏰ Set Time Window", callback_data="settings_time_window")],
-            [InlineKeyboardButton("📊 Set Frequency", callback_data="settings_frequency")],
-            [InlineKeyboardButton("📝 View Current Settings", callback_data="settings_view")],
-            [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
+            [InlineKeyboardButton(translator.translate("settings.toggle_notifications"), callback_data="settings_toggle_notifications")],
+            [InlineKeyboardButton(translator.translate("settings.set_time_window"), callback_data="settings_time_window")],
+            [InlineKeyboardButton(translator.translate("settings.set_frequency"), callback_data="settings_frequency")],
+            [InlineKeyboardButton(translator.translate("settings.view_settings"), callback_data="settings_view")],
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
         ]
         return InlineKeyboardMarkup(keyboard)
     
     @staticmethod
     def friends_menu(
         pending_requests: int = 0, 
-        friends_count: int = 0
+        friends_count: int = 0,
+        translator=None
     ) -> InlineKeyboardMarkup:
         """
         Generate friends menu keyboard.
@@ -67,30 +72,35 @@ class KeyboardGenerator:
         Args:
             pending_requests: Number of pending friend requests
             friends_count: Total number of friends
+            translator: Translator instance for localization
             
         Returns:
             InlineKeyboardMarkup for friends menu
         """
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+            
         keyboard = [
-            [InlineKeyboardButton("➕ Add Friend", callback_data="friends_add")],
+            [InlineKeyboardButton(translator.translate("friends.add"), callback_data="friends_add")],
         ]
         
         # Friend requests with count indicator
-        requests_text = "📥 Friend Requests"
+        requests_text = translator.translate("friends.requests")
         if pending_requests > 0:
             requests_text += f" ({pending_requests})"
         keyboard.append([InlineKeyboardButton(requests_text, callback_data="friends_requests")])
         
         # Friends list with count
-        friends_text = "👥 My Friends"
+        friends_text = translator.translate("friends.list")
         if friends_count > 0:
             friends_text += f" ({friends_count})"
         keyboard.append([InlineKeyboardButton(friends_text, callback_data="friends_list")])
         
         keyboard.extend([
-            [InlineKeyboardButton("🔍 Find Friends", callback_data="friends_discover")],
-            [InlineKeyboardButton("📊 Friend Activities", callback_data="friends_activities")],
-            [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
+            [InlineKeyboardButton(translator.translate("friends.discover"), callback_data="friends_discover")],
+            [InlineKeyboardButton(translator.translate("friends.activities"), callback_data="friends_activities")],
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
         ])
         
         return InlineKeyboardMarkup(keyboard)
@@ -355,8 +365,8 @@ class KeyboardGenerator:
             InlineKeyboardMarkup for language selection
         """
         if translator is None:
-            from bot.i18n import get_translator
-            translator = get_translator()
+            from bot.i18n.translator import Translator
+            translator = Translator()
         
         keyboard = [
             [InlineKeyboardButton(
@@ -378,19 +388,19 @@ class KeyboardGenerator:
 
 # Convenience functions for common keyboards
 
-def get_main_menu_keyboard(is_admin: bool = False) -> InlineKeyboardMarkup:
+def get_main_menu_keyboard(is_admin: bool = False, translator=None) -> InlineKeyboardMarkup:
     """Get main menu keyboard."""
-    return KeyboardGenerator.main_menu(is_admin)
+    return KeyboardGenerator.main_menu(is_admin, translator)
 
 
-def get_settings_keyboard() -> InlineKeyboardMarkup:
+def get_settings_keyboard(translator=None) -> InlineKeyboardMarkup:
     """Get settings menu keyboard."""
-    return KeyboardGenerator.settings_menu()
+    return KeyboardGenerator.settings_menu(translator)
 
 
-def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0) -> InlineKeyboardMarkup:
+def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0, translator=None) -> InlineKeyboardMarkup:
     """Get friends menu keyboard."""
-    return KeyboardGenerator.friends_menu(pending_requests, friends_count)
+    return KeyboardGenerator.friends_menu(pending_requests, friends_count, translator)
 
 
 def get_admin_keyboard() -> InlineKeyboardMarkup:

@@ -101,8 +101,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception as e:
         logger.error(f"Error handling callback {data}: {e}")
         await query.edit_message_text(
-            "❌ Произошла ошибка. Попробуйте ещё раз.",
-            reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
+            translator.translate('errors.general'),
+            reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
         )
 
 
@@ -145,7 +145,7 @@ async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTL
         )
         return
     
-    keyboard = create_settings_menu()
+    keyboard = create_settings_menu(translator)
     
     # Localized settings display
     enabled_status = translator.translate('settings.notifications_enabled') if user_data['enabled'] else translator.translate('settings.notifications_disabled')
@@ -167,7 +167,7 @@ async def handle_friends_menu(query, db_client: DatabaseClient, user_cache: TTLC
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
-    keyboard = create_friends_menu()
+    keyboard = create_friends_menu(0, 0, translator)
     
     await query.edit_message_text(
         f"👥 **{translator.translate('menu.friends')}**\n\n"
@@ -369,12 +369,12 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
             
             await query.edit_message_text(
                 message,
-                reply_markup=create_settings_menu()
+                reply_markup=create_settings_menu(translator)
             )
         else:
             await query.edit_message_text(
                 translator.translate('settings.error_update'),
-                reply_markup=create_settings_menu()
+                reply_markup=create_settings_menu(translator)
             )
     elif action == "back":
         # Use config passed as parameter
@@ -382,13 +382,13 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
     elif action == "time_window":
         await query.edit_message_text(
             translator.translate('settings.time_window_help'),
-            reply_markup=create_settings_menu(),
+            reply_markup=create_settings_menu(translator),
             parse_mode='Markdown'
         )
     elif action == "frequency":
         await query.edit_message_text(
             translator.translate('settings.frequency_help'),
-            reply_markup=create_settings_menu(),
+            reply_markup=create_settings_menu(translator),
             parse_mode='Markdown'
         )
     elif action == "view":
@@ -411,7 +411,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             "➕ **Добавить друга**\n\n"
             "Отправьте команду:\n"
             "`/add_friend @username`",
-            reply_markup=create_friends_menu(),
+            reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
     elif action == "list":
@@ -426,7 +426,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                 "👥 **Список друзей**\n\n"
                 "У вас пока нет друзей.\n"
                 "Добавьте друзей через команду `/add_friend @username`",
-                reply_markup=create_friends_menu(),
+                reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
         else:
@@ -441,7 +441,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                 
             await query.edit_message_text(
                 friends_text,
-                reply_markup=create_friends_menu(),
+                reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
     elif action == "back":
@@ -454,7 +454,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             "• `/friend_requests` - посмотреть запросы\n"
             "• `/accept @username` - принять запрос\n"
             "• `/decline @username` - отклонить запрос",
-            reply_markup=create_friends_menu(),
+            reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
     elif action == "discover":
@@ -462,7 +462,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             "🔍 **Поиск друзей**\n\n"
             "Эта функция находится в разработке.\n"
             "Пока используйте команду `/add_friend @username`",
-            reply_markup=create_friends_menu(),
+            reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
     elif action == "activities":
@@ -471,7 +471,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             "Используйте команду:\n"
             "`/activities [@username]`\n\n"
             "Или откройте веб-интерфейс для детального просмотра",
-            reply_markup=create_friends_menu(),
+            reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
 
