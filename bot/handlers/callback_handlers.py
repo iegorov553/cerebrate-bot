@@ -268,7 +268,7 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
             
             await query.edit_message_text(
                 new_translator.translate('language.changed', 
-                                       language=lang_info['native'], 
+                                       language_name=lang_info['native'], 
                                        flag=lang_info['flag']),
                 reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, new_translator),
                 parse_mode='Markdown'
@@ -284,7 +284,7 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
             
             await query.edit_message_text(
                 fallback_translator.translate('language.changed', 
-                                           language=lang_info['native'], 
+                                           language_name=lang_info['native'], 
                                            flag=lang_info['flag']) + "\n\n"
                 "📝 *Примечание: изменения будут применены после добавления поддержки в базу данных*",
                 reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, fallback_translator),

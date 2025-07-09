@@ -113,8 +113,8 @@
   "language": {
     "title": "🌍 **Выбор языка**",
     "subtitle": "Выберите предпочитаемый язык:",
-    "current": "Текущий язык: {language} {flag}",
-    "changed": "✅ Язык изменён на {language} {flag}",
+    "current": "Текущий язык: {language_name} {flag}",
+    "changed": "✅ Язык изменён на {language_name} {flag}",
     "russian": "🇷🇺 Русский",
     "english": "🇺🇸 English", 
     "spanish": "🇪🇸 Español"
