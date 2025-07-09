@@ -11,7 +11,7 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.i18n import get_translator
-from bot.keyboards.keyboard_generators import create_friends_menu, create_language_menu, create_main_menu, create_settings_menu
+from bot.keyboards.keyboard_generators import KeyboardGenerator, create_friends_menu, create_language_menu, create_main_menu, create_settings_menu
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
@@ -79,6 +79,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
             await handle_friends_action(query, data, db_client, user, config, translator)
+        elif data.startswith("admin_"):
+            await handle_admin_action(query, data, db_client, user, config, translator)
         elif data == "back_main":
             await handle_main_menu(query, config, user, translator)
         else:
@@ -92,9 +94,13 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         )
 
 
-async def handle_main_menu(query, config: Config, user):
+async def handle_main_menu(query, config: Config, user, translator=None):
     """Handle main menu navigation."""
-    keyboard = create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
+    if translator is None:
+        from bot.i18n import get_translator
+        translator = get_translator()
+    
+    keyboard = KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
     
     await query.edit_message_text(
         f"👋 Главное меню\n\n"
@@ -116,7 +122,7 @@ async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTL
     if not user_data:
         await query.edit_message_text(
             "❌ Не удалось получить настройки.",
-            reply_markup=create_main_menu()
+            reply_markup=KeyboardGenerator.main_menu()
         )
         return
     
@@ -175,7 +181,7 @@ async def handle_admin_panel(query, config: Config, user):
         await query.edit_message_text(
             "🔒 **Доступ запрещён**\n\n"
             "Эта функция доступна только администраторам.",
-            reply_markup=create_main_menu()
+            reply_markup=KeyboardGenerator.main_menu()
         )
         return
     
@@ -197,7 +203,7 @@ async def handle_admin_panel(query, config: Config, user):
 
 async def handle_language_menu(query, current_language: str, translator):
     """Handle language menu display."""
-    keyboard = create_language_menu(current_language, translator)
+    keyboard = KeyboardGenerator.language_menu(current_language, translator)
     
     help_text = f"{translator.translate('language.title')}\n\n{translator.translate('language.subtitle')}"
     
@@ -233,14 +239,14 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
                 translator.translate('language.changed', 
                                    language=lang_info['native'], 
                                    flag=lang_info['flag']),
-                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
                 parse_mode='Markdown'
             )
         else:
             translator = get_translator()
             await query.edit_message_text(
                 translator.translate('errors.database'),
-                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
                 parse_mode='Markdown'
             )
     except Exception as e:
@@ -284,8 +290,12 @@ async def handle_help(query, translator):
     )
 
 
-async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config):
+async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
     """Handle settings-related actions."""
+    if translator is None:
+        from bot.i18n import get_translator
+        translator = get_translator()
+    
     action = data.replace("settings_", "")
     
     if action == "toggle_notifications":
@@ -298,7 +308,7 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
         if not user_settings:
             await query.edit_message_text(
                 "❌ Не удалось получить настройки.",
-                reply_markup=create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
+                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
             )
             return
             
@@ -321,11 +331,36 @@ async def handle_settings_action(query, data: str, db_client: DatabaseClient, us
             )
     elif action == "back":
         # Use config passed as parameter
-        await handle_main_menu(query, config, user)
+        await handle_main_menu(query, config, user, translator)
+    elif action == "time_window":
+        await query.edit_message_text(
+            "⏰ **Настройка времени уведомлений**\n\n"
+            "Отправьте команду:\n"
+            "`/window HH:MM-HH:MM`\n\n"
+            "Например: `/window 09:00-22:00`",
+            reply_markup=create_settings_menu(),
+            parse_mode='Markdown'
+        )
+    elif action == "frequency":
+        await query.edit_message_text(
+            "📊 **Настройка частоты уведомлений**\n\n"
+            "Отправьте команду:\n"
+            "`/freq N`\n\n"
+            "Где N - количество минут между уведомлениями\n"
+            "Например: `/freq 120` (каждые 2 часа)",
+            reply_markup=create_settings_menu(),
+            parse_mode='Markdown'
+        )
+    elif action == "view":
+        await handle_settings_menu(query, db_client, user_cache, user)
 
 
-async def handle_friends_action(query, data: str, db_client: DatabaseClient, user, config: Config):
+async def handle_friends_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None):
     """Handle friends-related actions."""
+    if translator is None:
+        from bot.i18n import get_translator
+        translator = get_translator()
+    
     action = data.replace("friends_", "")
     
     if action == "add":
@@ -368,7 +403,74 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             )
     elif action == "back":
         # Use config passed as parameter
-        await handle_main_menu(query, config, user)
+        await handle_main_menu(query, config, user, translator)
+    elif action == "requests":
+        await query.edit_message_text(
+            "📥 **Запросы в друзья**\n\n"
+            "Используйте команды:\n"
+            "• `/friend_requests` - посмотреть запросы\n"
+            "• `/accept @username` - принять запрос\n"
+            "• `/decline @username` - отклонить запрос",
+            reply_markup=create_friends_menu(),
+            parse_mode='Markdown'
+        )
+    elif action == "discover":
+        await query.edit_message_text(
+            "🔍 **Поиск друзей**\n\n"
+            "Эта функция находится в разработке.\n"
+            "Пока используйте команду `/add_friend @username`",
+            reply_markup=create_friends_menu(),
+            parse_mode='Markdown'
+        )
+    elif action == "activities":
+        await query.edit_message_text(
+            "📊 **Активности друзей**\n\n"
+            "Используйте команду:\n"
+            "`/activities [@username]`\n\n"
+            "Или откройте веб-интерфейс для детального просмотра",
+            reply_markup=create_friends_menu(),
+            parse_mode='Markdown'
+        )
+
+
+async def handle_admin_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None):
+    """Handle admin-related actions."""
+    if translator is None:
+        from bot.i18n import get_translator
+        translator = get_translator()
+    
+    from bot.admin.admin_operations import AdminOperations
+    admin_ops = AdminOperations(db_client, config)
+    
+    if not admin_ops.is_admin(user.id):
+        await query.edit_message_text(
+            "🔒 **Доступ запрещён**\n\nЭта функция доступна только администраторам.",
+            reply_markup=KeyboardGenerator.main_menu(False, translator),
+            parse_mode='Markdown'
+        )
+        return
+    
+    action = data.replace("admin_", "")
+    
+    if action == "broadcast":
+        await query.edit_message_text(
+            "📢 **Массовая рассылка**\n\n"
+            "Отправьте команду:\n"
+            "`/broadcast <сообщение>`\n\n"
+            "Например: `/broadcast Привет всем!`",
+            reply_markup=KeyboardGenerator.main_menu(True, translator),
+            parse_mode='Markdown'
+        )
+    elif action == "stats":
+        await query.edit_message_text(
+            "📊 **Статистика пользователей**\n\n"
+            "Используйте команду:\n"
+            "`/broadcast_info`",
+            reply_markup=KeyboardGenerator.main_menu(True, translator),
+            parse_mode='Markdown'
+        )
+    else:
+        await handle_main_menu(query, config, user, translator)
 
 
 def setup_callback_handlers(

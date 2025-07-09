@@ -229,11 +229,11 @@ class FriendOperations:
             
             try:
                 # Use direct table queries instead of RPC
-                friends = self.get_friends_list_fallback(user_id)
+                friends = await self.get_friends_list_fallback(user_id)
                 
             except Exception:
                 # Fallback to original method
-                friends = self.get_friends_list_fallback(user_id)
+                friends = await self.get_friends_list_fallback(user_id)
             
             logger.debug("Friends list fetched", user_id=user_id, count=len(friends))
             return friends
