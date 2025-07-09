@@ -69,7 +69,7 @@ class UserOperations:
         cache_key = f"user_settings_{user_id}"
         
         if not force_refresh and self.cache:
-            settings = self.cache.get(cache_key)
+            settings = await self.cache.get(cache_key)
             if settings is not None:
                 logger.debug("User settings from cache", user_id=user_id)
                 return settings
