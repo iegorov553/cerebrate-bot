@@ -104,7 +104,34 @@ class UserOperations:
             return True
             
         except Exception as exc:
-            logger.error("Error updating user settings", user_id=user_id, error=str(exc))
+            error_msg = str(exc)
+            
+            # Check if it's a missing column error (language column not yet added)
+            if "Could not find the 'language' column" in error_msg and 'language' in updates:
+                logger.warning("Language column not found, trying without language update", user_id=user_id)
+                
+                # Retry without language field
+                updates_without_language = {k: v for k, v in updates.items() if k != 'language'}
+                
+                if updates_without_language:
+                    try:
+                        self.db.table("users").update(updates_without_language).eq("tg_id", user_id).execute()
+                        
+                        # Invalidate cache if available
+                        if self.cache:
+                            self.cache.invalidate(f"user_settings_{user_id}")
+                            self.cache.invalidate(f"user_{user_id}")
+                        
+                        logger.info("User settings updated (without language)", user_id=user_id, updates=list(updates_without_language.keys()))
+                        return True
+                    except Exception as exc2:
+                        logger.error("Error updating user settings (fallback)", user_id=user_id, error=str(exc2))
+                        return False
+                else:
+                    logger.warning("Only language field to update, but column not found", user_id=user_id)
+                    return False
+            
+            logger.error("Error updating user settings", user_id=user_id, error=error_msg)
             return False
     
     @track_errors_async("user_lookup")

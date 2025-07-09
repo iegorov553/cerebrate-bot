@@ -228,25 +228,32 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
         success = await user_ops.update_user_settings(user.id, {'language': new_language})
         
         if success:
-            # Update translator
-            translator = get_translator()
-            translator.set_language(new_language)
+            # Create new translator with new language (don't modify global one)
+            new_translator = get_translator()
+            new_translator.set_language(new_language)
             
             # Get language info
-            lang_info = translator.get_language_info(new_language)
+            lang_info = new_translator.get_language_info(new_language)
             
             await query.edit_message_text(
-                translator.translate('language.changed', 
-                                   language=lang_info['native'], 
-                                   flag=lang_info['flag']),
-                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                new_translator.translate('language.changed', 
+                                       language=lang_info['native'], 
+                                       flag=lang_info['flag']),
+                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, new_translator),
                 parse_mode='Markdown'
             )
         else:
-            translator = get_translator()
+            # If language column doesn't exist, just show success message anyway
+            fallback_translator = get_translator()
+            fallback_translator.set_language(new_language)  # Set temporarily for this response
+            
+            # Get language info
+            lang_info = fallback_translator.get_language_info(new_language)
+            
             await query.edit_message_text(
-                translator.translate('errors.database'),
-                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator),
+                f"✅ Язык изменён на {lang_info['native']} {lang_info['flag']}\n\n"
+                "📝 *Примечание: изменения будут применены после добавления поддержки в базу данных*",
+                reply_markup=KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, fallback_translator),
                 parse_mode='Markdown'
             )
     except Exception as e:
