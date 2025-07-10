@@ -39,7 +39,7 @@ class KeyboardGenerator:
         
         keyboard.extend([
             [InlineKeyboardButton(translator.translate("menu.language"), callback_data="menu_language")],
-            [InlineKeyboardButton(translator.translate("menu.help"), callback_data="menu_help")]
+            [InlineKeyboardButton(translator.translate("feedback.title"), callback_data="feedback_menu")]
         ])
         
         return InlineKeyboardMarkup(keyboard)

@@ -87,8 +87,6 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_language_menu(query, user_language, translator)
         elif data.startswith("language_"):
             await handle_language_change(query, data, db_client, user_cache, user, config)
-        elif data == "menu_help":
-            await handle_help(query, db_client, user_cache, user)
         elif data.startswith("settings_"):
             await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
@@ -318,53 +316,6 @@ async def handle_language_change(query, data: str, db_client: DatabaseClient, us
         )
 
 
-async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, user):
-    """Handle help menu display."""
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-    
-    # Get user translator
-    translator = await get_user_translator(user.id, db_client, user_cache)
-    
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(translator.translate("feedback.title"), callback_data="feedback_menu")],
-        [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
-    ])
-    
-    # Build help text from translations
-    # Use array format directly since we updated the JSON files
-    try:
-        commands_list = translator.translate("help.commands")
-        commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
-        
-        how_it_works_list = translator.translate("help.how_it_works")
-        how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
-        
-        friends_info_list = translator.translate("help.friends_info")
-        friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
-    except Exception as e:
-        # Fallback in case of error
-        commands = "Commands not available"
-        how_it_works = "Help not available"
-        friends_info = "Friends info not available"
-        logger.error(f"Error building help text: {e}")
-    
-    # Simple help text for debugging
-    help_text = (
-        f"{translator.translate('help.title')}\n\n"
-        f"{translator.translate('help.description')}\n\n"
-        f"{translator.translate('help.commands_title')}\n"
-        f"{commands}\n\n"
-        f"{translator.translate('help.how_it_works_title')}\n"
-        f"{how_it_works}\n\n"
-        f"{translator.translate('help.friends_title')}\n"
-        f"{friends_info}"
-    )
-    
-    await query.edit_message_text(
-        help_text,
-        reply_markup=keyboard
-    )
-
 
 async def handle_settings_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
     """Handle settings-related actions."""
@@ -561,7 +512,7 @@ async def handle_feedback_action(query, data: str, db_client: DatabaseClient, us
         await query.edit_message_text(
             translator.translate('feedback.disabled'),
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton(translator.translate("menu.back"), callback_data="menu_help")]
+                [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
             ]),
             parse_mode='Markdown'
         )
@@ -573,7 +524,7 @@ async def handle_feedback_action(query, data: str, db_client: DatabaseClient, us
             [InlineKeyboardButton(translator.translate("feedback.bug_report"), callback_data="feedback_bug_report")],
             [InlineKeyboardButton(translator.translate("feedback.feature_request"), callback_data="feedback_feature_request")],
             [InlineKeyboardButton(translator.translate("feedback.general"), callback_data="feedback_general")],
-            [InlineKeyboardButton(translator.translate("menu.back"), callback_data="menu_help")]
+            [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
         ])
         
         await query.edit_message_text(

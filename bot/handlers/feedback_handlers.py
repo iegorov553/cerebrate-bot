@@ -110,16 +110,11 @@ async def handle_feedback_description(
     
     # Show confirmation
     feedback_type = session.get("feedback_type", "general")
-    type_emoji = {
-        "bug_report": "🐛",
-        "feature_request": "💡", 
-        "general": "📝"
-    }.get(feedback_type, "📝")
     
     # Preview message
     preview_text = (
         f"{translator.translate('feedback.confirm_title')}\n\n"
-        f"{type_emoji} **{translator.translate(f'feedback.{feedback_type}')}**\n\n"
+        f"**{translator.translate(f'feedback.{feedback_type}')}**\n\n"
         f"*{description[:500]}{'...' if len(description) > 500 else ''}*"
     )
     
