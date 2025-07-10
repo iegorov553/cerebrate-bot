@@ -322,15 +322,23 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
     
     # Build help text from translations
     # Use array format directly since we updated the JSON files
-    commands_list = translator.translate("help.commands")
-    commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
+    try:
+        commands_list = translator.translate("help.commands")
+        commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
+        
+        how_it_works_list = translator.translate("help.how_it_works")
+        how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
+        
+        friends_info_list = translator.translate("help.friends_info")
+        friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
+    except Exception as e:
+        # Fallback in case of error
+        commands = "Commands not available"
+        how_it_works = "Help not available"
+        friends_info = "Friends info not available"
+        logger.error(f"Error building help text: {e}")
     
-    how_it_works_list = translator.translate("help.how_it_works")
-    how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
-    
-    friends_info_list = translator.translate("help.friends_info")
-    friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
-    
+    # Simple help text for debugging
     help_text = (
         f"{translator.translate('help.title')}\n\n"
         f"{translator.translate('help.description')}\n\n"
@@ -344,8 +352,7 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
     
     await query.edit_message_text(
         help_text,
-        reply_markup=keyboard,
-        parse_mode='Markdown'
+        reply_markup=keyboard
     )
 
 
