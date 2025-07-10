@@ -8,6 +8,7 @@ This file provides comprehensive technical guidance to Claude Code (claude.ai/co
 - **🤖 Activity Tracking**: Personalized notifications with smart scheduling
 - **👥 Social Features**: Friend system with discovery algorithms
 - **📊 Analytics**: Web interface with real-time data visualization
+- **💬 User Feedback**: GitHub Issues integration for bug reports and suggestions
 - **🏗️ Modular Architecture**: Enterprise-grade code organization
 - **🌍 Multi-Language Support**: Full i18n with Russian, English, Spanish (production-ready)
 - **🧪 Full Test Coverage**: 50+ automated tests with CI/CD
@@ -42,11 +43,15 @@ The project has completed migration to modern modular architecture:
 - ✅ **NEW**: Message handlers for activity logging with confirmation
 - ✅ **NEW**: User-specific language loading from database
 - ✅ **NEW**: Persistent language preferences across sessions
+- ✅ **NEW**: GitHub Issues integration for user feedback and bug reports
+- ✅ **NEW**: FeedbackManager with rate limiting and session management
+- ✅ **NEW**: Automated GitHub Issue creation with user tracking
 
 ### Core Technology Stack
 - **Backend**: Python 3.8+ with python-telegram-bot 20.3+
 - **Database**: Supabase PostgreSQL with RLS policies
 - **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
+- **HTTP Client**: aiohttp for GitHub API integration
 - **Deployment**: Railway (bot) + Vercel (webapp)
 - **Monitoring**: Sentry with structured logging
 - **Testing**: pytest with 70%+ coverage
@@ -76,6 +81,11 @@ RELEASE_VERSION=v2.2.0  # For deployment tracking
 CACHE_TTL_SECONDS=300    # Default: 5 minutes
 RATE_LIMIT_ENABLED=true  # Enable rate limiting
 BATCH_SIZE=10           # Broadcast batch size
+
+# GitHub Feedback System (Optional but Recommended)
+GITHUB_FEEDBACK_TOKEN=ghp_xxx...  # GitHub Personal Access Token with repo scope
+GITHUB_REPO=iegorov553/cerebrate-bot  # Repository for creating feedback issues
+FEEDBACK_RATE_LIMIT=3    # Max feedback messages per user per hour
 ```
 
 ### Web App Configuration (Vercel)
@@ -212,6 +222,30 @@ supabase db push
 - Friend system messages
 - Admin panel interface
 - Activity confirmation messages
+- Feedback system interface
+
+### Feedback System ✅ PRODUCTION-READY
+**User Feedback Interface:**
+- **💬 Feedback button** in help menu
+- **3 feedback types**: 🐛 Bug reports, 💡 Feature requests, 📝 General feedback
+- **Rate limiting**: 3 messages per user per hour
+- **GitHub integration**: Automatic Issue creation with tracking links
+- **Session management**: Guided step-by-step process
+- **Preview & confirmation**: User can review before sending
+
+**GitHub Issues Integration:**
+- **Automatic Issue creation** with structured templates
+- **User tracking**: Telegram ID and username included for follow-up
+- **Categorized labels**: `user-feedback`, `bug-report`, `enhancement`, `feedback`
+- **Issue templates**: Formatted with user info, timestamps, bot version
+- **Direct links**: Users receive GitHub Issue URL for status tracking
+
+**Features:**
+- **Multilingual support**: All feedback UI localized in ru/en/es
+- **Rate limiting**: Prevents spam (configurable per hour limit)
+- **Graceful degradation**: Works without GitHub token (logs only)
+- **Session timeout**: 1-hour expiry for incomplete feedback sessions
+- **Rich formatting**: Markdown-formatted GitHub Issues with emoji indicators
 
 ### Settings Menu
 - 🔔 **Notifications toggle**: Enable/disable with one click
@@ -274,8 +308,14 @@ bot/
 │   ├── admin_operations.py   # Admin utilities and verification
 │   └── broadcast_manager.py  # Broadcast system with batching
 ├── handlers/                 # Request handlers
+│   ├── callback_handlers.py  # Inline keyboard callback handling
+│   ├── message_handlers.py   # Text message processing
+│   ├── feedback_handlers.py  # User feedback message processing
 │   ├── error_handler.py      # Comprehensive error handling
 │   └── rate_limit_handler.py # Rate limiting with user-friendly messages
+├── feedback/                 # User feedback system
+│   ├── github_client.py      # GitHub Issues API integration
+│   └── feedback_manager.py   # Feedback session management
 ├── keyboards/                # UI generation
 │   └── keyboard_generators.py # Dynamic inline keyboard creation
 ├── cache/                    # Caching system
@@ -332,6 +372,7 @@ class MultiTierRateLimiter:
         "settings": (10, 300),       # 10 requests per 5 minutes
         "admin": (50, 60),          # 50 requests per minute
         "callback": (30, 60),       # 30 callbacks per minute
+        "feedback": (3, 3600),      # 3 feedback messages per hour
     }
 ```
 
@@ -401,6 +442,35 @@ _('welcome.greeting', name='Alice')             # Short form
 - **👤 User registration**: Auto-create users on first message
 - **🛡️ Rate limiting**: Prevent spam with `@rate_limit("general")`
 - **📊 Monitoring**: Comprehensive logging and error tracking
+
+#### 8. User Feedback System (`bot/feedback/`) ✅ NEW
+**GitHub Issues integration for user feedback:**
+```python
+class FeedbackManager:
+    """Manages user feedback and GitHub integration."""
+    
+    async def start_feedback_session(self, user_id: int, feedback_type: str) -> bool:
+        """Start feedback session with rate limiting."""
+        
+    async def submit_feedback(self, user_id: int, description: str) -> Optional[str]:
+        """Submit feedback to GitHub, returns Issue URL."""
+
+class GitHubFeedbackClient:
+    """Client for creating GitHub issues from user feedback."""
+    
+    async def create_issue(self, title: str, body: str, labels: List[str]) -> Optional[str]:
+        """Create GitHub Issue via REST API."""
+```
+
+**Features:**
+- **🐛 Bug Reports**: Structured templates with user context and system info
+- **💡 Feature Requests**: Enhancement suggestions with user tracking
+- **📝 General Feedback**: Open-ended user comments and opinions
+- **🔗 Issue Tracking**: Automatic GitHub Issue creation with direct links
+- **⏱️ Session Management**: 1-hour TTL sessions with step-by-step guidance
+- **🛡️ Rate Limiting**: 3 messages per user per hour (configurable)
+- **🌍 Multilingual**: Full localization for all feedback UI components
+- **📊 Monitoring**: Comprehensive logging and error tracking with Sentry
 
 ### Legacy Core Functions (cerebrate_bot.py)
 - **Event loop compatibility**: `nest_asyncio` for cloud deployment
@@ -553,18 +623,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 - **State management**: Dynamic keyboard generation based on current data
 
 ### Recent Updates
-1. **Production-ready i18n system**: Complete multi-language support with user-specific translators
-2. **Database integration**: Language preferences saved in `users.language` column
-3. **Callback handlers fixes**: All menu buttons now work correctly with proper function signatures
-4. **Message activity logging**: All text messages get confirmation responses with new questions
-5. **Cache async/await fixes**: Resolved all RuntimeWarnings with TTL cache operations
-6. **Inline keyboard system**: Complete UI overhaul with button navigation
-7. **Admin broadcast**: Mass messaging with confirmation and statistics
-8. **Friends discovery**: Find new friends through mutual connections
-9. **Critical performance improvements**: 90% faster friend discovery, 80% faster settings UI
-10. **Security enhancements**: Safe parsing, input validation, error resilience
-11. **Caching system**: TTL cache with automatic invalidation for user settings
-12. **Batch processing**: Non-blocking broadcasts with real-time progress tracking
+1. **GitHub Issues Feedback System**: Complete user feedback integration with automatic Issue creation ✅ NEW
+2. **Production-ready i18n system**: Complete multi-language support with user-specific translators
+3. **Database integration**: Language preferences saved in `users.language` column
+4. **Callback handlers fixes**: All menu buttons now work correctly with proper function signatures
+5. **Message activity logging**: All text messages get confirmation responses with new questions
+6. **Cache async/await fixes**: Resolved all RuntimeWarnings with TTL cache operations
+7. **Inline keyboard system**: Complete UI overhaul with button navigation
+8. **Admin broadcast**: Mass messaging with confirmation and statistics
+9. **Friends discovery**: Find new friends through mutual connections
+10. **Critical performance improvements**: 90% faster friend discovery, 80% faster settings UI
+11. **Security enhancements**: Safe parsing, input validation, error resilience
+12. **Caching system**: TTL cache with automatic invalidation for user settings
+13. **Batch processing**: Non-blocking broadcasts with real-time progress tracking
 
 ## Performance & Security Improvements
 
