@@ -1,5 +1,5 @@
 """
-Broadcast manager for Hour Watcher Bot admin functionality.
+Broadcast manager for Doyobi Diary admin functionality.
 
 This module provides efficient mass messaging capabilities with progress tracking,
 batching, and error handling.

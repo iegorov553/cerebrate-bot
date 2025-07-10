@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hour Watcher Bot supports multiple languages through a comprehensive i18n system with automatic detection and user preferences.
+Doyobi Diary supports multiple languages through a comprehensive i18n system with automatic detection and user preferences.
 
 ## Supported Languages
 

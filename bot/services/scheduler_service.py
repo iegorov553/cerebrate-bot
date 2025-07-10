@@ -1,5 +1,5 @@
 """
-Scheduler service for Hour Watcher Bot.
+Scheduler service for Doyobi Diary.
 
 This module handles the scheduling of notifications and periodic tasks.
 """

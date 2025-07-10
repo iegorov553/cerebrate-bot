@@ -1,5 +1,5 @@
 """
-Utility functions for Hour Watcher Bot.
+Utility functions for Doyobi Diary.
 """
 
 from .cache_manager import CacheManager

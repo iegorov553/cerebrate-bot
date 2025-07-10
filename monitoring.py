@@ -1,5 +1,5 @@
 """
-Monitoring and logging configuration for Hour Watcher Bot.
+Monitoring and logging configuration for Doyobi Diary.
 """
 import logging
 import os
@@ -42,7 +42,7 @@ def setup_monitoring():
         
         # Set user context
         sentry_sdk.set_context("bot", {
-            "name": "Hour Watcher Bot",
+            "name": "Doyobi Diary",
             "version": release,
             "environment": environment
         })

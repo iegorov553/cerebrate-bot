@@ -1,5 +1,5 @@
 """
-Services package for Hour Watcher Bot.
+Services package for Doyobi Diary.
 """
 
 from .scheduler_service import SchedulerService

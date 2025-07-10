@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Hour Watcher Bot - Modern Modular Entry Point
+Doyobi Diary - Modern Modular Entry Point
 
 This is the main entry point for the bot using proper modular architecture.
 Replaces the old monolithic cerebrate_bot.py file.
@@ -87,7 +87,7 @@ async def create_application() -> Application:
 
 async def main() -> None:
     """Main entry point for the bot."""
-    logger.info("Starting Hour Watcher Bot (Modular Architecture)")
+    logger.info("Starting Doyobi Diary (Modular Architecture)")
     
     # Create application
     application = await create_application()

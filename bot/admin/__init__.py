@@ -1,5 +1,5 @@
 """
-Admin functionality for Hour Watcher Bot.
+Admin functionality for Doyobi Diary.
 """
 
 from .admin_operations import AdminOperations

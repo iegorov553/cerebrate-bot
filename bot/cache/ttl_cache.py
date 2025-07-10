@@ -1,5 +1,5 @@
 """
-TTL Cache implementation for Hour Watcher Bot.
+TTL Cache implementation for Doyobi Diary.
 
 This module provides time-to-live caching functionality with automatic cleanup
 and configurable expiration times.

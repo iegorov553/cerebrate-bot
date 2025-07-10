@@ -1,5 +1,5 @@
 """
-Configuration management for Hour Watcher Bot.
+Configuration management for Doyobi Diary.
 """
 import os
 from dataclasses import dataclass

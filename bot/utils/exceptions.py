@@ -1,5 +1,5 @@
 """
-Custom exceptions for Hour Watcher Bot.
+Custom exceptions for Doyobi Diary.
 """
 
 

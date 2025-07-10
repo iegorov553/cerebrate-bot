@@ -1,5 +1,5 @@
 """
-Main translation engine for Hour Watcher Bot.
+Main translation engine for Doyobi Diary.
 """
 import json
 import os

@@ -1,10 +1,10 @@
 # Deployment Documentation
 
-This document provides comprehensive deployment instructions for the Hour Watcher Bot across all environments and platforms.
+This document provides comprehensive deployment instructions for the Doyobi Diary across all environments and platforms.
 
 ## Overview
 
-The Hour Watcher Bot uses a **multi-platform deployment strategy** with Railway for the bot backend and Vercel for the web interface, backed by Supabase for data storage.
+The Doyobi Diary uses a **multi-platform deployment strategy** with Railway for the bot backend and Vercel for the web interface, backed by Supabase for data storage.
 
 ### Deployment Architecture
 
@@ -905,4 +905,4 @@ railway metrics
 
 ---
 
-This deployment documentation provides comprehensive instructions for deploying the Hour Watcher Bot to production with proper monitoring, security, and scalability considerations.
+This deployment documentation provides comprehensive instructions for deploying the Doyobi Diary to production with proper monitoring, security, and scalability considerations.

@@ -1,4 +1,4 @@
-# Hour Watcher Bot 🤖
+# Doyobi Diary 🤖
 
 [![Tests](https://github.com/iegorov553/cerebrate-bot/actions/workflows/test.yml/badge.svg)](https://github.com/iegorov553/cerebrate-bot/actions/workflows/test.yml)
 [![Deploy](https://github.com/iegorov553/cerebrate-bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/iegorov553/cerebrate-bot/actions/workflows/deploy.yml)
@@ -108,7 +108,7 @@ python3 -m pytest tests/ -m "not integration"
 
 ### Главная навигация
 ```
-🤖 Hour Watcher Bot
+🤖 Doyobi Diary
 ├── ⚙️ Настройки
 │   ├── 🔔 Переключение уведомлений
 │   ├── ⏰ Установка временного окна

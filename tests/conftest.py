@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for the Hour Watcher Bot tests.
+Pytest configuration and fixtures for the Doyobi Diary tests.
 """
 import asyncio
 import os

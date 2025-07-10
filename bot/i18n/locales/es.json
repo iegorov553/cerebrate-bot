@@ -1,7 +1,7 @@
 {
   "menu": {
     "main_title": "👋 Menú Principal",
-    "main_subtitle": "🤖 **Hour Watcher Bot**\nElige una acción:",
+    "main_subtitle": "🤖 **Doyobi Diary**\nElige una acción:",
     "settings": "⚙️ Configuración",
     "friends": "👥 Amigos", 
     "history": "📊 Historial",
@@ -14,7 +14,7 @@
   
   "welcome": {
     "greeting": "¡Hola, {name}!",
-    "description": "🤖 **Hour Watcher Bot** te ayudará a rastrear tu actividad.\n\nElige una acción:",
+    "description": "🤖 **Doyobi Diary** te ayudará a rastrear tu actividad.\n\nElige una acción:",
     "choose_action": "Elige una acción:"
   },
   
@@ -84,7 +84,7 @@
   
   "help": {
     "title": "❓ **Ayuda**",
-    "description": "🤖 **Hour Watcher Bot** te ayuda a rastrear tu actividad con recordatorios inteligentes e interfaz multiidioma.",
+    "description": "🤖 **Doyobi Diary** te ayuda a rastrear tu actividad con recordatorios inteligentes e interfaz multiidioma.",
     "commands_title": "**Comandos principales:**",
     "commands": [
       "• `/start` - Menú principal con botones",

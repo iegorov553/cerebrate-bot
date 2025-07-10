@@ -1,5 +1,5 @@
 """
-Database operations for Hour Watcher Bot.
+Database operations for Doyobi Diary.
 """
 
 from .client import DatabaseClient

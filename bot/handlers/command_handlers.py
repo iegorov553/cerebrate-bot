@@ -1,5 +1,5 @@
 """
-Command handlers for the Hour Watcher Bot.
+Command handlers for the Doyobi Diary.
 
 This module contains all user command handlers (non-admin).
 """

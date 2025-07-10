@@ -1,10 +1,10 @@
 # Testing Documentation
 
-This document provides comprehensive testing guidelines and procedures for the Hour Watcher Bot project.
+This document provides comprehensive testing guidelines and procedures for the Doyobi Diary project.
 
 ## Overview
 
-The Hour Watcher Bot employs a **multi-layered testing strategy** with unit tests, integration tests, and end-to-end testing to ensure reliability and maintainability.
+The Doyobi Diary employs a **multi-layered testing strategy** with unit tests, integration tests, and end-to-end testing to ensure reliability and maintainability.
 
 ### Testing Philosophy
 

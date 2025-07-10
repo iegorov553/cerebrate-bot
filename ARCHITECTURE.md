@@ -1,10 +1,10 @@
 # Architecture Documentation
 
-This document provides detailed architectural overview of the Hour Watcher Bot, covering both the current hybrid architecture and the planned modular system migration.
+This document provides detailed architectural overview of the Doyobi Diary, covering both the current hybrid architecture and the planned modular system migration.
 
 ## Overview
 
-The Hour Watcher Bot employs a **hybrid architecture** that combines a proven monolithic core with modern modular components, providing both stability and scalability.
+The Doyobi Diary employs a **hybrid architecture** that combines a proven monolithic core with modern modular components, providing both stability and scalability.
 
 ### Architecture Philosophy
 

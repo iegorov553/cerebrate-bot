@@ -4,7 +4,7 @@ This file provides comprehensive technical guidance to Claude Code (claude.ai/co
 
 ## Project Overview
 
-**Hour Watcher Bot** is a production-ready Telegram bot with modern modular architecture:
+**Doyobi Diary** is a production-ready Telegram bot with modern modular architecture:
 - **🤖 Activity Tracking**: Personalized notifications with smart scheduling
 - **👥 Social Features**: Friend system with discovery algorithms
 - **📊 Analytics**: Web interface with real-time data visualization

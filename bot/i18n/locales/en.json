@@ -1,7 +1,7 @@
 {
   "menu": {
     "main_title": "👋 Main Menu",
-    "main_subtitle": "🤖 **Hour Watcher Bot**\nChoose an action:",
+    "main_subtitle": "🤖 **Doyobi Diary**\nChoose an action:",
     "settings": "⚙️ Settings",
     "friends": "👥 Friends", 
     "history": "📊 History",
@@ -14,7 +14,7 @@
   
   "welcome": {
     "greeting": "Hello, {name}!",
-    "description": "🤖 **Hour Watcher Bot** will help you track your activity.\n\nChoose an action:",
+    "description": "🤖 **Doyobi Diary** will help you track your activity.\n\nChoose an action:",
     "choose_action": "Choose an action:"
   },
   
@@ -84,7 +84,7 @@
   
   "help": {
     "title": "❓ **Help**",
-    "description": "🤖 **Hour Watcher Bot** helps you track your activity with smart reminders and multilingual interface.",
+    "description": "🤖 **Doyobi Diary** helps you track your activity with smart reminders and multilingual interface.",
     "commands_title": "**Main commands:**",
     "commands": [
       "• `/start` - Main menu with buttons",

@@ -1,5 +1,5 @@
 """
-Internationalization (i18n) package for Hour Watcher Bot.
+Internationalization (i18n) package for Doyobi Diary.
 
 Provides multi-language support with automatic language detection
 and fallback mechanisms.

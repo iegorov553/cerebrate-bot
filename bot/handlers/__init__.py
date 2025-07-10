@@ -1,5 +1,5 @@
 """
-Telegram bot handlers for Hour Watcher Bot.
+Telegram bot handlers for Doyobi Diary.
 """
 
 from .error_handler import setup_error_handler

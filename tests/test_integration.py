@@ -1,5 +1,5 @@
 """
-Integration tests for the Hour Watcher Bot.
+Integration tests for the Doyobi Diary.
 """
 import os
 import sys

@@ -1,10 +1,10 @@
 # Monitoring Documentation
 
-This document provides comprehensive monitoring setup and operational guidance for the Hour Watcher Bot production environment.
+This document provides comprehensive monitoring setup and operational guidance for the Doyobi Diary production environment.
 
 ## Overview
 
-The Hour Watcher Bot employs **enterprise-grade monitoring** with multiple layers of observability, error tracking, and performance monitoring to ensure reliable production operation.
+The Doyobi Diary employs **enterprise-grade monitoring** with multiple layers of observability, error tracking, and performance monitoring to ensure reliable production operation.
 
 ### Monitoring Stack
 
@@ -372,7 +372,7 @@ print(f"Sentry configured: {sentry_sdk.Hub.current.client is not None}")
 
 ```python
 # Отправить тестовую ошибку в Sentry
-sentry_sdk.capture_message("Test message from Hour Watcher Bot")
+sentry_sdk.capture_message("Test message from Doyobi Diary")
 ```
 
 ### Проверка логов

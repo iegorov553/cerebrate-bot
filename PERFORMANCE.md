@@ -1,10 +1,10 @@
 # Performance Documentation
 
-This document provides comprehensive performance optimization strategies, measurements, and monitoring for the Hour Watcher Bot.
+This document provides comprehensive performance optimization strategies, measurements, and monitoring for the Doyobi Diary.
 
 ## Overview
 
-The Hour Watcher Bot has undergone **extensive performance optimization** resulting in significant improvements across all major operations.
+The Doyobi Diary has undergone **extensive performance optimization** resulting in significant improvements across all major operations.
 
 ### Performance Achievements
 
@@ -1043,7 +1043,7 @@ class OptimizedHTTPClient:
             connector=self._connector,
             timeout=timeout,
             headers={
-                'User-Agent': 'HourWatcherBot/2.2.0'
+                'User-Agent': 'DoyobiDiary/2.2.0'
             }
         )
         
@@ -1353,4 +1353,4 @@ async def run_performance_benchmarks():
 
 ---
 
-This performance documentation demonstrates the comprehensive optimization efforts that have transformed the Hour Watcher Bot into a high-performance, enterprise-grade application capable of handling significant user loads with exceptional responsiveness.
+This performance documentation demonstrates the comprehensive optimization efforts that have transformed the Doyobi Diary into a high-performance, enterprise-grade application capable of handling significant user loads with exceptional responsiveness.

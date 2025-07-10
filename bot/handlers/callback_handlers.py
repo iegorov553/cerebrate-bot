@@ -119,7 +119,7 @@ async def handle_main_menu(query, config: Config, user, translator=None, db_clie
     keyboard = KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
     
     welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-    welcome_text += f"🤖 **Hour Watcher Bot**\n"
+    welcome_text += f"🤖 **Doyobi Diary**\n"
     welcome_text += translator.translate('welcome.choose_action')
     
     await query.edit_message_text(

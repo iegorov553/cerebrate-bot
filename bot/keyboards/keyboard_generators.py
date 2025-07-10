@@ -1,5 +1,5 @@
 """
-Keyboard generators for Hour Watcher Bot.
+Keyboard generators for Doyobi Diary.
 
 This module provides dynamic inline keyboard generation for the Telegram bot interface.
 """
