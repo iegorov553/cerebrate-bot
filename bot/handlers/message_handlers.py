@@ -76,6 +76,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         if config.is_feedback_enabled():
             from bot.handlers.feedback_handlers import handle_feedback_message
+
             # Try to handle as feedback message first
             await handle_feedback_message(update, context)
             

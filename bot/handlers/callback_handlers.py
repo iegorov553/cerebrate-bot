@@ -11,7 +11,13 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.i18n import get_translator
-from bot.keyboards.keyboard_generators import KeyboardGenerator, create_friends_menu, create_language_menu, create_main_menu, create_settings_menu
+from bot.keyboards.keyboard_generators import (
+    KeyboardGenerator,
+    create_friends_menu,
+    create_language_menu,
+    create_main_menu,
+    create_settings_menu,
+)
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
@@ -191,7 +197,7 @@ async def handle_friends_menu(query, db_client: DatabaseClient, user_cache: TTLC
 async def handle_history(query, config: Config, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle history web app opening."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-    
+
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
@@ -571,10 +577,10 @@ async def handle_feedback_action(query, data: str, db_client: DatabaseClient, us
 
 async def handle_questions_menu(query, db_client: DatabaseClient, user_cache: TTLCache, user):
     """Handle questions menu display."""
-    from bot.questions import QuestionManager
     from bot.database.user_operations import UserOperations
     from bot.keyboards.keyboard_generators import create_questions_menu
-    
+    from bot.questions import QuestionManager
+
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
@@ -605,12 +611,14 @@ async def handle_questions_menu(query, db_client: DatabaseClient, user_cache: TT
 
 async def handle_questions_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
     """Handle questions-related actions."""
-    from bot.questions import QuestionManager, QuestionTemplates
     from bot.database.user_operations import UserOperations
     from bot.keyboards.keyboard_generators import (
-        create_questions_menu, create_question_edit_menu, 
-        create_question_templates_menu, create_question_delete_confirm
+        create_question_delete_confirm,
+        create_question_edit_menu,
+        create_question_templates_menu,
+        create_questions_menu,
     )
+    from bot.questions import QuestionManager, QuestionTemplates
     
     if translator is None:
         translator = await get_user_translator(user.id, db_client, user_cache)

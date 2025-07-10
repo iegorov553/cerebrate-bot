@@ -18,13 +18,13 @@ class TestHandlerIntegration:
     async def test_callback_handlers_registration(self):
         """Test that callback handlers properly register bot_data."""
         from telegram.ext import Application
-        
+
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
         from bot.handlers.callback_handlers import setup_callback_handlers
         from bot.utils.rate_limiter import MultiTierRateLimiter
-        
+
         # Create mock components
         application = MagicMock(spec=Application)
         application.bot_data = {}
@@ -51,7 +51,7 @@ class TestHandlerIntegration:
     async def test_keyboard_callback_data_consistency(self):
         """Test that keyboard generators and callback handlers use consistent data."""
         from bot.keyboards.keyboard_generators import create_main_menu
-        
+
         # Get keyboard
         keyboard = create_main_menu(is_admin=False)
         
@@ -64,7 +64,7 @@ class TestHandlerIntegration:
         
         # Define what callback handler should support
         expected_handlers = [
-            "menu_settings", "menu_friends", "menu_history", "menu_help"
+            "menu_questions", "menu_friends", "menu_history", "menu_language", "feedback_menu"
         ]
         
         # Verify all expected callback_data are present
@@ -75,13 +75,13 @@ class TestHandlerIntegration:
     async def test_message_handler_registration(self):
         """Test that message handlers are properly registered."""
         from telegram.ext import Application
-        
+
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
         from bot.handlers.message_handlers import setup_message_handlers
         from bot.utils.rate_limiter import MultiTierRateLimiter
-        
+
         # Create mock components
         application = MagicMock(spec=Application)
         application.bot_data = {}
@@ -106,16 +106,16 @@ class TestHandlerIntegration:
         """Test full callback handler flow with real callback_data."""
         from telegram import CallbackQuery, InlineKeyboardButton, Update, User
         from telegram.ext import ContextTypes
-        
+
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
         from bot.handlers.callback_handlers import handle_callback_query
-        
+
         # Create mock objects
         user = User(id=123456789, is_bot=False, first_name="Test", username="testuser")
         callback_query = MagicMock(spec=CallbackQuery)
-        callback_query.data = "menu_settings"  # Real callback_data from keyboard
+        callback_query.data = "menu_questions"  # Real callback_data from keyboard
         callback_query.answer = AsyncMock()
         callback_query.edit_message_text = AsyncMock()
         
@@ -154,11 +154,11 @@ class TestHandlerIntegration:
                 # Verify callback was answered
                 callback_query.answer.assert_called_once()
                 
-                # Verify message was edited (settings menu shown)
+                # Verify message was edited (questions menu shown)
                 callback_query.edit_message_text.assert_called_once()
                 
-                # Verify settings were fetched (now called multiple times due to language loading)
-                # Called once for get_user_language and once for handle_settings_menu
+                # Verify user data was fetched (now called multiple times due to language loading)
+                # Called once for get_user_language and once for handle_questions_menu
                 assert mock_user_ops.get_user_settings.call_count >= 2
                 mock_user_ops.get_user_settings.assert_any_call(123456789)
 
@@ -167,12 +167,12 @@ class TestHandlerIntegration:
         """Test that text messages are logged as activities."""
         from telegram import Message, Update, User
         from telegram.ext import ContextTypes
-        
+
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
         from bot.handlers.message_handlers import handle_text_message
-        
+
         # Create mock objects
         user = User(id=123456789, is_bot=False, first_name="Test", username="testuser")
         message = MagicMock(spec=Message)
@@ -188,6 +188,7 @@ class TestHandlerIntegration:
         with patch('bot.database.client.create_client'):
             config = Config.from_env()
             context.bot_data = {
+                'config': config,
                 'db_client': MagicMock(spec=DatabaseClient),
                 'user_cache': MagicMock(spec=TTLCache)
             }
@@ -210,20 +211,20 @@ class TestHandlerIntegration:
                     last_name=None
                 )
                 
-                # Verify activity was logged
-                mock_user_ops.log_activity.assert_called_once_with(
-                    123456789, 
-                    "This is my activity"
-                )
+                # Verify activity was logged (with question_id parameter)
+                mock_user_ops.log_activity.assert_called_once()
+                args, kwargs = mock_user_ops.log_activity.call_args
+                assert args == (123456789, "This is my activity")
+                assert 'question_id' in kwargs
 
     @pytest.mark.asyncio
     async def test_command_exclusion_from_activity_logging(self):
         """Test that commands are not logged as activities."""
         from telegram import Message, Update, User
         from telegram.ext import ContextTypes
-        
+
         from bot.handlers.message_handlers import handle_text_message
-        
+
         # Create mock objects
         user = User(id=123456789, is_bot=False, first_name="Test", username="testuser")
         message = MagicMock(spec=Message)

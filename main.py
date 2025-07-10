@@ -15,8 +15,8 @@ from telegram.ext import Application, ApplicationBuilder
 from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.handlers.admin_handlers import setup_admin_handlers
 from bot.handlers.admin_conversations import setup_admin_conversations
+from bot.handlers.admin_handlers import setup_admin_handlers
 from bot.handlers.callback_handlers import setup_callback_handlers
 from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.error_handler import setup_error_handler

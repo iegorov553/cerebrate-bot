@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 import aiohttp
+
 from monitoring import get_logger, track_errors_async
 
 logger = get_logger(__name__)
