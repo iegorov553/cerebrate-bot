@@ -86,18 +86,18 @@ class TestTranslator:
         translator = Translator()
         
         # Test Russian (default)
-        result_ru = translator.translate("menu.settings")
-        assert "Настройки" in result_ru
+        result_ru = translator.translate("menu.questions")
+        assert "Вопросы" in result_ru
         
         # Test English
         translator.set_language("en")
-        result_en = translator.translate("menu.settings")
-        assert "Settings" in result_en
+        result_en = translator.translate("menu.questions")
+        assert "Questions" in result_en
         
         # Test Spanish
         translator.set_language("es")
-        result_es = translator.translate("menu.settings")
-        assert "Configuración" in result_es
+        result_es = translator.translate("menu.questions")
+        assert "Preguntas" in result_es
     
     def test_translate_with_template_variables(self):
         """Test translation with template variables."""
@@ -195,10 +195,10 @@ class TestTranslationConsistency:
         languages = translator.get_available_languages()
         
         required_keys = [
-            "menu.settings",
+            "menu.questions",
             "menu.friends", 
             "menu.history",
-            "menu.help",
+            "menu.language",
             "welcome.greeting",
             "errors.general"
         ]
