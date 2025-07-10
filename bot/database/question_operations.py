@@ -38,7 +38,7 @@ class QuestionOperations:
             List of active question dictionaries
         """
         try:
-            result = await self.db_client.table('user_questions')\
+            result = self.db_client.table('user_questions')\
                 .select('*')\
                 .eq('user_id', user_id)\
                 .eq('active', True)\
@@ -64,7 +64,7 @@ class QuestionOperations:
             Default question dictionary or None
         """
         try:
-            result = await self.db_client.table('user_questions')\
+            result = self.db_client.table('user_questions')\
                 .select('*')\
                 .eq('user_id', user_id)\
                 .eq('is_default', True)\
@@ -90,7 +90,7 @@ class QuestionOperations:
             Question dictionary or None
         """
         try:
-            result = await self.db_client.table('user_questions')\
+            result = self.db_client.table('user_questions')\
                 .select('*')\
                 .eq('id', question_id)\
                 .single()\
@@ -114,7 +114,7 @@ class QuestionOperations:
             Created question dictionary or None
         """
         try:
-            result = await self.db_client.table('user_questions')\
+            result = self.db_client.table('user_questions')\
                 .insert(question_data)\
                 .execute()
             
@@ -141,7 +141,7 @@ class QuestionOperations:
             True if successful
         """
         try:
-            result = await self.db_client.table('user_questions')\
+            result = self.db_client.table('user_questions')\
                 .update(updates)\
                 .eq('id', question_id)\
                 .execute()
@@ -261,7 +261,7 @@ class QuestionOperations:
                 'expires_at': (datetime.now() + timedelta(days=90)).isoformat()  # 3 months
             }
             
-            result = await self.db_client.table('question_notifications')\
+            result = self.db_client.table('question_notifications')\
                 .insert(notification_data)\
                 .execute()
             
@@ -292,7 +292,7 @@ class QuestionOperations:
             Notification dictionary or None
         """
         try:
-            result = await self.db_client.table('question_notifications')\
+            result = self.db_client.table('question_notifications')\
                 .select('*, user_questions(*)')\
                 .eq('user_id', user_id)\
                 .eq('telegram_message_id', telegram_message_id)\
@@ -320,7 +320,7 @@ class QuestionOperations:
         """
         try:
             # Get count before deletion
-            count_result = await self.db_client.table('question_notifications')\
+            count_result = self.db_client.table('question_notifications')\
                 .select('id', count='exact')\
                 .lt('expires_at', datetime.now().isoformat())\
                 .execute()
@@ -328,7 +328,7 @@ class QuestionOperations:
             count_before = count_result.count if count_result.count else 0
             
             # Delete expired notifications
-            await self.db_client.table('question_notifications')\
+            self.db_client.table('question_notifications')\
                 .delete()\
                 .lt('expires_at', datetime.now().isoformat())\
                 .execute()
@@ -353,14 +353,14 @@ class QuestionOperations:
         """
         try:
             # Get active questions count
-            active_result = await self.db_client.table('user_questions')\
+            active_result = self.db_client.table('user_questions')\
                 .select('id', count='exact')\
                 .eq('user_id', user_id)\
                 .eq('active', True)\
                 .execute()
             
             # Get total activities for active questions
-            activities_result = await self.db_client.table('tg_jobs')\
+            activities_result = self.db_client.table('tg_jobs')\
                 .select('id', count='exact')\
                 .eq('tg_id', user_id)\
                 .not_.is_('question_id', 'null')\

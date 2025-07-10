@@ -193,7 +193,7 @@ class MultiQuestionScheduler:
     async def _get_last_notification_for_question(self, question_id: int) -> Optional[datetime]:
         """Get the last notification time for a specific question."""
         try:
-            result = await self.question_manager.question_ops.db_client.table('question_notifications')\
+            result = self.question_manager.question_ops.db_client.table('question_notifications')\
                 .select('sent_at')\
                 .eq('question_id', question_id)\
                 .order('sent_at', desc=True)\
@@ -256,7 +256,7 @@ class MultiQuestionScheduler:
         """Format question text with template variables."""
         try:
             # Get user info for formatting
-            user_result = await self.user_ops.db.table('users')\
+            user_result = self.user_ops.db.table('users')\
                 .select('tg_first_name')\
                 .eq('tg_id', user_id)\
                 .single()\
