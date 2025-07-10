@@ -37,6 +37,26 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_cache: TTLCache = context.bot_data['user_cache']
     
     try:
+        # Check if user has active feedback session first
+        config: Config = context.bot_data['config']
+        
+        if config.is_feedback_enabled():
+            from bot.handlers.feedback_handlers import handle_feedback_message
+            # Try to handle as feedback message first
+            await handle_feedback_message(update, context)
+            
+            # Check if message was consumed by feedback handler
+            from bot.feedback import FeedbackManager
+            from bot.utils.rate_limiter import MultiTierRateLimiter
+            
+            rate_limiter = MultiTierRateLimiter(feedback_rate_limit=config.feedback_rate_limit)
+            feedback_manager = FeedbackManager(config, rate_limiter, user_cache)
+            session = await feedback_manager.get_feedback_session(user.id)
+            
+            if session:
+                # Message was handled by feedback system
+                return
+        
         # Ensure user exists in database first
         from bot.database.user_operations import UserOperations
         user_ops = UserOperations(db_client, user_cache)
@@ -58,7 +78,6 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                        message_length=len(message.text))
             
             # Send confirmation and new question
-            config: Config = context.bot_data['config']
             confirmation_text = (
                 f"📝 Записал: *{message.text}*\n\n"
                 f"{config.question_text}"

@@ -133,5 +133,27 @@
   
   "notifications": {
     "reminder": "⏰ ¡Hora de reportar!\n\n¿Qué has estado haciendo? Envía algo al bot."
+  },
+  
+  "feedback": {
+    "title": "💬 Retroalimentación",
+    "description": "¡Ayúdanos a mejorar el bot! Elige el tipo de mensaje:",
+    "bug_report": "🐛 Reportar un error",
+    "feature_request": "💡 Sugerir mejora", 
+    "general": "📝 Comentario general",
+    "bug_report_description": "🐛 **Reportar un error**\n\nDescribe el problema que encontraste:",
+    "feature_request_description": "💡 **Sugerir mejora**\n\nDescribe tu sugerencia para mejorar el bot:",
+    "general_description": "📝 **Comentario general**\n\nComparte tu opinión sobre el bot:",
+    "enter_description": "📝 Escribe tu descripción en un mensaje:",
+    "confirm_title": "Confirmar envío:",
+    "confirm_send": "✅ Enviar",
+    "confirm_cancel": "❌ Cancelar",
+    "success": "✅ ¡Tu mensaje ha sido enviado!\n\n🔗 **Enlace a tu reporte:**\n{issue_url}\n\nPuedes seguir el estado del procesamiento usando este enlace. ¡Revisaremos tu mensaje pronto!\n\n¡Gracias por ayudarnos a mejorar Doyobi Diary! 🙏",
+    "success_no_link": "✅ ¡Tu mensaje ha sido enviado!\n\nRevisaremos tu mensaje pronto.\n\n¡Gracias por ayudarnos a mejorar Doyobi Diary! 🙏",
+    "cancelled": "❌ Envío cancelado.",
+    "session_expired": "⏰ Sesión de retroalimentación expirada. Por favor comienza de nuevo.",
+    "rate_limited": "⚠️ Estás enviando mensajes muy frecuentemente. Por favor intenta más tarde.",
+    "error": "❌ Ocurrió un error al enviar tu mensaje. Por favor intenta más tarde.",
+    "disabled": "⚠️ Sistema de retroalimentación temporalmente no disponible."
   }
 }

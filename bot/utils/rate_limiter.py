@@ -106,7 +106,7 @@ class RateLimiter:
 class MultiTierRateLimiter:
     """Multi-tier rate limiter with different limits for different actions."""
     
-    def __init__(self):
+    def __init__(self, feedback_rate_limit: int = 3):
         """Initialize with default limits for different action types."""
         self.limiters = {
             # General commands - 20 per minute
@@ -126,6 +126,9 @@ class MultiTierRateLimiter:
             
             # Callback queries - 30 per minute
             "callback": RateLimiter(max_requests=30, window_seconds=60),
+            
+            # Feedback submissions - configurable rate limit per hour
+            "feedback": RateLimiter(max_requests=feedback_rate_limit, window_seconds=3600),
         }
     
     async def check_limit(self, user_id: int, action: str) -> Tuple[bool, Optional[int]]:
@@ -235,6 +238,11 @@ async def check_discovery_rate_limit(user_id: int) -> Tuple[bool, Optional[int]]
 async def check_admin_rate_limit(user_id: int) -> Tuple[bool, Optional[int]]:
     """Check rate limit for admin commands."""
     return await rate_limiter.check_limit(user_id, "admin")
+
+
+async def check_feedback_rate_limit(user_id: int) -> Tuple[bool, Optional[int]]:
+    """Check rate limit for feedback submissions."""
+    return await rate_limiter.check_limit(user_id, "feedback")
 
 
 # Background cleanup task

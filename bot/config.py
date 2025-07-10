@@ -35,6 +35,11 @@ class Config:
     # Web App Configuration (should be set via environment variable)
     webapp_url: str = ""
     
+    # GitHub Feedback Configuration
+    github_feedback_token: Optional[str] = None
+    github_repo: str = "iegorov553/cerebrate-bot"
+    feedback_rate_limit: int = 3  # messages per hour
+    
     @classmethod
     def from_env(cls) -> "Config":
         """Create configuration from environment variables."""
@@ -67,6 +72,11 @@ class Config:
             
             # Web app
             webapp_url=os.getenv("WEBAPP_URL", "https://doyobi-diary.vercel.app"),
+            
+            # GitHub Feedback
+            github_feedback_token=os.getenv("GITHUB_FEEDBACK_TOKEN"),
+            github_repo=os.getenv("GITHUB_REPO", "iegorov553/cerebrate-bot"),
+            feedback_rate_limit=int(os.getenv("FEEDBACK_RATE_LIMIT", "3")),
         )
     
     def validate(self) -> None:
@@ -87,3 +97,7 @@ class Config:
     def is_monitoring_enabled(self) -> bool:
         """Check if monitoring is enabled."""
         return self.sentry_dsn is not None
+    
+    def is_feedback_enabled(self) -> bool:
+        """Check if GitHub feedback is enabled."""
+        return self.github_feedback_token is not None

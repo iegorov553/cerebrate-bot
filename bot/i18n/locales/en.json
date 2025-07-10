@@ -133,5 +133,27 @@
   
   "notifications": {
     "reminder": "⏰ Time to report!\n\nWhat have you been doing? Send something to the bot."
+  },
+  
+  "feedback": {
+    "title": "💬 Feedback",
+    "description": "Help us improve the bot! Choose the type of feedback:",
+    "bug_report": "🐛 Report a bug",
+    "feature_request": "💡 Suggest improvement", 
+    "general": "📝 General feedback",
+    "bug_report_description": "🐛 **Report a bug**\n\nDescribe the problem you encountered:",
+    "feature_request_description": "💡 **Suggest improvement**\n\nDescribe your suggestion for improving the bot:",
+    "general_description": "📝 **General feedback**\n\nShare your opinion about the bot:",
+    "enter_description": "📝 Write your description in one message:",
+    "confirm_title": "Confirm sending:",
+    "confirm_send": "✅ Send",
+    "confirm_cancel": "❌ Cancel",
+    "success": "✅ Your message has been sent!\n\n🔗 **Link to your issue:**\n{issue_url}\n\nYou can track the processing status using this link. We will review your message soon!\n\nThank you for helping us improve Doyobi Diary! 🙏",
+    "success_no_link": "✅ Your message has been sent!\n\nWe will review your message soon.\n\nThank you for helping us improve Doyobi Diary! 🙏",
+    "cancelled": "❌ Sending cancelled.",
+    "session_expired": "⏰ Feedback session expired. Please start again.",
+    "rate_limited": "⚠️ You are sending messages too frequently. Please try later.",
+    "error": "❌ An error occurred while sending your message. Please try later.",
+    "disabled": "⚠️ Feedback system is temporarily unavailable."
   }
 }

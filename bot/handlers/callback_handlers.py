@@ -95,6 +95,15 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_friends_action(query, data, db_client, user, config, translator, user_cache)
         elif data.startswith("admin_"):
             await handle_admin_action(query, data, db_client, user, config, translator, user_cache)
+        elif data.startswith("feedback_") or data == "feedback_menu":
+            if data.startswith("feedback_confirm_") or data.startswith("feedback_cancel_"):
+                # Handle feedback confirmation
+                from bot.handlers.feedback_handlers import handle_feedback_confirmation
+                action = "confirm" if data.startswith("feedback_confirm_") else "cancel"
+                target_user_id = int(data.split("_")[-1])
+                await handle_feedback_confirmation(update, context, action, target_user_id)
+            else:
+                await handle_feedback_action(query, data, db_client, user_cache, user, config, translator)
         elif data == "back_main":
             await handle_main_menu(query, config, user, None, db_client, user_cache)
         else:
@@ -317,6 +326,7 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
     translator = await get_user_translator(user.id, db_client, user_cache)
     
     keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton(translator.translate("feedback.title"), callback_data="feedback_menu")],
         [InlineKeyboardButton(translator.translate("menu.back"), callback_data="main_menu")]
     ])
     
@@ -537,6 +547,90 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
         )
     else:
         await handle_main_menu(query, config, user, translator)
+
+
+async def handle_feedback_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
+    """Handle feedback-related actions."""
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    
+    if translator is None:
+        translator = await get_user_translator(user.id, db_client, user_cache)
+    
+    # Check if feedback is enabled
+    if not config.is_feedback_enabled():
+        await query.edit_message_text(
+            translator.translate('feedback.disabled'),
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton(translator.translate("menu.back"), callback_data="menu_help")]
+            ]),
+            parse_mode='Markdown'
+        )
+        return
+    
+    if data == "feedback_menu":
+        # Main feedback menu
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(translator.translate("feedback.bug_report"), callback_data="feedback_bug_report")],
+            [InlineKeyboardButton(translator.translate("feedback.feature_request"), callback_data="feedback_feature_request")],
+            [InlineKeyboardButton(translator.translate("feedback.general"), callback_data="feedback_general")],
+            [InlineKeyboardButton(translator.translate("menu.back"), callback_data="menu_help")]
+        ])
+        
+        await query.edit_message_text(
+            f"**{translator.translate('feedback.title')}**\n\n"
+            f"{translator.translate('feedback.description')}",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+        
+    elif data in ["feedback_bug_report", "feedback_feature_request", "feedback_general"]:
+        # Start feedback session
+        feedback_type = data.replace("feedback_", "")
+        
+        # Initialize feedback manager
+        from bot.feedback import FeedbackManager
+        from bot.utils.rate_limiter import MultiTierRateLimiter
+        
+        rate_limiter = MultiTierRateLimiter(feedback_rate_limit=config.feedback_rate_limit)
+        feedback_manager = FeedbackManager(config, rate_limiter, user_cache)
+        
+        # Check rate limit
+        if not await feedback_manager.check_rate_limit(user.id):
+            await query.edit_message_text(
+                translator.translate('feedback.rate_limited'),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton(translator.translate("menu.back"), callback_data="feedback_menu")]
+                ]),
+                parse_mode='Markdown'
+            )
+            return
+        
+        # Start feedback session
+        user_language = await get_user_language(user.id, db_client, user_cache)
+        success = await feedback_manager.start_feedback_session(user.id, feedback_type, user_language)
+        
+        if success:
+            # Show description prompt
+            description_key = f"feedback.{feedback_type}_description"
+            
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(translator.translate("menu.back"), callback_data="feedback_menu")]
+            ])
+            
+            await query.edit_message_text(
+                f"{translator.translate(description_key)}\n\n"
+                f"{translator.translate('feedback.enter_description')}",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        else:
+            await query.edit_message_text(
+                translator.translate('feedback.rate_limited'),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton(translator.translate("menu.back"), callback_data="feedback_menu")]
+                ]),
+                parse_mode='Markdown'
+            )
 
 
 def setup_callback_handlers(
