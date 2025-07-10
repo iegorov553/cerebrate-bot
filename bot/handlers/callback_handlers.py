@@ -75,8 +75,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
     try:
         if data == "main_menu":
             await handle_main_menu(query, config, user, None, db_client, user_cache)
-        elif data == "menu_settings" or data == "settings":
-            await handle_settings_menu(query, db_client, user_cache, user)
+        elif data == "menu_questions" or data == "questions":
+            await handle_questions_menu(query, db_client, user_cache, user)
         elif data == "menu_friends" or data == "friends":
             await handle_friends_menu(query, db_client, user_cache, user)
         elif data == "menu_history" or data == "history":
@@ -102,6 +102,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
                 await handle_feedback_confirmation(update, context, action, target_user_id)
             else:
                 await handle_feedback_action(query, data, db_client, user_cache, user, config, translator)
+        elif data.startswith("questions_") or data == "questions_noop":
+            await handle_questions_action(query, data, db_client, user_cache, user, config, translator)
         elif data == "back_main":
             await handle_main_menu(query, config, user, None, db_client, user_cache)
         else:
@@ -582,6 +584,350 @@ async def handle_feedback_action(query, data: str, db_client: DatabaseClient, us
                 ]),
                 parse_mode='Markdown'
             )
+
+
+async def handle_questions_menu(query, db_client: DatabaseClient, user_cache: TTLCache, user):
+    """Handle questions menu display."""
+    from bot.questions import QuestionManager
+    from bot.database.user_operations import UserOperations
+    from bot.keyboards.keyboard_generators import create_questions_menu
+    
+    # Get user translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
+    # Initialize question manager
+    question_manager = QuestionManager(db_client, user_cache)
+    
+    # Get user questions summary
+    questions_summary = await question_manager.get_user_questions_summary(user.id)
+    
+    # Get notifications status from user settings
+    user_ops = UserOperations(db_client, user_cache)
+    user_data = await user_ops.get_user_settings(user.id)
+    notifications_enabled = user_data.get('enabled', True) if user_data else True
+    
+    # Create keyboard
+    keyboard = create_questions_menu(questions_summary, notifications_enabled, translator)
+    
+    # Create menu text
+    menu_text = f"{translator.translate('questions.title')}\n\n"
+    menu_text += translator.translate('questions.description')
+    
+    await query.edit_message_text(
+        menu_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+async def handle_questions_action(query, data: str, db_client: DatabaseClient, user_cache: TTLCache, user, config: Config, translator=None):
+    """Handle questions-related actions."""
+    from bot.questions import QuestionManager, QuestionTemplates
+    from bot.database.user_operations import UserOperations
+    from bot.keyboards.keyboard_generators import (
+        create_questions_menu, create_question_edit_menu, 
+        create_question_templates_menu, create_question_delete_confirm
+    )
+    
+    if translator is None:
+        translator = await get_user_translator(user.id, db_client, user_cache)
+    
+    # Initialize question manager
+    question_manager = QuestionManager(db_client, user_cache)
+    
+    try:
+        if data == "questions_noop":
+            # No-op callback (for section headers)
+            return
+            
+        elif data == "questions_toggle_notifications":
+            # Toggle global notifications
+            user_ops = UserOperations(db_client, user_cache)
+            user_data = await user_ops.get_user_settings(user.id)
+            
+            if user_data:
+                new_enabled = not user_data.get('enabled', True)
+                success = await user_ops.update_user_settings(user.id, {'enabled': new_enabled})
+                
+                if success:
+                    # Refresh questions menu
+                    await handle_questions_menu(query, db_client, user_cache, user)
+                else:
+                    await query.edit_message_text(
+                        translator.translate('errors.database'),
+                        parse_mode='Markdown'
+                    )
+            
+        elif data.startswith("questions_edit:"):
+            # Edit specific question
+            question_id = int(data.split(":")[1])
+            question = await question_manager.question_ops.get_question_by_id(question_id)
+            
+            if question:
+                keyboard = create_question_edit_menu(question, translator)
+                
+                # Create edit text
+                edit_text = f"{translator.translate('questions.edit_title')}\n\n"
+                edit_text += translator.translate('questions.current_text', text=question['question_text']) + "\n"
+                edit_text += translator.translate('questions.current_schedule', 
+                    start=question['window_start'], 
+                    end=question['window_end'], 
+                    interval=question['interval_minutes']) + "\n"
+                
+                status = translator.translate('questions.enable') if question['active'] else translator.translate('questions.disable')
+                edit_text += translator.translate('questions.current_status', status=status) + "\n\n"
+                edit_text += translator.translate('questions.edit_instructions')
+                
+                await query.edit_message_text(
+                    edit_text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data.startswith("questions_delete:"):
+            # Show delete confirmation
+            question_id = int(data.split(":")[1])
+            keyboard = create_question_delete_confirm(question_id, translator)
+            
+            await query.edit_message_text(
+                translator.translate('questions.delete_confirm_text'),
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif data.startswith("questions_delete_yes:"):
+            # Confirm deletion
+            question_id = int(data.split(":")[1])
+            success = await question_manager.question_ops.delete_question(question_id)
+            
+            if success:
+                await query.edit_message_text(
+                    translator.translate('questions.success_deleted'),
+                    parse_mode='Markdown'
+                )
+                # Return to questions menu after short delay
+                await handle_questions_menu(query, db_client, user_cache, user)
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data.startswith("questions_toggle:"):
+            # Toggle question status
+            question_id = int(data.split(":")[1])
+            success, new_status = await question_manager.toggle_question_status(question_id)
+            
+            if success:
+                # Refresh the edit menu
+                await handle_questions_action(query, f"questions_edit:{question_id}", db_client, user_cache, user, config, translator)
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data.startswith("questions_test:"):
+            # Send test notification
+            question_id = int(data.split(":")[1])
+            question = await question_manager.question_ops.get_question_by_id(question_id)
+            
+            if question:
+                # Send test message
+                from telegram import Bot
+                bot = Bot(token=config.bot_token)
+                
+                try:
+                    test_message = await bot.send_message(
+                        user.id,
+                        f"🧪 {translator.translate('questions.success_test')}\n\n{question['question_text']}"
+                    )
+                    
+                    # Save notification for reply tracking
+                    await question_manager.save_notification_for_reply(
+                        user.id, question_id, test_message.message_id
+                    )
+                    
+                    await query.edit_message_text(
+                        translator.translate('questions.success_test'),
+                        parse_mode='Markdown'
+                    )
+                except Exception as e:
+                    logger.error(f"Error sending test notification: {e}")
+                    await query.edit_message_text(
+                        translator.translate('errors.general'),
+                        parse_mode='Markdown'
+                    )
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data == "questions_templates":
+            # Show template categories
+            keyboard = create_question_templates_menu(None, translator)
+            
+            await query.edit_message_text(
+                f"{translator.translate('questions.templates')}\n\n"
+                f"Выберите категорию шаблонов:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif data.startswith("questions_templates_cat:"):
+            # Show templates in category
+            category = data.split(":")[1]
+            keyboard = create_question_templates_menu(category, translator)
+            
+            category_names = QuestionTemplates.get_category_names()
+            category_name = category_names.get(category, category)
+            
+            await query.edit_message_text(
+                f"{translator.translate('questions.templates')}\n\n"
+                f"**{category_name}**\n\n"
+                f"Выберите шаблон:",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        elif data.startswith("questions_use_template:"):
+            # Use specific template
+            template_name = data.split(":", 1)[1]
+            template = QuestionTemplates.get_template_by_name(template_name)
+            
+            if template:
+                # Show template confirmation
+                from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+                
+                keyboard = InlineKeyboardMarkup([
+                    [
+                        InlineKeyboardButton(
+                            translator.translate("questions.template_use"),
+                            callback_data=f"questions_create_from_template:{template_name}"
+                        ),
+                        InlineKeyboardButton(
+                            translator.translate("questions.template_cancel"),
+                            callback_data="questions_templates"
+                        )
+                    ]
+                ])
+                
+                template_text = translator.translate('questions.template_selected',
+                    name=template['name'],
+                    text=template['text'],
+                    start=template['window_start'],
+                    end=template['window_end'],
+                    interval=template['interval_minutes']
+                )
+                
+                await query.edit_message_text(
+                    template_text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data.startswith("questions_create_from_template:"):
+            # Create question from template
+            template_name = data.split(":", 1)[1]
+            template = QuestionTemplates.get_template_by_name(template_name)
+            
+            if template:
+                # Create question data
+                question_data = {
+                    'question_name': template['name'],
+                    'question_text': template['text'],
+                    'window_start': template['window_start'],
+                    'window_end': template['window_end'],
+                    'interval_minutes': template['interval_minutes']
+                }
+                
+                created_question = await question_manager.create_custom_question(user.id, question_data)
+                
+                if created_question:
+                    await query.edit_message_text(
+                        translator.translate('questions.success_created'),
+                        parse_mode='Markdown'
+                    )
+                    # Return to questions menu
+                    await handle_questions_menu(query, db_client, user_cache, user)
+                else:
+                    await query.edit_message_text(
+                        translator.translate('questions.error_limit'),
+                        parse_mode='Markdown'
+                    )
+            else:
+                await query.edit_message_text(
+                    translator.translate('questions.error_not_found'),
+                    parse_mode='Markdown'
+                )
+        
+        elif data == "questions_show_all":
+            # Show all settings summary
+            questions_summary = await question_manager.get_user_questions_summary(user.id)
+            user_ops = UserOperations(db_client, user_cache)
+            user_data = await user_ops.get_user_settings(user.id)
+            notifications_enabled = user_data.get('enabled', True) if user_data else True
+            
+            # Create summary text
+            summary_text = f"{translator.translate('questions.all_settings_title')}\n\n"
+            
+            notif_status = "✅" if notifications_enabled else "❌"
+            summary_text += translator.translate('questions.notifications_status', status=notif_status) + "\n"
+            
+            stats = questions_summary.get('stats', {})
+            summary_text += translator.translate('questions.active_questions_count', 
+                count=stats.get('active_questions', 0),
+                max=stats.get('max_questions', 5)
+            ) + "\n\n"
+            
+            summary_text += translator.translate('questions.questions_list') + "\n"
+            
+            # Default question
+            default_q = questions_summary.get('default_question')
+            if default_q:
+                status = "✅" if default_q.get('active', True) else "❌"
+                summary_text += f"{translator.translate('questions.default_marker')} {default_q['question_name']}: \"{default_q['question_text'][:30]}...\" {status}\n"
+                summary_text += f"   {default_q['window_start']}-{default_q['window_end']}, каждые {default_q['interval_minutes']} мин\n"
+            
+            # Custom questions
+            custom_questions = questions_summary.get('custom_questions', [])
+            for question in custom_questions:
+                status = "✅" if question.get('active', True) else "❌"
+                summary_text += f"{translator.translate('questions.custom_marker')} {question['question_name']}: \"{question['question_text'][:30]}...\" {status}\n"
+                summary_text += f"   {question['window_start']}-{question['window_end']}, каждые {question['interval_minutes']} мин\n"
+            
+            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(translator.translate("questions.back"), callback_data="menu_questions")]
+            ])
+            
+            await query.edit_message_text(
+                summary_text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        
+        else:
+            # Return to main questions menu for unknown actions
+            await handle_questions_menu(query, db_client, user_cache, user)
+            
+    except Exception as e:
+        logger.error(f"Error handling questions action {data}: {e}")
+        await query.edit_message_text(
+            translator.translate('errors.general'),
+            parse_mode='Markdown'
+        )
 
 
 def setup_callback_handlers(

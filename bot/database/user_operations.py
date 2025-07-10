@@ -155,8 +155,8 @@ class UserOperations:
             return None
     
     @track_errors_async("user_activity_log")
-    async def log_activity(self, user_id: int, activity_text: str) -> bool:
-        """Log user activity to database."""
+    async def log_activity(self, user_id: int, activity_text: str, question_id: Optional[int] = None) -> bool:
+        """Log user activity to database with optional question linkage."""
         try:
             activity_data = {
                 "tg_id": user_id,
@@ -164,9 +164,17 @@ class UserOperations:
                 "jobs_timestamp": "now()"
             }
             
+            # Add question_id if provided
+            if question_id is not None:
+                activity_data["question_id"] = question_id
+            
             self.db.table("tg_jobs").insert(activity_data).execute()
             
-            logger.info("Activity logged", user_id=user_id, text_length=len(activity_text))
+            log_data = {"user_id": user_id, "text_length": len(activity_text)}
+            if question_id:
+                log_data["question_id"] = question_id
+            
+            logger.info("Activity logged", **log_data)
             return True
             
         except Exception as exc:

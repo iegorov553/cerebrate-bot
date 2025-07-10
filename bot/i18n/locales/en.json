@@ -2,6 +2,7 @@
   "menu": {
     "main_title": "👋 Main Menu",
     "main_subtitle": "🤖 **Doyobi Diary**\nChoose an action:",
+    "questions": "📝 My Questions",
     "settings": "⚙️ Settings",
     "friends": "👥 Friends", 
     "history": "📊 History",
@@ -155,5 +156,64 @@
     "rate_limited": "⚠️ You are sending messages too frequently. Please try later.",
     "error": "❌ An error occurred while sending your message. Please try later.",
     "disabled": "⚠️ Feedback system is temporarily unavailable."
+  },
+  
+  "questions": {
+    "title": "📝 **My Questions**",
+    "description": "Manage your personal questions for activity tracking:",
+    "notifications_toggle": "🔔 All notifications: {status}",
+    "default_question": "Main question",
+    "custom_section": "➕ Additional questions:",
+    "add_new": "➕ Add new question ({count})",
+    "templates": "🎯 Ready templates",
+    "show_all_settings": "📊 Show all settings",
+    "back": "🔙 Back",
+    "back_to_categories": "🔙 To categories",
+    
+    "edit_text": "✏️ Edit text",
+    "edit_schedule": "⏰ Edit schedule",
+    "enable": "✅ Enable",
+    "disable": "❌ Disable",
+    "test": "🧪 Test",
+    "delete": "🗑️ Delete",
+    "delete_confirm": "✅ Yes, delete",
+    "delete_cancel": "❌ Cancel",
+    
+    "popular_templates": "⭐ Popular templates",
+    
+    "edit_title": "✏️ **Editing question**",
+    "current_text": "📝 **Text:** {text}",
+    "current_schedule": "⏰ **Schedule:** {start} - {end}, every {interval} min",
+    "current_status": "🔔 **Status:** {status}",
+    "edit_instructions": "ℹ️ When changing text, a new version of the question will be created.\nOld answers will remain linked to the old text.",
+    
+    "template_selected": "✅ Template selected: **{name}**\n\n📝 Text: {text}\n⏰ Time: {start}-{end}\n📊 Frequency: every {interval} min\n\nUse this template?",
+    "template_use": "✅ Use",
+    "template_cancel": "❌ Cancel",
+    
+    "all_settings_title": "📊 **All settings**",
+    "notifications_status": "🔔 Notifications: {status}",
+    "active_questions_count": "📝 Active questions: {count}/{max}",
+    "questions_list": "📝 **Your questions:**",
+    "default_marker": "🔸",
+    "custom_marker": "•",
+    
+    "success_created": "✅ Question created!",
+    "success_updated": "✅ Question updated!",
+    "success_deleted": "✅ Question deleted!",
+    "success_toggled": "✅ Status changed!",
+    "success_test": "🧪 Test notification sent!",
+    
+    "error_limit": "❌ Question limit reached (5 maximum)",
+    "error_name_exists": "❌ Question with this name already exists",
+    "error_invalid_data": "❌ Invalid data",
+    "error_not_found": "❌ Question not found",
+    "error_cannot_delete_default": "❌ Cannot delete main question",
+    
+    "prompt_text": "📝 Enter new question text:",
+    "prompt_name": "📛 Enter question name:",
+    "prompt_schedule": "⏰ Enter schedule in format:\n`09:00-18:00 120`\n(start-end_time interval_in_minutes)",
+    
+    "help_variables": "💡 **Available variables:**\n• `{name}` - user name\n• `{time}` - current time\n\nExample: \"Hello, {name}! What are you doing at {time}?\""
   }
 }

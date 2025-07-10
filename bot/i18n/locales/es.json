@@ -2,6 +2,7 @@
   "menu": {
     "main_title": "👋 Menú Principal",
     "main_subtitle": "🤖 **Doyobi Diary**\nElige una acción:",
+    "questions": "📝 Mis Preguntas",
     "settings": "⚙️ Configuración",
     "friends": "👥 Amigos", 
     "history": "📊 Historial",
@@ -155,5 +156,64 @@
     "rate_limited": "⚠️ Estás enviando mensajes muy frecuentemente. Por favor intenta más tarde.",
     "error": "❌ Ocurrió un error al enviar tu mensaje. Por favor intenta más tarde.",
     "disabled": "⚠️ Sistema de retroalimentación temporalmente no disponible."
+  },
+  
+  "questions": {
+    "title": "📝 **Mis Preguntas**",
+    "description": "Gestiona tus preguntas personales para el seguimiento de actividades:",
+    "notifications_toggle": "🔔 Todas las notificaciones: {status}",
+    "default_question": "Pregunta principal",
+    "custom_section": "➕ Preguntas adicionales:",
+    "add_new": "➕ Agregar nueva pregunta ({count})",
+    "templates": "🎯 Plantillas listas",
+    "show_all_settings": "📊 Mostrar todas las configuraciones",
+    "back": "🔙 Atrás",
+    "back_to_categories": "🔙 A categorías",
+    
+    "edit_text": "✏️ Editar texto",
+    "edit_schedule": "⏰ Editar horario",
+    "enable": "✅ Activar",
+    "disable": "❌ Desactivar",
+    "test": "🧪 Probar",
+    "delete": "🗑️ Eliminar",
+    "delete_confirm": "✅ Sí, eliminar",
+    "delete_cancel": "❌ Cancelar",
+    
+    "popular_templates": "⭐ Plantillas populares",
+    
+    "edit_title": "✏️ **Editando pregunta**",
+    "current_text": "📝 **Texto:** {text}",
+    "current_schedule": "⏰ **Horario:** {start} - {end}, cada {interval} min",
+    "current_status": "🔔 **Estado:** {status}",
+    "edit_instructions": "ℹ️ Al cambiar el texto, se creará una nueva versión de la pregunta.\nLas respuestas antiguas seguirán vinculadas al texto anterior.",
+    
+    "template_selected": "✅ Plantilla seleccionada: **{name}**\n\n📝 Texto: {text}\n⏰ Tiempo: {start}-{end}\n📊 Frecuencia: cada {interval} min\n\n¿Usar esta plantilla?",
+    "template_use": "✅ Usar",
+    "template_cancel": "❌ Cancelar",
+    
+    "all_settings_title": "📊 **Todas las configuraciones**",
+    "notifications_status": "🔔 Notificaciones: {status}",
+    "active_questions_count": "📝 Preguntas activas: {count}/{max}",
+    "questions_list": "📝 **Tus preguntas:**",
+    "default_marker": "🔸",
+    "custom_marker": "•",
+    
+    "success_created": "✅ ¡Pregunta creada!",
+    "success_updated": "✅ ¡Pregunta actualizada!",
+    "success_deleted": "✅ ¡Pregunta eliminada!",
+    "success_toggled": "✅ ¡Estado cambiado!",
+    "success_test": "🧪 ¡Notificación de prueba enviada!",
+    
+    "error_limit": "❌ Límite de preguntas alcanzado (5 máximo)",
+    "error_name_exists": "❌ Ya existe una pregunta con ese nombre",
+    "error_invalid_data": "❌ Datos inválidos",
+    "error_not_found": "❌ Pregunta no encontrada",
+    "error_cannot_delete_default": "❌ No se puede eliminar la pregunta principal",
+    
+    "prompt_text": "📝 Introduce el nuevo texto de la pregunta:",
+    "prompt_name": "📛 Introduce el nombre de la pregunta:",
+    "prompt_schedule": "⏰ Introduce el horario en formato:\n`09:00-18:00 120`\n(hora_inicio-fin intervalo_en_minutos)",
+    
+    "help_variables": "💡 **Variables disponibles:**\n• `{name}` - nombre del usuario\n• `{time}` - hora actual\n\nEjemplo: \"¡Hola, {name}! ¿Qué estás haciendo a las {time}?\""
   }
 }

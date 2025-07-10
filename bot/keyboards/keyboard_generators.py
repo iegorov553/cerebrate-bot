@@ -29,7 +29,7 @@ class KeyboardGenerator:
             translator = Translator()
             
         keyboard = [
-            [InlineKeyboardButton(translator.translate("menu.settings"), callback_data="menu_settings")],
+            [InlineKeyboardButton(translator.translate("menu.questions"), callback_data="menu_questions")],
             [InlineKeyboardButton(translator.translate("menu.friends"), callback_data="menu_friends")],
             [InlineKeyboardButton(translator.translate("menu.history"), callback_data="menu_history")],
         ]
@@ -383,6 +383,222 @@ class KeyboardGenerator:
             [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
         ]
         return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def questions_menu(
+        questions_summary: Dict, 
+        notifications_enabled: bool = True, 
+        translator=None
+    ) -> InlineKeyboardMarkup:
+        """
+        Generate questions menu keyboard.
+        
+        Args:
+            questions_summary: Summary of user questions
+            notifications_enabled: Whether notifications are globally enabled
+            translator: Translator instance for localization
+            
+        Returns:
+            InlineKeyboardMarkup for questions menu
+        """
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+        
+        keyboard = []
+        
+        # Global notifications toggle
+        notif_status = "✅" if notifications_enabled else "❌"
+        notif_text = translator.translate("questions.notifications_toggle", status=notif_status)
+        keyboard.append([InlineKeyboardButton(notif_text, callback_data="questions_toggle_notifications")])
+        
+        keyboard.append([])  # Empty row separator
+        
+        # Default question
+        default_q = questions_summary.get('default_question')
+        if default_q:
+            status = "✅" if default_q.get('active', True) else "❌"
+            text = f"🔸 {translator.translate('questions.default_question')} {status}"
+            keyboard.append([InlineKeyboardButton(text, callback_data=f"questions_edit:{default_q['id']}")])
+        
+        # Custom questions
+        custom_questions = questions_summary.get('custom_questions', [])
+        if custom_questions:
+            keyboard.append([])  # Separator
+            keyboard.append([InlineKeyboardButton(
+                translator.translate("questions.custom_section"), 
+                callback_data="questions_noop"
+            )])
+            
+            for question in custom_questions:
+                status = "✅" if question.get('active', True) else "❌"
+                name = question.get('question_name', 'Вопрос')[:15]  # Limit length
+                text = f"• {name} {status}"
+                keyboard.append([
+                    InlineKeyboardButton(text, callback_data=f"questions_edit:{question['id']}"),
+                    InlineKeyboardButton("🗑️", callback_data=f"questions_delete:{question['id']}")
+                ])
+        
+        # Add new question button
+        can_add = questions_summary.get('can_add_more', True)
+        stats = questions_summary.get('stats', {})
+        active_count = stats.get('active_questions', 0)
+        max_count = stats.get('max_questions', 5)
+        
+        if can_add:
+            keyboard.append([])  # Separator
+            keyboard.append([InlineKeyboardButton(
+                translator.translate("questions.add_new", count=f"{active_count}/{max_count}"),
+                callback_data="questions_add"
+            )])
+        
+        # Additional options
+        keyboard.extend([
+            [],  # Separator
+            [InlineKeyboardButton(translator.translate("questions.templates"), callback_data="questions_templates")],
+            [InlineKeyboardButton(translator.translate("questions.show_all_settings"), callback_data="questions_show_all")],
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
+        ])
+        
+        return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def question_edit_menu(question: Dict, translator=None) -> InlineKeyboardMarkup:
+        """
+        Generate question edit menu keyboard.
+        
+        Args:
+            question: Question data
+            translator: Translator instance for localization
+            
+        Returns:
+            InlineKeyboardMarkup for question editing
+        """
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+        
+        keyboard = []
+        
+        # Edit options
+        keyboard.extend([
+            [InlineKeyboardButton(translator.translate("questions.edit_text"), callback_data=f"questions_edit_text:{question['id']}")],
+            [InlineKeyboardButton(translator.translate("questions.edit_schedule"), callback_data=f"questions_edit_schedule:{question['id']}")],
+        ])
+        
+        # Toggle status (only for non-default questions)
+        if not question.get('is_default', False):
+            status_text = translator.translate("questions.disable") if question.get('active') else translator.translate("questions.enable")
+            keyboard.append([InlineKeyboardButton(status_text, callback_data=f"questions_toggle:{question['id']}")])
+        
+        # Test question
+        keyboard.append([InlineKeyboardButton(translator.translate("questions.test"), callback_data=f"questions_test:{question['id']}")])
+        
+        # Delete (only for non-default questions)
+        if not question.get('is_default', False):
+            keyboard.append([InlineKeyboardButton(translator.translate("questions.delete"), callback_data=f"questions_delete_confirm:{question['id']}")])
+        
+        # Back button
+        keyboard.append([InlineKeyboardButton(translator.translate("questions.back"), callback_data="menu_questions")])
+        
+        return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def question_templates_menu(category: str = None, translator=None) -> InlineKeyboardMarkup:
+        """
+        Generate question templates menu keyboard.
+        
+        Args:
+            category: Template category to show
+            translator: Translator instance for localization
+            
+        Returns:
+            InlineKeyboardMarkup for templates
+        """
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+        
+        keyboard = []
+        
+        if category is None:
+            # Show categories
+            from bot.questions.question_templates import QuestionTemplates
+            categories = QuestionTemplates.get_category_names()
+            
+            for cat_key, cat_name in categories.items():
+                keyboard.append([InlineKeyboardButton(
+                    cat_name, 
+                    callback_data=f"questions_templates_cat:{cat_key}"
+                )])
+            
+            # Popular templates shortcut
+            keyboard.append([InlineKeyboardButton(
+                translator.translate("questions.popular_templates"),
+                callback_data="questions_templates_cat:popular"
+            )])
+            
+        else:
+            # Show templates in category
+            from bot.questions.question_templates import QuestionTemplates
+            
+            if category == "popular":
+                templates = QuestionTemplates.get_popular_templates()
+            else:
+                all_templates = QuestionTemplates.get_templates()
+                templates = all_templates.get(category, [])
+            
+            for template in templates:
+                name = template['name'][:25]  # Limit length
+                keyboard.append([InlineKeyboardButton(
+                    f"➕ {name}",
+                    callback_data=f"questions_use_template:{template['name']}"
+                )])
+            
+            # Back to categories
+            keyboard.append([InlineKeyboardButton(
+                translator.translate("questions.back_to_categories"),
+                callback_data="questions_templates"
+            )])
+        
+        # Back to questions menu
+        keyboard.append([InlineKeyboardButton(
+            translator.translate("questions.back"),
+            callback_data="menu_questions"
+        )])
+        
+        return InlineKeyboardMarkup(keyboard)
+    
+    @staticmethod
+    def question_delete_confirm(question_id: int, translator=None) -> InlineKeyboardMarkup:
+        """
+        Generate question deletion confirmation keyboard.
+        
+        Args:
+            question_id: Question ID to delete
+            translator: Translator instance for localization
+            
+        Returns:
+            InlineKeyboardMarkup for deletion confirmation
+        """
+        if translator is None:
+            from bot.i18n.translator import Translator
+            translator = Translator()
+        
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    translator.translate("questions.delete_confirm"),
+                    callback_data=f"questions_delete_yes:{question_id}"
+                ),
+                InlineKeyboardButton(
+                    translator.translate("questions.delete_cancel"),
+                    callback_data=f"questions_edit:{question_id}"
+                )
+            ]
+        ]
+        
+        return InlineKeyboardMarkup(keyboard)
 
 
 # Convenience functions for common keyboards
@@ -413,3 +629,9 @@ create_settings_menu = get_settings_keyboard
 create_friends_menu = get_friends_keyboard
 create_admin_menu = get_admin_keyboard
 create_language_menu = KeyboardGenerator.language_menu
+
+# New questions system keyboards
+create_questions_menu = KeyboardGenerator.questions_menu
+create_question_edit_menu = KeyboardGenerator.question_edit_menu
+create_question_templates_menu = KeyboardGenerator.question_templates_menu
+create_question_delete_confirm = KeyboardGenerator.question_delete_confirm

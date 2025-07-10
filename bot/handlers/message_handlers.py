@@ -16,6 +16,40 @@ from monitoring import get_logger, set_user_context, track_errors_async
 logger = get_logger(__name__)
 
 
+async def send_response_by_status(message, status: str, translator):
+    """Send response to user based on message processing status."""
+    try:
+        if status == "reply_success":
+            # Successful reply to notification
+            await message.reply_text("✅ Записано!")
+            
+        elif status == "old_notification_active_question":
+            # Old notification but question still active
+            await message.reply_text(
+                "😅 Вот это ты вспомнил! Уведомление старое, но записал как обычную активность."
+            )
+            
+        elif status == "old_notification_inactive_question":
+            # Both notification and question are outdated
+            await message.reply_text(
+                "🕰️ Этот вопрос уже неактуальный! Записал как обычную активность. "
+                "Отвечай на что-то посвежее! 😄"
+            )
+            
+        elif status == "default_question":
+            # Regular message to default question
+            await message.reply_text("✅ Записано!")
+            
+        else:
+            # Error or unknown status
+            await message.reply_text("✅ Записано!")
+            
+    except Exception as e:
+        logger.error(f"Error sending status response: {e}")
+        # Fallback response
+        await message.reply_text("✅ Записано!")
+
+
 @rate_limit("general")
 @track_errors_async("handle_text_message")
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -69,28 +103,46 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             last_name=user.last_name
         )
         
-        # Log the activity
-        success = await user_ops.log_activity(user.id, message.text)
+        # Initialize question manager and ensure user has default question
+        from bot.questions import QuestionManager
+        question_manager = QuestionManager(db_client, user_cache)
+        await question_manager.ensure_user_has_default_question(user.id)
         
-        if success:
-            logger.info("Activity logged successfully", 
-                       user_id=user.id, 
-                       message_length=len(message.text))
+        # Determine which question this message responds to
+        reply_to_message_id = None
+        if message.reply_to_message:
+            reply_to_message_id = message.reply_to_message.message_id
+        
+        question_id, status = await question_manager.determine_question_for_message(
+            user.id, reply_to_message_id
+        )
+        
+        if question_id:
+            # Log the activity with question linkage
+            success = await user_ops.log_activity(user.id, message.text, question_id=question_id)
             
-            # Send confirmation and new question
-            confirmation_text = (
-                f"📝 Записал: *{message.text}*\n\n"
-                f"{config.question_text}"
-            )
-            
-            await message.reply_text(
-                confirmation_text,
-                parse_mode='Markdown'
-            )
+            if success:
+                logger.info("Activity logged successfully", 
+                           user_id=user.id, 
+                           question_id=question_id,
+                           message_length=len(message.text))
+                
+                # Get user translator for response
+                from bot.handlers.callback_handlers import get_user_translator
+                translator = await get_user_translator(user.id, db_client, user_cache)
+                
+                # Send status-specific response
+                await send_response_by_status(message, status, translator)
+                
+            else:
+                logger.warning("Failed to log activity", user_id=user.id)
+                await message.reply_text(
+                    "❌ Не удалось записать активность. Попробуйте ещё раз."
+                )
         else:
-            logger.warning("Failed to log activity", user_id=user.id)
+            logger.error("No question found for user", user_id=user.id)
             await message.reply_text(
-                "❌ Не удалось записать активность. Попробуйте ещё раз."
+                "❌ Ошибка системы вопросов. Попробуйте команду /start"
             )
             
     except Exception as e:

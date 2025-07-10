@@ -20,7 +20,7 @@ from bot.handlers.callback_handlers import setup_callback_handlers
 from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.error_handler import setup_error_handler
 from bot.handlers.message_handlers import setup_message_handlers
-from bot.services.scheduler_service import SchedulerService
+from bot.services.multi_question_scheduler import create_multi_question_scheduler
 from bot.utils.rate_limiter import MultiTierRateLimiter
 
 # Monitoring setup
@@ -76,11 +76,14 @@ async def create_application() -> Application:
     
     logger.info("All handlers configured")
     
-    # Setup scheduler service
-    scheduler_service = SchedulerService(application, db_client, config)
-    scheduler_service.start()
+    # Setup multi-question scheduler service
+    multi_question_scheduler = create_multi_question_scheduler(application, db_client, config)
+    multi_question_scheduler.start()
     
-    logger.info("Scheduler service started")
+    logger.info("Multi-question scheduler service started")
+    
+    # Store scheduler in application for proper shutdown
+    application.bot_data['multi_question_scheduler'] = multi_question_scheduler
     
     return application
 
@@ -92,9 +95,16 @@ async def main() -> None:
     # Create application
     application = await create_application()
     
-    # Run the bot
-    logger.info("Bot is ready! Starting polling...")
-    await application.run_polling()
+    try:
+        # Run the bot
+        logger.info("Bot is ready! Starting polling...")
+        await application.run_polling()
+    finally:
+        # Cleanup scheduler on shutdown
+        if 'multi_question_scheduler' in application.bot_data:
+            scheduler = application.bot_data['multi_question_scheduler']
+            scheduler.stop()
+            logger.info("Multi-question scheduler stopped")
 
 
 if __name__ == "__main__":
