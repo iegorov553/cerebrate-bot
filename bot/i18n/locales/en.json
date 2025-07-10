@@ -30,7 +30,6 @@
     "toggle_notifications": "🔔 Toggle Notifications",
     "set_time_window": "⏰ Set Time Window",
     "set_frequency": "📊 Set Frequency",
-    "view_settings": "📝 View Current Settings",
     "language_settings": "🌍 Choose Language",
     "notifications_enabled_msg": "🔔 Notifications ✅ enabled!\n\nReturning to settings...",
     "notifications_disabled_msg": "🔔 Notifications ❌ disabled!\n\nReturning to settings...",

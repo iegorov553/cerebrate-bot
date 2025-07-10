@@ -55,7 +55,6 @@ class KeyboardGenerator:
             [InlineKeyboardButton(translator.translate("settings.toggle_notifications"), callback_data="settings_toggle_notifications")],
             [InlineKeyboardButton(translator.translate("settings.set_time_window"), callback_data="settings_time_window")],
             [InlineKeyboardButton(translator.translate("settings.set_frequency"), callback_data="settings_frequency")],
-            [InlineKeyboardButton(translator.translate("settings.view_settings"), callback_data="settings_view")],
             [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
         ]
         return InlineKeyboardMarkup(keyboard)

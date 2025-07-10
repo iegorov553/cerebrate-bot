@@ -30,7 +30,6 @@
     "toggle_notifications": "🔔 Alternar Notificaciones",
     "set_time_window": "⏰ Establecer Horario",
     "set_frequency": "📊 Establecer Frecuencia",
-    "view_settings": "📝 Ver Configuración Actual",
     "language_settings": "🌍 Elegir Idioma",
     "notifications_enabled_msg": "🔔 ¡Notificaciones ✅ activadas!\n\nVolviendo a configuración...",
     "notifications_disabled_msg": "🔔 ¡Notificaciones ❌ desactivadas!\n\nVolviendo a configuración...",

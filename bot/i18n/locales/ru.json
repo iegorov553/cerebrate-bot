@@ -30,7 +30,6 @@
     "toggle_notifications": "🔔 Переключить уведомления",
     "set_time_window": "⏰ Установить время",
     "set_frequency": "📊 Установить частоту",
-    "view_settings": "📝 Посмотреть настройки",
     "language_settings": "🌍 Выбрать язык",
     "notifications_enabled_msg": "🔔 Уведомления ✅ включены!\n\nВозвращаемся к настройкам...",
     "notifications_disabled_msg": "🔔 Уведомления ❌ отключены!\n\nВозвращаемся к настройкам...",
