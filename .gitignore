@@ -49,6 +49,16 @@ creds.json
 
 # Deployment
 .vercel
+node_modules/
 
 # Supabase
 supabase_migrations/.temp/
+
+# Local development
+.env.local
+.env.development
+.env.production
+
+# Documentation temp files
+docs/.temp/
+*.md.backup
