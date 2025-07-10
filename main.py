@@ -16,6 +16,7 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.handlers.admin_handlers import setup_admin_handlers
+from bot.handlers.admin_conversations import setup_admin_conversations
 from bot.handlers.callback_handlers import setup_callback_handlers
 from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.error_handler import setup_error_handler
@@ -71,6 +72,7 @@ async def create_application() -> Application:
     # Setup all handlers
     setup_command_handlers(application, db_client, user_cache, rate_limiter, config)
     setup_admin_handlers(application, db_client, rate_limiter, config)
+    setup_admin_conversations(application, db_client, rate_limiter, config)  # NEW: Admin conversations
     setup_callback_handlers(application, db_client, user_cache, rate_limiter, config)
     setup_message_handlers(application, db_client, user_cache, rate_limiter, config)
     

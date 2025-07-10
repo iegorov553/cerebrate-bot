@@ -34,46 +34,7 @@ def require_admin(func):
     return wrapper
 
 
-@rate_limit("admin")
-@track_errors_async("broadcast_command")
-@require_admin
-async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /broadcast command - send message to all users."""
-    user = update.effective_user
-    set_user_context(user.id, user.username, user.first_name)
-    
-    if not context.args:
-        await update.message.reply_text(
-            "📢 **Рассылка сообщений**\n\n"
-            "Использование: `/broadcast <сообщение>`\n\n"
-            "Пример:\n"
-            "`/broadcast Обновление бота! Новые функции доступны.`\n\n"
-            "Поддерживается форматирование Markdown.",
-            parse_mode='Markdown'
-        )
-        return
-    
-    # Get message text
-    message_text = ' '.join(context.args)
-    
-    # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    config: Config = context.bot_data['config']
-    
-    # Create broadcast manager
-    broadcast_manager = BroadcastManager(db_client, config)
-    
-    # Show preview and ask for confirmation
-    preview_text = f"📢 **Предпросмотр рассылки:**\n\n{message_text}\n\n" \
-                   "Отправить всем пользователям? Ответьте 'да' для подтверждения."
-    
-    await update.message.reply_text(preview_text, parse_mode='Markdown')
-    
-    # Store broadcast data for confirmation
-    context.user_data['pending_broadcast'] = {
-        'message': message_text,
-        'broadcast_manager': broadcast_manager
-    }
+# Broadcast command moved to admin_conversations.py with ConversationHandler
 
 
 @rate_limit("admin")
@@ -130,7 +91,7 @@ def setup_admin_handlers(
     application.bot_data['admin_ops'] = admin_ops
     
     # Register admin command handlers
-    application.add_handler(CommandHandler("broadcast", broadcast_command))
+    # Note: broadcast moved to admin_conversations.py
     application.add_handler(CommandHandler("broadcast_info", broadcast_info_command))
     
     logger.info("Admin handlers registered successfully")

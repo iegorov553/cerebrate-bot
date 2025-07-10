@@ -216,3 +216,18 @@ class UserOperations:
         except Exception as exc:
             logger.error("Error updating last notification", user_id=user_id, error=str(exc))
             return False
+    
+    @track_errors_async("get_all_user_ids")
+    async def get_all_user_ids(self) -> list:
+        """Get all user IDs for broadcast."""
+        try:
+            result = self.db.table("users").select("tg_id").execute()
+            
+            user_ids = [user['tg_id'] for user in result.data] if result.data else []
+            logger.debug("Retrieved user IDs for broadcast", count=len(user_ids))
+            
+            return user_ids
+            
+        except Exception as exc:
+            logger.error("Error getting all user IDs", error=str(exc))
+            return []
