@@ -1,7 +1,6 @@
 # Doyobi Diary 🤖
 
 [![Tests](https://github.com/iegorov553/cerebrate-bot/actions/workflows/test.yml/badge.svg)](https://github.com/iegorov553/cerebrate-bot/actions/workflows/test.yml)
-[![Deploy](https://github.com/iegorov553/cerebrate-bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/iegorov553/cerebrate-bot/actions/workflows/deploy.yml)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![Telegram Bot API](https://img.shields.io/badge/Telegram%20Bot%20API-20.3-blue.svg)](https://core.telegram.org/bots/api)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)](https://supabase.com)
