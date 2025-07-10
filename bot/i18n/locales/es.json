@@ -64,14 +64,14 @@
   },
   
   "history": {
-    "title": "📊 **Historial de Actividad**",
+    "title": "📊 Historial de Actividad",
     "subtitle": "Abre la interfaz web para ver el historial detallado:",
     "description": "Abre la interfaz web para ver el historial detallado:",
     "open_button": "📊 Abrir Historial"
   },
   
   "admin": {
-    "title": "👨‍💼 **Panel de Administrador**",
+    "title": "👨‍💼 Panel de Administrador",
     "subtitle": "Elige una acción:",
     "panel": "Panel de Administrador",
     "choose_action": "Elige una acción:",

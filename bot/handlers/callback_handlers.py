@@ -193,8 +193,8 @@ async def handle_history(query, config: Config, db_client: DatabaseClient, user_
     ])
     
     await query.edit_message_text(
-        f"📊 **{translator.translate('menu.history')}**\n\n"
-        f"{translator.translate('history.description', default='Откройте веб-интерфейс для просмотра детальной истории:')}",
+        f"**{translator.translate('history.title')}**\n\n"
+        f"{translator.translate('history.description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
@@ -227,7 +227,7 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
     ])
     
     await query.edit_message_text(
-        f"👨‍💼 **{translator.translate('admin.panel')}**\n\n"
+        f"**{translator.translate('admin.title')}**\n\n"
         f"{translator.translate('admin.choose_action')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
@@ -321,25 +321,15 @@ async def handle_help(query, db_client: DatabaseClient, user_cache: TTLCache, us
     ])
     
     # Build help text from translations
-    try:
-        # Try new format first
-        commands = "\n".join(translator.translate(f"help.commands.{i}") for i in range(5))
-    except:
-        # Fallback to old format
-        commands_list = translator.translate("help.commands")
-        commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
+    # Use array format directly since we updated the JSON files
+    commands_list = translator.translate("help.commands")
+    commands = "\n".join(commands_list) if isinstance(commands_list, list) else str(commands_list)
     
-    try:
-        how_it_works = "\n".join(translator.translate(f"help.how_it_works.{i}") for i in range(4))
-    except:
-        how_it_works_list = translator.translate("help.how_it_works")
-        how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
+    how_it_works_list = translator.translate("help.how_it_works")
+    how_it_works = "\n".join(how_it_works_list) if isinstance(how_it_works_list, list) else str(how_it_works_list)
     
-    try:
-        friends_info = "\n".join(translator.translate(f"help.friends_info.{i}") for i in range(3))
-    except:
-        friends_info_list = translator.translate("help.friends_info")
-        friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
+    friends_info_list = translator.translate("help.friends_info")
+    friends_info = "\n".join(friends_info_list) if isinstance(friends_info_list, list) else str(friends_info_list)
     
     help_text = (
         f"{translator.translate('help.title')}\n\n"
