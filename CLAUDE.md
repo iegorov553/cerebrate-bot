@@ -196,7 +196,7 @@ supabase db push
 - 📊 **History**: Activity tracking via web interface
 - 🌍 **Language**: Multi-language support (Russian/English/Spanish)
 - 📢 **Admin Panel**: Broadcast system (admin only)
-- ❓ **Help**: Bot documentation and usage guide
+- 💬 **Feedback**: User feedback and bug reporting system
 
 ### Multi-Language Support ✅ PRODUCTION-READY
 **Language Selection Interface:**
@@ -226,7 +226,7 @@ supabase db push
 
 ### Feedback System ✅ PRODUCTION-READY
 **User Feedback Interface:**
-- **💬 Feedback button** in help menu
+- **💬 Feedback button** in main menu (first-level access)
 - **3 feedback types**: 🐛 Bug reports, 💡 Feature requests, 📝 General feedback
 - **Rate limiting**: 3 messages per user per hour
 - **GitHub integration**: Automatic Issue creation with tracking links
@@ -624,18 +624,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 
 ### Recent Updates
 1. **GitHub Issues Feedback System**: Complete user feedback integration with automatic Issue creation ✅ NEW
-2. **Production-ready i18n system**: Complete multi-language support with user-specific translators
-3. **Database integration**: Language preferences saved in `users.language` column
-4. **Callback handlers fixes**: All menu buttons now work correctly with proper function signatures
-5. **Message activity logging**: All text messages get confirmation responses with new questions
-6. **Cache async/await fixes**: Resolved all RuntimeWarnings with TTL cache operations
-7. **Inline keyboard system**: Complete UI overhaul with button navigation
-8. **Admin broadcast**: Mass messaging with confirmation and statistics
-9. **Friends discovery**: Find new friends through mutual connections
-10. **Critical performance improvements**: 90% faster friend discovery, 80% faster settings UI
-11. **Security enhancements**: Safe parsing, input validation, error resilience
-12. **Caching system**: TTL cache with automatic invalidation for user settings
-13. **Batch processing**: Non-blocking broadcasts with real-time progress tracking
+2. **UI Navigation Improvements**: Feedback moved to main menu, removed redundant help section ✅ NEW
+3. **Production-ready i18n system**: Complete multi-language support with user-specific translators
+4. **Database integration**: Language preferences saved in `users.language` column
+5. **Callback handlers fixes**: All menu buttons now work correctly with proper function signatures
+6. **Message activity logging**: All text messages get confirmation responses with new questions
+7. **Cache async/await fixes**: Resolved all RuntimeWarnings with TTL cache operations
+8. **Inline keyboard system**: Complete UI overhaul with button navigation
+9. **Admin broadcast**: Mass messaging with confirmation and statistics
+10. **Friends discovery**: Find new friends through mutual connections
+11. **Critical performance improvements**: 90% faster friend discovery, 80% faster settings UI
+12. **Security enhancements**: Safe parsing, input validation, error resilience
+13. **Caching system**: TTL cache with automatic invalidation for user settings
+14. **Batch processing**: Non-blocking broadcasts with real-time progress tracking
 
 ## Performance & Security Improvements
 
