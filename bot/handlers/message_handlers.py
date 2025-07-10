@@ -171,6 +171,6 @@ def setup_message_handlers(
         filters.TEXT & ~filters.COMMAND,
         handle_text_message
     )
-    application.add_handler(text_handler)
+    application.add_handler(text_handler, group=1)  # Lower priority than conversations
     
     logger.info("Message handlers registered successfully")

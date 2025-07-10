@@ -63,6 +63,27 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     return WAITING_BROADCAST_TEXT
 
 
+@track_errors_async("start_broadcast_from_callback")  
+@require_admin
+async def start_broadcast_from_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Start broadcast conversation - entry point from callback button."""
+    query = update.callback_query
+    user = query.from_user
+    
+    await query.answer()  # Acknowledge the callback
+    set_user_context(user.id, user.username, user.first_name)
+    
+    await query.edit_message_text(
+        "📢 **Создание рассылки**\n\n"
+        "Отправьте текст сообщения для рассылки всем пользователям.\n\n"
+        "💡 Поддерживается форматирование Markdown.\n"
+        "📝 Для отмены используйте /cancel",
+        parse_mode='Markdown'
+    )
+    
+    return WAITING_BROADCAST_TEXT
+
+
 @track_errors_async("handle_broadcast_text")
 async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle broadcast text input and show confirmation."""
@@ -195,7 +216,11 @@ def create_broadcast_conversation() -> ConversationHandler:
     
     return ConversationHandler(
         entry_points=[
-            CommandHandler("broadcast", start_broadcast)
+            CommandHandler("broadcast", start_broadcast),
+            CallbackQueryHandler(
+                start_broadcast_from_callback,
+                pattern="^admin_broadcast$"
+            )
         ],
         states={
             WAITING_BROADCAST_TEXT: [

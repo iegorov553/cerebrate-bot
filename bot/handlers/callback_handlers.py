@@ -482,12 +482,10 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
     action = data.replace("admin_", "")
     
     if action == "broadcast":
+        # This will be handled by ConversationHandler entry point
+        # Just show a temp message since callback will be intercepted
         await query.edit_message_text(
-            "📢 **Массовая рассылка**\n\n"
-            "Отправьте команду:\n"
-            "`/broadcast <сообщение>`\n\n"
-            "Например: `/broadcast Привет всем!`",
-            reply_markup=KeyboardGenerator.main_menu(True, translator),
+            "🔄 **Запуск системы рассылки...**\n\nПодождите секунду...",
             parse_mode='Markdown'
         )
     elif action == "stats":
