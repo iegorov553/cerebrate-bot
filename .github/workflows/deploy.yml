@@ -39,7 +39,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd webapp
-        npm ci
+        npm install
 
     - name: Build webapp
       run: |
