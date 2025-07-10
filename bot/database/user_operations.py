@@ -207,8 +207,8 @@ class UserOperations:
             
             # Invalidate cache for this user (if cache is available)
             if self.cache:
-                self.cache.invalidate(f"user_settings_{user_id}")
-                self.cache.invalidate(f"user_{user_id}")
+                await self.cache.invalidate(f"user_settings_{user_id}")
+                await self.cache.invalidate(f"user_{user_id}")
             
             logger.debug("Updated last notification timestamp", user_id=user_id)
             return True

@@ -60,7 +60,10 @@
     "request_not_found": "❌ Solicitud de amistad de @{username} no encontrada o ya procesada.",
     "user_not_found": "❌ Usuario @{username} no encontrado.",
     "request_notification_sent": "🎉 ¡@{username} aceptó tu solicitud de amistad!",
-    "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad."
+    "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad.",
+    "requests_help": "📥 **Solicitudes de Amistad**\n\nUsa los comandos:\n• `/friend_requests` - ver solicitudes\n• `/accept @username` - aceptar solicitud\n• `/decline @username` - rechazar solicitud",
+    "discover_help": "🔍 **Encontrar Amigos**\n\nEsta función está en desarrollo.\nPor ahora usa el comando `/add_friend @username`",
+    "activities_help": "📊 **Actividades de Amigos**\n\nUsa el comando:\n`/activities [@username]`\n\nO abre la interfaz web para una vista detallada"
   },
   
   "history": {
@@ -80,7 +83,10 @@
     "statistics": "📊 Estadísticas",
     "test_broadcast": "🧪 Prueba de Difusión",
     "access_denied": "Acceso Denegado",
-    "admin_only": "Esta función solo está disponible para administradores."
+    "admin_only": "Esta función solo está disponible para administradores.",
+    "access_denied_full": "🔒 **Acceso Denegado**\n\nEsta función está disponible solo para administradores.",
+    "broadcast_starting": "🔄 **Iniciando sistema de difusión...**\n\nEspera un momento...",
+    "stats_help": "📊 **Estadísticas de Usuarios**\n\nUsa el comando:\n`/broadcast_info`"
   },
   
   "help": {

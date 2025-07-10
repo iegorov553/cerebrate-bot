@@ -412,7 +412,7 @@ class CachedUserOperations:
         if result.data:
             # Invalidate cache after update
             cache_key = f"user_settings:{tg_id}"
-            self.cache.invalidate(cache_key)
+            await self.cache.invalidate(cache_key)
             logger.info("User settings updated and cache invalidated", user_id=tg_id)
             return True
         

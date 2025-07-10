@@ -4,7 +4,7 @@ Database operations for user questions system.
 This module handles CRUD operations for custom user questions with versioning support.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
 from monitoring import get_logger, track_errors_async
@@ -257,8 +257,8 @@ class QuestionOperations:
                 'user_id': user_id,
                 'question_id': question_id,
                 'telegram_message_id': telegram_message_id,
-                'sent_at': datetime.now().isoformat(),
-                'expires_at': (datetime.now() + timedelta(days=90)).isoformat()  # 3 months
+                'sent_at': datetime.now(timezone.utc).isoformat(),
+                'expires_at': (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()  # 3 months
             }
             
             result = self.db_client.table('question_notifications')\
@@ -296,7 +296,7 @@ class QuestionOperations:
                 .select('*, user_questions(*)')\
                 .eq('user_id', user_id)\
                 .eq('telegram_message_id', telegram_message_id)\
-                .gt('expires_at', datetime.now().isoformat())\
+                .gt('expires_at', datetime.now(timezone.utc).isoformat())\
                 .order('sent_at', desc=True)\
                 .limit(1)\
                 .execute()
@@ -320,9 +320,10 @@ class QuestionOperations:
         """
         try:
             # Get count before deletion
+            now_iso = datetime.now(timezone.utc).isoformat()
             count_result = self.db_client.table('question_notifications')\
                 .select('id', count='exact')\
-                .lt('expires_at', datetime.now().isoformat())\
+                .lt('expires_at', now_iso)\
                 .execute()
             
             count_before = count_result.count if count_result.count else 0
@@ -330,7 +331,7 @@ class QuestionOperations:
             # Delete expired notifications
             self.db_client.table('question_notifications')\
                 .delete()\
-                .lt('expires_at', datetime.now().isoformat())\
+                .lt('expires_at', now_iso)\
                 .execute()
             
             logger.info(f"Cleaned up {count_before} expired notifications")

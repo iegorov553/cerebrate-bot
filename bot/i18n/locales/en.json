@@ -60,7 +60,10 @@
     "request_not_found": "❌ Friend request from @{username} not found or already processed.",
     "user_not_found": "❌ User @{username} not found.",
     "request_notification_sent": "🎉 @{username} accepted your friend request!",
-    "request_notification_declined": "❌ @{username} declined your friend request."
+    "request_notification_declined": "❌ @{username} declined your friend request.",
+    "requests_help": "📥 **Friend Requests**\n\nUse commands:\n• `/friend_requests` - view requests\n• `/accept @username` - accept request\n• `/decline @username` - decline request",
+    "discover_help": "🔍 **Find Friends**\n\nThis feature is under development.\nFor now use `/add_friend @username` command",
+    "activities_help": "📊 **Friend Activities**\n\nUse command:\n`/activities [@username]`\n\nOr open web interface for detailed view"
   },
   
   "history": {
@@ -80,7 +83,10 @@
     "statistics": "📊 Statistics",
     "test_broadcast": "🧪 Test Broadcast",
     "access_denied": "Access Denied",
-    "admin_only": "This feature is only available to administrators."
+    "admin_only": "This feature is only available to administrators.",
+    "access_denied_full": "🔒 **Access Denied**\n\nThis function is available only to administrators.",
+    "broadcast_starting": "🔄 **Starting broadcast system...**\n\nPlease wait a moment...",
+    "stats_help": "📊 **User Statistics**\n\nUse command:\n`/broadcast_info`"
   },
   
   "help": {

@@ -5,13 +5,51 @@ This module provides high-level business logic for managing user questions,
 including versioning, validation, and reply tracking.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 
 from bot.database.question_operations import QuestionOperations
 from monitoring import get_logger, track_errors_async
 
 logger = get_logger(__name__)
+
+
+def safe_parse_datetime(datetime_str: str) -> Optional[datetime]:
+    """
+    Safely parse datetime string with various formats and timezone handling.
+    
+    Args:
+        datetime_str: DateTime string in various formats
+        
+    Returns:
+        Parsed datetime object or None if parsing fails
+    """
+    if not datetime_str:
+        return None
+        
+    try:
+        # Handle different timezone formats
+        if datetime_str.endswith('Z'):
+            # Convert Z to +00:00 for ISO format compatibility
+            datetime_str = datetime_str[:-1] + '+00:00'
+        elif datetime_str.endswith('+00:00') or datetime_str.endswith('-00:00'):
+            # Already has timezone info
+            pass
+        elif '+' not in datetime_str and '-' not in datetime_str[-6:]:
+            # No timezone info, assume UTC
+            datetime_str += '+00:00'
+        
+        # Try parsing with timezone info
+        return datetime.fromisoformat(datetime_str)
+        
+    except ValueError:
+        try:
+            # Fallback: try parsing without timezone, then make it UTC
+            parsed = datetime.fromisoformat(datetime_str.replace('Z', ''))
+            return parsed.replace(tzinfo=timezone.utc)
+        except ValueError:
+            logger.warning(f"Failed to parse datetime string: {datetime_str}")
+            return None
 
 
 class QuestionManager:
@@ -95,10 +133,10 @@ class QuestionManager:
                 
                 if notification:
                     # Check if notification is still valid
-                    now = datetime.now()
-                    expires_at = datetime.fromisoformat(notification['expires_at'].replace('Z', '+00:00'))
+                    now = datetime.now(timezone.utc)
+                    expires_at = safe_parse_datetime(notification['expires_at'])
                     
-                    if expires_at > now:
+                    if expires_at and expires_at > now:
                         # Valid notification
                         return notification['question_id'], "reply_success"
                     else:

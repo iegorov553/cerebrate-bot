@@ -391,9 +391,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
     
     if action == "add":
         await query.edit_message_text(
-            "➕ **Добавить друга**\n\n"
-            "Отправьте команду:\n"
-            "`/add_friend @username`",
+            translator.translate('friends.add_instruction'),
             reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
@@ -406,21 +404,19 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
         
         if not friends:
             await query.edit_message_text(
-                "👥 **Список друзей**\n\n"
-                "У вас пока нет друзей.\n"
-                "Добавьте друзей через команду `/add_friend @username`",
+                translator.translate('friends.list_empty'),
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
         else:
-            friends_text = "👥 **Ваши друзья:**\n\n"
+            friends_text = f"{translator.translate('friends.list_title')}\n\n"
             for friend in friends[:10]:  # Показываем максимум 10 друзей
                 username = friend.get('tg_username', '')
                 name = friend.get('tg_first_name', 'Без имени')
                 friends_text += f"• @{username} - {name}\n" if username else f"• {name}\n"
             
             if len(friends) > 10:
-                friends_text += f"\n... и ещё {len(friends) - 10} друзей"
+                friends_text += f"\n{translator.translate('friends.list_more', count=len(friends) - 10)}"
                 
             await query.edit_message_text(
                 friends_text,
@@ -432,28 +428,19 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
         await handle_main_menu(query, config, user, translator, db_client, user_cache)
     elif action == "requests":
         await query.edit_message_text(
-            "📥 **Запросы в друзья**\n\n"
-            "Используйте команды:\n"
-            "• `/friend_requests` - посмотреть запросы\n"
-            "• `/accept @username` - принять запрос\n"
-            "• `/decline @username` - отклонить запрос",
+            translator.translate('friends.requests_help'),
             reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
     elif action == "discover":
         await query.edit_message_text(
-            "🔍 **Поиск друзей**\n\n"
-            "Эта функция находится в разработке.\n"
-            "Пока используйте команду `/add_friend @username`",
+            translator.translate('friends.discover_help'),
             reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
     elif action == "activities":
         await query.edit_message_text(
-            "📊 **Активности друзей**\n\n"
-            "Используйте команду:\n"
-            "`/activities [@username]`\n\n"
-            "Или откройте веб-интерфейс для детального просмотра",
+            translator.translate('friends.activities_help'),
             reply_markup=create_friends_menu(0, 0, translator),
             parse_mode='Markdown'
         )
@@ -473,7 +460,7 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
     
     if not admin_ops.is_admin(user.id):
         await query.edit_message_text(
-            "🔒 **Доступ запрещён**\n\nЭта функция доступна только администраторам.",
+            translator.translate('admin.access_denied_full'),
             reply_markup=KeyboardGenerator.main_menu(False, translator),
             parse_mode='Markdown'
         )
@@ -485,14 +472,12 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
         # This will be handled by ConversationHandler entry point
         # Just show a temp message since callback will be intercepted
         await query.edit_message_text(
-            "🔄 **Запуск системы рассылки...**\n\nПодождите секунду...",
+            translator.translate('admin.broadcast_starting'),
             parse_mode='Markdown'
         )
     elif action == "stats":
         await query.edit_message_text(
-            "📊 **Статистика пользователей**\n\n"
-            "Используйте команду:\n"
-            "`/broadcast_info`",
+            translator.translate('admin.stats_help'),
             reply_markup=KeyboardGenerator.main_menu(True, translator),
             parse_mode='Markdown'
         )
