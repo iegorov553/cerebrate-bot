@@ -1,0 +1,75 @@
+# Git
+.git
+.gitignore
+.githooks
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.pytest_cache
+.mypy_cache
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.venv/
+
+# Local development
+.env
+.env.local
+.env.development
+.env.production
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+ROADMAP.md
+CHANGELOG.md
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Development tools
+.flake8
+.bandit
+pytest.ini
+mypy.ini
+
+# Temporary files
+tmp/
+logs/
+*.tmp
+*.temp
+
+# Railway
+railway.json
+
+# Node (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Backup files
+*.bak
+*.backup

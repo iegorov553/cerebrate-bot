@@ -594,6 +594,73 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
 
 
+@rate_limit("general")
+@track_errors_async("health_command")
+async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /health command - show system health status."""
+    user = update.effective_user
+    if user is None:
+        return
+
+    set_user_context(user.id, user.username, user.first_name)
+    
+    # Get dependencies from context
+    config: Config = context.bot_data['config']
+    db_client: DatabaseClient = context.bot_data['db_client']
+    
+    # Импортируем HealthService
+    from bot.services.health_service import HealthService
+    from bot.utils.version import get_bot_version
+    
+    try:
+        # Создаем health service
+        version = get_bot_version()
+        health_service = HealthService(db_client, version)
+        
+        # Получаем статус здоровья системы
+        health_status = await health_service.get_system_health(context.application)
+        
+        # Формируем сообщение
+        status_emoji = {
+            "healthy": "✅",
+            "degraded": "⚠️", 
+            "unhealthy": "❌"
+        }
+        
+        message = f"🏥 **System Health Check**\n\n"
+        message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {health_status.status}\n"
+        message += f"📅 **Timestamp:** {health_status.timestamp}\n"
+        message += f"🔢 **Version:** {health_status.version}\n"
+        message += f"⏱️ **Uptime:** {health_status.uptime_seconds:.1f}s\n\n"
+        
+        message += "**Components:**\n"
+        for name, component in health_status.components.items():
+            emoji = status_emoji.get(component.status, '❓')
+            message += f"{emoji} **{name.title()}:** {component.status}"
+            
+            if component.latency_ms:
+                message += f" ({component.latency_ms:.0f}ms)"
+            
+            if component.error:
+                message += f"\n   ⚠️ Error: {component.error}"
+                
+            message += "\n"
+        
+        await update.message.reply_text(
+            message,
+            parse_mode='Markdown'
+        )
+        
+        logger.info(f"Health check command executed for user {user.id}, status: {health_status.status}")
+        
+    except Exception as e:
+        logger.error(f"Health command failed for user {user.id}: {e}")
+        await update.message.reply_text(
+            "❌ Failed to check system health. Please try again later.",
+            parse_mode='Markdown'
+        )
+
+
 def setup_command_handlers(
     application: Application,
     db_client: DatabaseClient,
@@ -622,5 +689,6 @@ def setup_command_handlers(
     application.add_handler(CommandHandler("decline", decline_friend_command))
     application.add_handler(CommandHandler("window", window_command))
     application.add_handler(CommandHandler("freq", freq_command))
+    application.add_handler(CommandHandler("health", health_command))
     
     logger.info("Command handlers registered successfully")

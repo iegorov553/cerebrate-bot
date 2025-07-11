@@ -87,7 +87,7 @@ class WhisperClient:
         stat = os.stat(file_path)
         # Simple hash based on file size and modification time
         hash_input = f"{stat.st_size}_{stat.st_mtime}_{os.path.basename(file_path)}"
-        return hashlib.md5(hash_input.encode()).hexdigest()
+        return hashlib.sha256(hash_input.encode()).hexdigest()
     
     async def _validate_audio_file(self, file_path: str, duration_seconds: Optional[int] = None) -> None:
         """
