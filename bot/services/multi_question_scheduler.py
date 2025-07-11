@@ -180,9 +180,7 @@ class MultiQuestionScheduler:
             # This prevents duplicate notifications across bot restarts
             last_db_notification = await self._get_last_notification_for_question(question_id)
             if last_db_notification:
-                # Ensure both datetimes are timezone-aware for comparison
-                if last_db_notification.tzinfo is None:
-                    last_db_notification = last_db_notification.replace(tzinfo=timezone.utc)
+                # Function _get_last_notification_for_question now always returns timezone-aware datetime
                 time_since_db = (current_time - last_db_notification).total_seconds() / 60
                 if time_since_db < interval_minutes:
                     return False
@@ -209,8 +207,11 @@ class MultiQuestionScheduler:
                 try:
                     return datetime.fromisoformat(sent_at_str.replace('Z', '+00:00'))
                 except ValueError:
-                    # Try parsing as ISO format without timezone
-                    return datetime.fromisoformat(sent_at_str)
+                    # Try parsing as ISO format without timezone, then add UTC
+                    dt = datetime.fromisoformat(sent_at_str)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt
             
             return None
             
