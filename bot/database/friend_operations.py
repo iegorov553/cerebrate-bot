@@ -336,7 +336,10 @@ class FriendOperations:
                     current_friend_ids.add(friendship['requester_id'])
             
             if not current_friend_ids:
+                logger.info(f"User {user_id} has no friends - no recommendations possible")
                 return []
+            
+            logger.info(f"User {user_id} has {len(current_friend_ids)} friends: {list(current_friend_ids)}")
             
             # Также исключить пользователей с которыми уже есть pending запросы (в любом направлении)
             pending_requests = self.db.table("friendships").select(
@@ -353,6 +356,7 @@ class FriendOperations:
                     pending_user_ids.add(req['requester_id'])
             
             exclude_ids = current_friend_ids | pending_user_ids | {user_id}
+            logger.info(f"Excluding {len(exclude_ids)} users: friends={len(current_friend_ids)}, pending={len(pending_user_ids)}, self=1")
             
             # Get all friendships of current friends (batch query)
             # Get friendships where either requester or addressee is in current_friend_ids
@@ -384,7 +388,10 @@ class FriendOperations:
                 recommendations[candidate_id].add(mutual_friend_id)
             
             if not recommendations:
+                logger.info(f"No friend-of-friend candidates found for user {user_id}")
                 return []
+            
+            logger.info(f"Found {len(recommendations)} friend-of-friend candidates for user {user_id}")
             
             # Batch fetch all user info (single query)
             all_user_ids = list(recommendations.keys()) + list(current_friend_ids)
