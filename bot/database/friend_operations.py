@@ -338,7 +338,21 @@ class FriendOperations:
             if not current_friend_ids:
                 return []
             
-            exclude_ids = current_friend_ids | {user_id}
+            # Также исключить пользователей с которыми уже есть pending запросы (в любом направлении)
+            pending_requests = self.db.table("friendships").select(
+                "requester_id, addressee_id"
+            ).eq("status", "pending").or_(
+                f"requester_id.eq.{user_id},addressee_id.eq.{user_id}"
+            ).execute()
+            
+            pending_user_ids = set()
+            for req in pending_requests.data or []:
+                if req['requester_id'] == user_id:
+                    pending_user_ids.add(req['addressee_id'])
+                else:
+                    pending_user_ids.add(req['requester_id'])
+            
+            exclude_ids = current_friend_ids | pending_user_ids | {user_id}
             
             # Get all friendships of current friends (batch query)
             # Get friendships where either requester or addressee is in current_friend_ids
@@ -414,3 +428,56 @@ class FriendOperations:
         except Exception as exc:
             logger.error("Error in friends discovery fallback", user_id=user_id, error=str(exc))
             return []
+
+    @track_errors_async("send_friend_request_by_id")
+    async def send_friend_request_by_id(self, requester_id: int, target_user_id: int) -> tuple[bool, Optional[str]]:
+        """Send friend request by user ID with enhanced validation and feedback."""
+        try:
+            # Check if target user exists in database
+            target_user_result = self.db.table("users").select("tg_id, tg_username, tg_first_name").eq("tg_id", target_user_id).execute()
+            
+            if not target_user_result.data:
+                logger.warning("Target user not found", requester=requester_id, target=target_user_id)
+                return False, "Пользователь не найден в системе"
+            
+            # Check if friendship already exists in either direction
+            existing_friendship = self.db.table("friendships").select("status").or_(
+                f"and(requester_id.eq.{requester_id},addressee_id.eq.{target_user_id}),"
+                f"and(requester_id.eq.{target_user_id},addressee_id.eq.{requester_id})"
+            ).execute()
+            
+            if existing_friendship.data:
+                existing_status = existing_friendship.data[0]['status']
+                if existing_status == "accepted":
+                    return False, "Вы уже друзья"
+                elif existing_status == "pending":
+                    return False, "Запрос в друзья уже отправлен"
+                elif existing_status == "declined":
+                    # Allow new request after decline
+                    logger.info("Retrying friend request after previous decline", 
+                               requester=requester_id, target=target_user_id)
+            
+            # Create new friend request
+            result = self.db.table("friendships").insert({
+                "requester_id": requester_id,
+                "addressee_id": target_user_id,
+                "status": "pending"
+            }).execute()
+            
+            if result.data:
+                target_user = target_user_result.data[0]
+                target_name = target_user.get('tg_first_name') or target_user.get('tg_username') or f"ID{target_user_id}"
+                
+                logger.info("Friend request sent successfully", 
+                           requester=requester_id, target=target_user_id, target_name=target_name)
+                
+                return True, f"Запрос в друзья отправлен пользователю {target_name}"
+            else:
+                logger.error("Failed to create friend request", 
+                            requester=requester_id, target=target_user_id)
+                return False, "Не удалось отправить запрос в друзья"
+                
+        except Exception as exc:
+            logger.error("Error sending friend request by ID", 
+                        requester=requester_id, target=target_user_id, error=str(exc))
+            return False, "Произошла ошибка при отправке запроса"

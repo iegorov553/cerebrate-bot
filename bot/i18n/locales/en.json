@@ -63,7 +63,18 @@
     "request_notification_declined": "❌ @{username} declined your friend request.",
     "requests_help": "📥 **Friend Requests**\n\nUse commands:\n• `/friend_requests` - view requests\n• `/accept @username` - accept request\n• `/decline @username` - decline request",
     "discover_help": "🔍 **Find Friends**\n\nThis feature is under development.\nFor now use `/add_friend @username` command",
-    "activities_help": "📊 **Friend Activities**\n\nUse command:\n`/activities [@username]`\n\nOr open web interface for detailed view"
+    "activities_help": "📊 **Friend Activities**\n\nUse command:\n`/activities [@username]`\n\nOr open web interface for detailed view",
+    "discover_title": "Find Friends",
+    "recommendations_found": "Found {count} recommendations based on your friends",
+    "no_recommendations": "No mutual friends found",
+    "no_more_recommendations": "No more recommendations found",
+    "add_more_friends": "Add more friends to get recommendations!",
+    "all_requests_sent": "All available requests sent",
+    "mutual_friends": "Mutual friends: {count}",
+    "more_in_buttons": "Remaining {count} in buttons below",
+    "request_sent": "✅ Friend request sent!",
+    "request_failed": "❌ Failed to send request",
+    "rate_limited": "⚠️ Too many requests. Try again later"
   },
   
   "history": {

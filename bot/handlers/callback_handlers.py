@@ -97,6 +97,8 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await handle_settings_action(query, data, db_client, user_cache, user, config, translator)
         elif data.startswith("friends_"):
             await handle_friends_action(query, data, db_client, user, config, translator, user_cache)
+        elif data.startswith("add_friend:"):
+            await handle_add_friend_callback(query, data, db_client, user, config, translator, user_cache, context)
         elif data.startswith("admin_"):
             await handle_admin_action(query, data, db_client, user, config, translator, user_cache)
         elif data.startswith("feedback_") or data == "feedback_menu":
@@ -449,11 +451,80 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             parse_mode='Markdown'
         )
     elif action == "discover":
-        await query.edit_message_text(
-            translator.translate('friends.discover_help'),
-            reply_markup=create_friends_menu(0, 0, translator),
-            parse_mode='Markdown'
-        )
+        # Поиск друзей через алгоритм "друзья друзей"
+        from bot.database.friend_operations import FriendOperations
+        friend_ops = FriendOperations(db_client)
+        
+        try:
+            # Получить рекомендации с помощью готового оптимизированного алгоритма
+            raw_recommendations = await friend_ops.get_friends_of_friends_optimized(user.id, limit=10)
+            
+            if raw_recommendations:
+                # Преобразовать данные в формат для KeyboardGenerator
+                recommendations = []
+                for rec in raw_recommendations:
+                    user_info = rec.get('user_info', {})
+                    recommendations.append({
+                        'tg_id': user_info.get('tg_id'),
+                        'first_name': user_info.get('tg_first_name', 'Без имени'),
+                        'username': user_info.get('tg_username', 'неизвестен'),
+                        'mutual_friends_count': rec.get('mutual_count', 0),
+                        'mutual_friends': rec.get('mutual_friends', [])
+                    })
+                
+                # Сгенерировать клавиатуру с рекомендациями
+                keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
+                
+                # Создать текст с рекомендациями
+                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
+                
+                # Показать первые 3 рекомендации в тексте
+                for i, rec in enumerate(recommendations[:3]):
+                    username = rec.get('username', 'неизвестен')
+                    first_name = rec.get('first_name', 'Без имени')
+                    mutual_count = rec.get('mutual_friends_count', 0)
+                    mutual_friends = rec.get('mutual_friends', [])
+                    
+                    text += f"• **{first_name}** (@{username})\n"
+                    text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
+                    
+                    # Показать имена первых 2-3 взаимных друзей
+                    if mutual_friends:
+                        friend_names = []
+                        for friend in mutual_friends[:3]:
+                            if friend.startswith('@'):
+                                friend_names.append(friend)
+                            else:
+                                friend_names.append(f"@{friend}")
+                        if friend_names:
+                            text += f" (через {', '.join(friend_names)})"
+                    
+                    text += "\n\n"
+                
+                if len(recommendations) > 3:
+                    text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
+            else:
+                # Нет рекомендаций - предложить добавить больше друзей
+                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text += translator.translate('friends.no_recommendations') + "\n\n"
+                text += translator.translate('friends.add_more_friends')
+                
+                keyboard = create_friends_menu(0, 0, translator)
+            
+            await query.edit_message_text(
+                text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+            
+        except Exception as e:
+            logger.error(f"Error in friend discovery: {e}")
+            await query.edit_message_text(
+                translator.translate('errors.general'),
+                reply_markup=create_friends_menu(0, 0, translator),
+                parse_mode='Markdown'
+            )
     elif action == "activities":
         await query.edit_message_text(
             translator.translate('friends.activities_help'),
@@ -928,6 +999,116 @@ async def handle_questions_action(query, data: str, db_client: DatabaseClient, u
         await query.edit_message_text(
             translator.translate('errors.general'),
             parse_mode='Markdown'
+        )
+
+
+async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient, user, config: Config, translator, user_cache: TTLCache, context):
+    """Handle add friend button callbacks from discovery recommendations."""
+    if translator is None:
+        translator = await get_user_translator(user.id, db_client, user_cache)
+    
+    try:
+        # Извлечь ID пользователя из callback data
+        target_user_id = int(data.split(":")[1])
+        
+        # Отправить запрос в друзья
+        from bot.database.friend_operations import FriendOperations
+        friend_ops = FriendOperations(db_client)
+        
+        # Rate limiting проверяется через декоратор @rate_limit в основном обработчике
+        # Здесь добавим дополнительную проверку на friend_request лимит
+        from bot.utils.rate_limiter import MultiTierRateLimiter
+        rate_limiter = context.bot_data.get('rate_limiter')
+        if rate_limiter:
+            friend_rate_limiter = rate_limiter.rate_limiters.get("friend_request")
+            if friend_rate_limiter:
+                is_allowed, retry_after = await friend_rate_limiter.is_allowed(str(user.id))
+                if not is_allowed:
+                    await query.answer(
+                        translator.translate('friends.rate_limited'),
+                        show_alert=True
+                    )
+                    return
+        
+        # Отправить запрос в друзья  
+        success, message = await friend_ops.send_friend_request_by_id(user.id, target_user_id)
+        
+        if success:
+            # Успешно отправлен запрос
+            await query.answer(
+                translator.translate('friends.request_sent'),
+                show_alert=False
+            )
+            
+            # Обновить список рекомендаций (исключив уже добавленного пользователя)
+            raw_recommendations = await friend_ops.get_friends_of_friends_optimized(user.id, limit=10)
+            
+            if raw_recommendations:
+                # Преобразовать данные в формат для KeyboardGenerator
+                recommendations = []
+                for rec in raw_recommendations:
+                    user_info = rec.get('user_info', {})
+                    recommendations.append({
+                        'tg_id': user_info.get('tg_id'),
+                        'first_name': user_info.get('tg_first_name', 'Без имени'),
+                        'username': user_info.get('tg_username', 'неизвестен'),
+                        'mutual_friends_count': rec.get('mutual_count', 0),
+                        'mutual_friends': rec.get('mutual_friends', [])
+                    })
+                
+                keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
+                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
+                
+                # Показать обновленные рекомендации  
+                for i, rec in enumerate(recommendations[:3]):
+                    username = rec.get('username', 'неизвестен')
+                    first_name = rec.get('first_name', 'Без имени')
+                    mutual_count = rec.get('mutual_friends_count', 0)
+                    mutual_friends = rec.get('mutual_friends', [])
+                    
+                    text += f"• **{first_name}** (@{username})\n"
+                    text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
+                    
+                    # Показать имена первых 2-3 взаимных друзей
+                    if mutual_friends:
+                        friend_names = []
+                        for friend in mutual_friends[:3]:
+                            if friend.startswith('@'):
+                                friend_names.append(friend)
+                            else:
+                                friend_names.append(f"@{friend}")
+                        if friend_names:
+                            text += f" (через {', '.join(friend_names)})"
+                    
+                    text += "\n\n"
+                
+                if len(recommendations) > 3:
+                    text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
+            else:
+                # Больше нет рекомендаций
+                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text += translator.translate('friends.no_more_recommendations') + "\n\n"
+                text += translator.translate('friends.all_requests_sent')
+                keyboard = create_friends_menu(0, 0, translator)
+            
+            await query.edit_message_text(
+                text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        else:
+            # Ошибка при отправке запроса
+            await query.answer(
+                message or translator.translate('friends.request_failed'),
+                show_alert=True
+            )
+    
+    except Exception as e:
+        logger.error(f"Error handling add friend callback: {e}")
+        await query.answer(
+            translator.translate('errors.general'),
+            show_alert=True
         )
 
 

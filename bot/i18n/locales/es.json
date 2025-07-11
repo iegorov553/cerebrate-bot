@@ -63,7 +63,18 @@
     "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad.",
     "requests_help": "📥 **Solicitudes de Amistad**\n\nUsa los comandos:\n• `/friend_requests` - ver solicitudes\n• `/accept @username` - aceptar solicitud\n• `/decline @username` - rechazar solicitud",
     "discover_help": "🔍 **Encontrar Amigos**\n\nEsta función está en desarrollo.\nPor ahora usa el comando `/add_friend @username`",
-    "activities_help": "📊 **Actividades de Amigos**\n\nUsa el comando:\n`/activities [@username]`\n\nO abre la interfaz web para una vista detallada"
+    "activities_help": "📊 **Actividades de Amigos**\n\nUsa el comando:\n`/activities [@username]`\n\nO abre la interfaz web para una vista detallada",
+    "discover_title": "Encontrar Amigos",
+    "recommendations_found": "Se encontraron {count} recomendaciones basadas en tus amigos",
+    "no_recommendations": "No se encontraron amigos mutuos",
+    "no_more_recommendations": "No se encontraron más recomendaciones",
+    "add_more_friends": "¡Agrega más amigos para obtener recomendaciones!",
+    "all_requests_sent": "Todas las solicitudes disponibles enviadas",
+    "mutual_friends": "Amigos mutuos: {count}",
+    "more_in_buttons": "Restantes {count} en botones abajo",
+    "request_sent": "✅ ¡Solicitud de amistad enviada!",
+    "request_failed": "❌ Error al enviar solicitud",
+    "rate_limited": "⚠️ Demasiadas solicitudes. Inténtalo más tarde"
   },
   
   "history": {
