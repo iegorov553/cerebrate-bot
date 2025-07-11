@@ -6,7 +6,7 @@ with individual schedules and reply tracking.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -180,6 +180,9 @@ class MultiQuestionScheduler:
             # This prevents duplicate notifications across bot restarts
             last_db_notification = await self._get_last_notification_for_question(question_id)
             if last_db_notification:
+                # Ensure both datetimes are timezone-aware for comparison
+                if last_db_notification.tzinfo is None:
+                    last_db_notification = last_db_notification.replace(tzinfo=timezone.utc)
                 time_since_db = (current_time - last_db_notification).total_seconds() / 60
                 if time_since_db < interval_minutes:
                     return False
