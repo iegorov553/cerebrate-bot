@@ -158,7 +158,8 @@ class WhisperClient:
             logger.info(f"Starting transcription for {file_path} (language: {language})")
             
             try:
-                async with aiofiles.open(file_path, 'rb') as audio_file:
+                # OpenAI client requires regular file objects, not async
+                with open(file_path, 'rb') as audio_file:
                     transcription_params = {
                         "model": self.model,
                         "file": audio_file,
