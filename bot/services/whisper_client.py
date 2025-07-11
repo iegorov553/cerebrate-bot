@@ -185,7 +185,10 @@ class WhisperClient:
                     # Handle different response formats
                     text = str(transcription).strip()
                 
+                logger.info(f"Raw transcription response: '{text}', type: {type(transcription)}")
+                
                 if not text:
+                    logger.warning(f"Empty transcription for {file_path}, file size: {os.path.getsize(file_path)} bytes")
                     raise TranscriptionError("Empty transcription result")
                 
                 # Cache successful result

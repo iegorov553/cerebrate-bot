@@ -148,7 +148,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
-        logger.info(f"Processing voice message for user {user.id}, API key configured: {bool(config.openai_api_key)}")
+        logger.info(f"Processing voice message for user {user.id}, API key configured: {bool(config.openai_api_key)}, duration: {message.voice.duration}s")
         
         # Create WhisperClient
         whisper_client = WhisperClient(
@@ -187,11 +187,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         user_ops = UserOperations(db_client, user_cache)
         user_settings = await user_ops.get_user_settings(user.id)
         
+        # Let Whisper auto-detect language for better compatibility
         transcription_language = None
-        if user_settings and user_settings.get('language'):
-            # Map bot language codes to Whisper language codes
-            lang_map = {'ru': 'ru', 'en': 'en', 'es': 'es'}
-            transcription_language = lang_map.get(user_settings['language'])
+        # if user_settings and user_settings.get('language'):
+        #     # Map bot language codes to Whisper language codes
+        #     lang_map = {'ru': 'ru', 'en': 'en', 'es': 'es'}
+        #     transcription_language = lang_map.get(user_settings['language'])
         
         # Transcribe audio
         try:
