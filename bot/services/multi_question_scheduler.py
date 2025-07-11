@@ -241,7 +241,7 @@ class MultiQuestionScheduler:
             )
             
             # Update our local tracking
-            self.last_notifications[question_id] = datetime.now()
+            self.last_notifications[question_id] = datetime.now(timezone.utc)
             
             logger.info(f"Question notification sent", 
                        user_id=user_id, 
@@ -270,8 +270,8 @@ class MultiQuestionScheduler:
             if user_result.data:
                 user_name = user_result.data.get('tg_first_name', 'друг')
             
-            # Current time for {time} variable
-            current_time = datetime.now().strftime('%H:%M')
+            # Current time for {time} variable  
+            current_time = datetime.now(timezone.utc).strftime('%H:%M')
             
             # Apply template variables
             formatted_text = question_text.replace('{name}', user_name)
