@@ -174,10 +174,7 @@ class WhisperClient:
                         **transcription_params
                     )
                     logger.info(f"OpenAI API call successful")
-            except Exception as api_error:
-                logger.error(f"OpenAI API call failed: {type(api_error).__name__}: {api_error}")
-                raise
-                
+                    
                 # Extract text from response
                 if hasattr(transcription, 'text'):
                     text = transcription.text.strip()
@@ -201,6 +198,10 @@ class WhisperClient:
                 )
                 
                 return text
+                
+            except Exception as api_error:
+                logger.error(f"OpenAI API call failed: {type(api_error).__name__}: {api_error}")
+                raise
                 
         except (AudioTooLargeError, AudioTooLongError):
             # Re-raise validation errors as-is
