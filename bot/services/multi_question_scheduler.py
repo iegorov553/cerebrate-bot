@@ -95,7 +95,7 @@ class MultiQuestionScheduler:
                 logger.debug("No active users found")
                 return
             
-            current_time = datetime.now()
+            current_time = datetime.now(timezone.utc)
             notifications_sent = 0
             
             for user in active_users:
