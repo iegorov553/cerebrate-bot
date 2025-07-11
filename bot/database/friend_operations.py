@@ -322,14 +322,19 @@ class FriendOperations:
             # Get current friends (optimized with single query)
             current_friend_ids = set()
             
-            # Single query for both directions
-            friends_result = self.db.table("friendships").select(
+            # Single query for both directions - split into two queries due to Supabase client limitations
+            friends_result_1 = self.db.table("friendships").select(
                 "requester_id, addressee_id"
-            ).eq("status", "accepted").or_(
-                f"requester_id.eq.{user_id},addressee_id.eq.{user_id}"
-            ).execute()
+            ).eq("status", "accepted").eq("requester_id", user_id).execute()
             
-            for friendship in friends_result.data or []:
+            friends_result_2 = self.db.table("friendships").select(
+                "requester_id, addressee_id"
+            ).eq("status", "accepted").eq("addressee_id", user_id).execute()
+            
+            # Combine results
+            all_friendships = (friends_result_1.data or []) + (friends_result_2.data or [])
+            
+            for friendship in all_friendships:
                 if friendship['requester_id'] == user_id:
                     current_friend_ids.add(friendship['addressee_id'])
                 else:
@@ -342,14 +347,19 @@ class FriendOperations:
             logger.info(f"User {user_id} has {len(current_friend_ids)} friends: {list(current_friend_ids)}")
             
             # Также исключить пользователей с которыми уже есть pending запросы (в любом направлении)
-            pending_requests = self.db.table("friendships").select(
+            pending_requests_1 = self.db.table("friendships").select(
                 "requester_id, addressee_id"
-            ).eq("status", "pending").or_(
-                f"requester_id.eq.{user_id},addressee_id.eq.{user_id}"
-            ).execute()
+            ).eq("status", "pending").eq("requester_id", user_id).execute()
+            
+            pending_requests_2 = self.db.table("friendships").select(
+                "requester_id, addressee_id"
+            ).eq("status", "pending").eq("addressee_id", user_id).execute()
+            
+            # Combine pending requests
+            all_pending_requests = (pending_requests_1.data or []) + (pending_requests_2.data or [])
             
             pending_user_ids = set()
-            for req in pending_requests.data or []:
+            for req in all_pending_requests:
                 if req['requester_id'] == user_id:
                     pending_user_ids.add(req['addressee_id'])
                 else:
@@ -360,16 +370,22 @@ class FriendOperations:
             
             # Get all friendships of current friends (batch query)
             # Get friendships where either requester or addressee is in current_friend_ids
-            all_friendships = self.db.table("friendships").select(
+            friend_list = list(current_friend_ids)
+            friendships_as_requester = self.db.table("friendships").select(
                 "requester_id, addressee_id"
-            ).eq("status", "accepted").or_(
-                f"requester_id.in.({','.join(map(str, current_friend_ids))}),addressee_id.in.({','.join(map(str, current_friend_ids))})"
-            ).execute()
+            ).eq("status", "accepted").in_("requester_id", friend_list).execute()
+            
+            friendships_as_addressee = self.db.table("friendships").select(
+                "requester_id, addressee_id"
+            ).eq("status", "accepted").in_("addressee_id", friend_list).execute()
+            
+            # Combine all friendships
+            all_friendships_combined = (friendships_as_requester.data or []) + (friendships_as_addressee.data or [])
             
             # Build recommendations map
             recommendations = {}
             
-            for friendship in all_friendships.data or []:
+            for friendship in all_friendships_combined:
                 requester_id = friendship['requester_id']
                 addressee_id = friendship['addressee_id']
                 
@@ -448,13 +464,14 @@ class FriendOperations:
                 return False, "Пользователь не найден в системе"
             
             # Check if friendship already exists in either direction
-            existing_friendship = self.db.table("friendships").select("status").or_(
-                f"and(requester_id.eq.{requester_id},addressee_id.eq.{target_user_id}),"
-                f"and(requester_id.eq.{target_user_id},addressee_id.eq.{requester_id})"
-            ).execute()
+            existing_friendship_1 = self.db.table("friendships").select("status").eq("requester_id", requester_id).eq("addressee_id", target_user_id).execute()
+            existing_friendship_2 = self.db.table("friendships").select("status").eq("requester_id", target_user_id).eq("addressee_id", requester_id).execute()
             
-            if existing_friendship.data:
-                existing_status = existing_friendship.data[0]['status']
+            # Combine results
+            existing_friendship_data = (existing_friendship_1.data or []) + (existing_friendship_2.data or [])
+            
+            if existing_friendship_data:
+                existing_status = existing_friendship_data[0]['status']
                 if existing_status == "accepted":
                     return False, "Вы уже друзья"
                 elif existing_status == "pending":
