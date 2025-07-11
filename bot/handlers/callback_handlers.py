@@ -241,9 +241,18 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
+    # Get version info
+    from bot.utils.version import format_version_string, get_version_info
+    version_string = format_version_string()
+    version_info = get_version_info()
+    
+    admin_text = f"**{translator.translate('admin.title')}**\n\n"
+    admin_text += f"🔧 **Версия:** `{version_string}`\n"
+    admin_text += f"🌍 **Среда:** `{version_info['environment']}`\n\n"
+    admin_text += f"{translator.translate('admin.choose_action')}"
+    
     await query.edit_message_text(
-        f"**{translator.translate('admin.title')}**\n\n"
-        f"{translator.translate('admin.choose_action')}",
+        admin_text,
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
