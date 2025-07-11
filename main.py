@@ -21,6 +21,7 @@ from bot.handlers.callback_handlers import setup_callback_handlers
 from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.error_handler import setup_error_handler
 from bot.handlers.message_handlers import setup_message_handlers
+from bot.handlers.voice_handlers import setup_voice_handlers
 from bot.services.multi_question_scheduler import create_multi_question_scheduler
 from bot.utils.rate_limiter import MultiTierRateLimiter
 
@@ -75,6 +76,7 @@ async def create_application() -> Application:
     setup_admin_conversations(application, db_client, rate_limiter, config)  # NEW: Admin conversations
     setup_callback_handlers(application, db_client, user_cache, rate_limiter, config)
     setup_message_handlers(application, db_client, user_cache, rate_limiter, config)
+    setup_voice_handlers(application, db_client, user_cache, rate_limiter, config)
     
     logger.info("All handlers configured")
     

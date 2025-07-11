@@ -7,6 +7,10 @@ APScheduler==3.10.4
 python-dotenv==1.0.0
 nest_asyncio==1.5.8
 
+# Voice recognition dependencies
+openai>=1.0.0
+aiofiles>=23.0.0
+
 # Type hints and validation
 typing-extensions==4.8.0
 

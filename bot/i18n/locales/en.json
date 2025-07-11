@@ -142,6 +142,23 @@
     "reminder": "⏰ Time to report!\n\nWhat have you been doing? Send something to the bot."
   },
   
+  "voice": {
+    "processing": "🎤 Transcribing audio...",
+    "success": "✅ Recorded: {text}",
+    "error_not_configured": "❌ Voice messages not configured. Contact administrator.",
+    "error_too_large": "❌ File too large (max {max_size}MB)",
+    "error_too_long": "❌ Message too long (max {max_duration} seconds)",
+    "error_unsupported_format": "❌ Unsupported audio format",
+    "error_download": "❌ Failed to download audio file",
+    "error_transcription": "❌ Failed to recognize speech",
+    "error_api": "❌ Transcription service unavailable",
+    "error_empty_transcription": "❌ Empty transcription",
+    "error_save": "❌ Failed to save transcription",
+    "error_no_question": "❌ Question system error",
+    "error_processing": "❌ Transcription processing error",
+    "error_general": "❌ Voice message processing error"
+  },
+  
   "feedback": {
     "title": "💬 Feedback",
     "description": "Help us improve the bot! Choose the type of feedback:",

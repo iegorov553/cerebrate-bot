@@ -129,6 +129,9 @@ class MultiTierRateLimiter:
             
             # Feedback submissions - configurable rate limit per hour
             "feedback": RateLimiter(max_requests=feedback_rate_limit, window_seconds=3600),
+            
+            # Voice messages - 10 per hour (API costs money)
+            "voice_message": RateLimiter(max_requests=10, window_seconds=3600),
         }
     
     async def check_limit(self, user_id: int, action: str) -> Tuple[bool, Optional[int]]:

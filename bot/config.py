@@ -40,6 +40,12 @@ class Config:
     github_repo: str = "iegorov553/cerebrate-bot"
     feedback_rate_limit: int = 3  # messages per hour
     
+    # Whisper Voice Recognition Configuration
+    openai_api_key: Optional[str] = None
+    whisper_model: str = "whisper-1"
+    max_voice_file_size_mb: int = 25
+    max_voice_duration_seconds: int = 120
+    
     @classmethod
     def from_env(cls) -> "Config":
         """Create configuration from environment variables."""
@@ -77,6 +83,12 @@ class Config:
             github_feedback_token=os.getenv("GITHUB_FEEDBACK_TOKEN"),
             github_repo=os.getenv("GITHUB_REPO", "iegorov553/cerebrate-bot"),
             feedback_rate_limit=int(os.getenv("FEEDBACK_RATE_LIMIT", "3")),
+            
+            # Whisper Voice Recognition
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            whisper_model=os.getenv("WHISPER_MODEL", "whisper-1"),
+            max_voice_file_size_mb=int(os.getenv("MAX_VOICE_FILE_SIZE_MB", "25")),
+            max_voice_duration_seconds=int(os.getenv("MAX_VOICE_DURATION_SECONDS", "120")),
         )
     
     def validate(self) -> None:
@@ -101,3 +113,7 @@ class Config:
     def is_feedback_enabled(self) -> bool:
         """Check if GitHub feedback is enabled."""
         return self.github_feedback_token is not None
+    
+    def is_whisper_enabled(self) -> bool:
+        """Check if Whisper voice recognition is enabled."""
+        return self.openai_api_key is not None
