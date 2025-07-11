@@ -135,7 +135,13 @@
   
   "activity": {
     "logged": "✅ Activity logged",
-    "log_failed": "❌ Failed to log activity"
+    "log_failed": "❌ Failed to log activity",
+    "question_label": "Question",
+    "answer_label": "Answer",
+    "transcription_label": "Transcription",
+    "recorded": "Recorded!",
+    "recorded_old_notification": "Recorded! (Old notification, but question is active)",
+    "recorded_old_question": "Recorded! (This question is no longer active)"
   },
   
   "notifications": {

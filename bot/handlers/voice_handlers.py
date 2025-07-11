@@ -277,9 +277,32 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                         f"question_id={question_id}, transcription_length={len(transcribed_text)}"
                     )
                     
-                    # Update processing message with success
-                    success_text = translator.translate('voice.success', text=transcribed_text)
-                    await update_processing_message(update, processing_message_id, success_text, context.bot)
+                    # Получаем текст вопроса
+                    question = await question_manager.question_ops.get_question_by_id(question_id)
+                    question_text = question.get('question_text') if question else None
+                    
+                    # Импортируем функцию из message_handlers
+                    from bot.handlers.message_handlers import send_response_by_status
+                    
+                    # Формируем ответ с полной информацией
+                    await send_response_by_status(
+                        message=update.message,
+                        status="reply_success",  # Или другой статус если нужен
+                        translator=translator,
+                        question_text=question_text,
+                        user_response_text=transcribed_text,  # Расшифрованный текст
+                        is_voice=True  # Помечаем как голосовое сообщение
+                    )
+                    
+                    # Удаляем временное сообщение о процессинге
+                    try:
+                        if processing_message_id:
+                            await context.bot.delete_message(
+                                chat_id=update.effective_chat.id,
+                                message_id=processing_message_id
+                            )
+                    except Exception as delete_error:
+                        logger.warning(f"Failed to delete processing message: {delete_error}")
                 else:
                     error_text = translator.translate('voice.error_save')
                     await update_processing_message(update, processing_message_id, error_text, context.bot)

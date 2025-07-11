@@ -16,38 +16,65 @@ from monitoring import get_logger, set_user_context, track_errors_async
 logger = get_logger(__name__)
 
 
-async def send_response_by_status(message, status: str, translator):
-    """Send response to user based on message processing status."""
+async def send_response_by_status(
+    message, 
+    status: str, 
+    translator, 
+    question_text: str = None,
+    user_response_text: str = None,
+    is_voice: bool = False
+):
+    """
+    Send comprehensive response showing question, user answer, and status.
+    
+    Args:
+        message: Telegram message object
+        status: Processing status 
+        translator: User translator instance
+        question_text: Text of the question being answered
+        user_response_text: User's response text
+        is_voice: Whether this was a voice message
+    """
     try:
+        response_parts = []
+        
+        # 1. Показать вопрос (если есть)
+        if question_text:
+            display_question = question_text[:100] + "..." if len(question_text) > 100 else question_text
+            response_parts.append(f"📝 {translator.translate('activity.question_label')}: \"{display_question}\"")
+        
+        # 2. Показать ответ пользователя (если есть)
+        if user_response_text:
+            display_answer = user_response_text[:150] + "..." if len(user_response_text) > 150 else user_response_text
+            
+            if is_voice:
+                response_parts.append(f"🎤 {translator.translate('activity.transcription_label')}: \"{display_answer}\"")
+            else:
+                response_parts.append(f"💬 {translator.translate('activity.answer_label')}: \"{display_answer}\"")
+        
+        # 3. Статус операции
         if status == "reply_success":
-            # Successful reply to notification
-            await message.reply_text("✅ Записано!")
-            
+            response_parts.append("✅ " + translator.translate('activity.recorded'))
         elif status == "old_notification_active_question":
-            # Old notification but question still active
-            await message.reply_text(
-                "😅 Вот это ты вспомнил! Уведомление старое, но записал как обычную активность."
-            )
-            
+            response_parts.append("😅 " + translator.translate('activity.recorded_old_notification'))
         elif status == "old_notification_inactive_question":
-            # Both notification and question are outdated
-            await message.reply_text(
-                "🕰️ Этот вопрос уже неактуальный! Записал как обычную активность. "
-                "Отвечай на что-то посвежее! 😄"
-            )
-            
+            response_parts.append("🕰️ " + translator.translate('activity.recorded_old_question'))
         elif status == "default_question":
-            # Regular message to default question
-            await message.reply_text("✅ Записано!")
-            
+            response_parts.append("✅ " + translator.translate('activity.recorded'))
         else:
-            # Error or unknown status
-            await message.reply_text("✅ Записано!")
+            response_parts.append("✅ " + translator.translate('activity.recorded'))
+        
+        # Объединяем все части
+        response_text = "\n".join(response_parts)
+        await message.reply_text(response_text)
             
     except Exception as e:
         logger.error(f"Error sending status response: {e}")
         # Fallback response
-        await message.reply_text("✅ Записано!")
+        try:
+            await message.reply_text("✅ " + translator.translate('activity.recorded'))
+        except:
+            await message.reply_text("✅ Записано!")
 
 
 @rate_limit("general")
@@ -132,8 +159,19 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                 from bot.handlers.callback_handlers import get_user_translator
                 translator = await get_user_translator(user.id, db_client, user_cache)
                 
-                # Send status-specific response
-                await send_response_by_status(message, status, translator)
+                # Получаем текст вопроса
+                question = await question_manager.question_ops.get_question_by_id(question_id)
+                question_text = question.get('question_text') if question else None
+                
+                # Send status-specific response with question and answer info
+                await send_response_by_status(
+                    message=message,
+                    status=status, 
+                    translator=translator,
+                    question_text=question_text,
+                    user_response_text=message.text,  # Всегда дублируем ответ
+                    is_voice=False
+                )
                 
             else:
                 logger.warning("Failed to log activity", user_id=user.id)

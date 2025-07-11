@@ -135,7 +135,13 @@
   
   "activity": {
     "logged": "✅ Actividad registrada",
-    "log_failed": "❌ Error al registrar actividad"
+    "log_failed": "❌ Error al registrar actividad",
+    "question_label": "Pregunta",
+    "answer_label": "Respuesta",
+    "transcription_label": "Transcripción",
+    "recorded": "¡Registrado!",
+    "recorded_old_notification": "¡Registrado! (Notificación antigua, pero pregunta activa)",
+    "recorded_old_question": "¡Registrado! (Esta pregunta ya no está activa)"
   },
   
   "notifications": {

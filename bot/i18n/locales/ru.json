@@ -134,7 +134,13 @@
   
   "activity": {
     "logged": "✅ Активность записана",
-    "log_failed": "❌ Не удалось записать активность"
+    "log_failed": "❌ Не удалось записать активность",
+    "question_label": "Вопрос",
+    "answer_label": "Ответ",
+    "transcription_label": "Расшифровка",
+    "recorded": "Записано!",
+    "recorded_old_notification": "Записано! (Уведомление старое, но вопрос актуальный)",
+    "recorded_old_question": "Записано! (Этот вопрос уже неактуальный)"
   },
   
   "notifications": {
