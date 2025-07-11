@@ -475,7 +475,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                 keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
                 
                 # Создать текст с рекомендациями
-                text = f"**{translator.translate('friends.discover_title')}**\n\n"
+                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
                 text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
                 
                 # Показать первые 3 рекомендации в тексте
@@ -485,7 +485,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                     mutual_count = rec.get('mutual_friends_count', 0)
                     mutual_friends = rec.get('mutual_friends', [])
                     
-                    text += f"• **{first_name}** (\\@{username})\n"
+                    text += f"• <b>{first_name}</b> (@{username})\n"
                     text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
                     
                     # Показать имена первых 2-3 взаимных друзей
@@ -493,19 +493,19 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                         friend_names = []
                         for friend in mutual_friends[:3]:
                             if friend.startswith('@'):
-                                friend_names.append(f"\\{friend}")
+                                friend_names.append(friend)
                             else:
-                                friend_names.append(f"\\@{friend}")
+                                friend_names.append(f"@{friend}")
                         if friend_names:
                             text += f" (через {', '.join(friend_names)})"
                     
                     text += "\n\n"
                 
                 if len(recommendations) > 3:
-                    text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
+                    text += f"<i>{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}</i>"
             else:
                 # Нет рекомендаций - предложить добавить больше друзей
-                text = f"**{translator.translate('friends.discover_title')}**\n\n"
+                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
                 text += translator.translate('friends.no_recommendations') + "\n\n"
                 text += translator.translate('friends.add_more_friends')
                 
@@ -514,7 +514,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
             await query.edit_message_text(
                 text,
                 reply_markup=keyboard,
-                parse_mode='Markdown'
+                parse_mode='HTML'
             )
             
         except Exception as e:
@@ -1056,7 +1056,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                     })
                 
                 keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
-                text = f"**{translator.translate('friends.discover_title')}**\n\n"
+                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
                 text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
                 
                 # Показать обновленные рекомендации  
@@ -1066,7 +1066,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                     mutual_count = rec.get('mutual_friends_count', 0)
                     mutual_friends = rec.get('mutual_friends', [])
                     
-                    text += f"• **{first_name}** (\\@{username})\n"
+                    text += f"• <b>{first_name}</b> (@{username})\n"
                     text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
                     
                     # Показать имена первых 2-3 взаимных друзей
@@ -1074,19 +1074,19 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                         friend_names = []
                         for friend in mutual_friends[:3]:
                             if friend.startswith('@'):
-                                friend_names.append(f"\\{friend}")
+                                friend_names.append(friend)
                             else:
-                                friend_names.append(f"\\@{friend}")
+                                friend_names.append(f"@{friend}")
                         if friend_names:
                             text += f" (через {', '.join(friend_names)})"
                     
                     text += "\n\n"
                 
                 if len(recommendations) > 3:
-                    text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
+                    text += f"<i>{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}</i>"
             else:
                 # Больше нет рекомендаций
-                text = f"**{translator.translate('friends.discover_title')}**\n\n"
+                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
                 text += translator.translate('friends.no_more_recommendations') + "\n\n"
                 text += translator.translate('friends.all_requests_sent')
                 keyboard = create_friends_menu(0, 0, translator)
@@ -1094,7 +1094,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
             await query.edit_message_text(
                 text,
                 reply_markup=keyboard,
-                parse_mode='Markdown'
+                parse_mode='HTML'
             )
         else:
             # Ошибка при отправке запроса
