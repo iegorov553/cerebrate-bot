@@ -123,16 +123,22 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     set_user_context(user.id, user.username, user.first_name)
     
     config: Config = context.bot_data['config']
+    db_client: DatabaseClient = context.bot_data['db_client']
+    user_cache: TTLCache = context.bot_data['user_cache']
     
-    # Create web app button
-    web_app = WebAppInfo(url=f"{config.webapp_url}/history")
+    # Get user translator
+    from bot.handlers.callback_handlers import get_user_translator
+    translator = await get_user_translator(user.id, db_client, user_cache)
+    
+    # Create web app button for main webapp page
+    web_app = WebAppInfo(url=config.webapp_url)
     keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("📊 Открыть историю", web_app=web_app)
+        InlineKeyboardButton("🌐 " + translator.translate('menu.history'), web_app=web_app)
     ]])
     
     await update.message.reply_text(
-        "📊 **История активности**\n\n"
-        "Нажми кнопку ниже, чтобы открыть веб-интерфейс с твоей историей активности:",
+        f"🌐 **{translator.translate('menu.history')}**\n\n"
+        f"{translator.translate('history.webapp_description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )

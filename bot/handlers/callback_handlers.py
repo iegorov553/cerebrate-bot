@@ -195,21 +195,22 @@ async def handle_friends_menu(query, db_client: DatabaseClient, user_cache: TTLC
 
 
 async def handle_history(query, config: Config, db_client: DatabaseClient, user_cache: TTLCache, user):
-    """Handle history web app opening."""
+    """Handle direct web app opening."""
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
-    web_app = WebAppInfo(url=f"{config.webapp_url}/history")
+    # Сразу открываем веб-приложение без промежуточного меню
+    web_app = WebAppInfo(url=config.webapp_url)  # Открываем главную страницу веб-приложения
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(translator.translate('history.open_button'), web_app=web_app)],
+        [InlineKeyboardButton("🌐 " + translator.translate('menu.history'), web_app=web_app)],
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
     await query.edit_message_text(
-        f"**{translator.translate('history.title')}**\n\n"
-        f"{translator.translate('history.description')}",
+        f"🌐 **{translator.translate('menu.history')}**\n\n"
+        f"{translator.translate('history.webapp_description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )

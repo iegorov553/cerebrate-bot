@@ -5,7 +5,7 @@
     "questions": "📝 Mis Preguntas",
     "settings": "⚙️ Configuración",
     "friends": "👥 Amigos", 
-    "history": "📊 Historial",
+    "history": "🌐 Aplicación Web",
     "admin": "📢 Panel de Admin",
     "help": "❓ Ayuda",
     "back": "🔙 Atrás",
@@ -70,7 +70,8 @@
     "title": "📊 Historial de Actividad",
     "subtitle": "Abre la interfaz web para ver el historial detallado:",
     "description": "Abre la interfaz web para ver el historial detallado:",
-    "open_button": "📊 Abrir Historial"
+    "open_button": "📊 Abrir Historial",
+    "webapp_description": "Presiona el botón de abajo para abrir la aplicación web:"
   },
   
   "admin": {
