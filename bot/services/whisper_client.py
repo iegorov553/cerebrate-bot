@@ -157,19 +157,25 @@ class WhisperClient:
             # Transcribe using OpenAI Whisper
             logger.info(f"Starting transcription for {file_path} (language: {language})")
             
-            async with aiofiles.open(file_path, 'rb') as audio_file:
-                transcription_params = {
-                    "model": self.model,
-                    "file": audio_file,
-                    "response_format": "text"
-                }
-                
-                if language:
-                    transcription_params["language"] = language
-                
-                transcription: Transcription = await self.client.audio.transcriptions.create(
-                    **transcription_params
-                )
+            try:
+                async with aiofiles.open(file_path, 'rb') as audio_file:
+                    transcription_params = {
+                        "model": self.model,
+                        "file": audio_file,
+                        "response_format": "text"
+                    }
+                    
+                    if language:
+                        transcription_params["language"] = language
+                    
+                    logger.info(f"Calling OpenAI Whisper API with model={self.model}, language={language}")
+                    transcription: Transcription = await self.client.audio.transcriptions.create(
+                        **transcription_params
+                    )
+                    logger.info(f"OpenAI API call successful")
+            except Exception as api_error:
+                logger.error(f"OpenAI API call failed: {type(api_error).__name__}: {api_error}")
+                raise
                 
                 # Extract text from response
                 if hasattr(transcription, 'text'):

@@ -143,9 +143,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     try:
         # Check if Whisper is configured
         if not config.openai_api_key:
+            logger.warning(f"OPENAI_API_KEY not configured for user {user.id}")
             error_text = translator.translate('voice.error_not_configured')
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
+        
+        logger.info(f"Processing voice message for user {user.id}, API key configured: {bool(config.openai_api_key)}")
         
         # Create WhisperClient
         whisper_client = WhisperClient(
@@ -220,14 +223,18 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             return
             
         except TranscriptionError as e:
-            logger.error(f"Transcription error: {e}")
+            logger.error(f"Transcription error details: {e}")
             error_text = translator.translate('voice.error_transcription')
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
             
         except Exception as e:
-            logger.error(f"Unexpected error during transcription: {e}")
-            error_text = translator.translate('voice.error_api')
+            logger.error(f"Unexpected error during transcription: {type(e).__name__}: {e}")
+            # Check if it's an API key issue
+            if "api" in str(e).lower() or "key" in str(e).lower() or "auth" in str(e).lower():
+                error_text = translator.translate('voice.error_not_configured')
+            else:
+                error_text = translator.translate('voice.error_api')
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
