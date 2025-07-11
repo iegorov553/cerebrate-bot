@@ -91,7 +91,7 @@ async def send_voice_processing_message(update: Update, translator) -> int:
         return None
 
 
-async def update_processing_message(update: Update, message_id: int, text: str) -> None:
+async def update_processing_message(update: Update, message_id: int, text: str, bot) -> None:
     """
     Update processing message with final result.
     
@@ -99,10 +99,11 @@ async def update_processing_message(update: Update, message_id: int, text: str) 
         update: Telegram update
         message_id: ID of message to update
         text: New text for the message
+        bot: Bot instance
     """
     try:
         if message_id:
-            await update.message.bot.edit_message_text(
+            await bot.edit_message_text(
                 chat_id=update.effective_chat.id,
                 message_id=message_id,
                 text=text
@@ -143,7 +144,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         # Check if Whisper is configured
         if not config.openai_api_key:
             error_text = translator.translate('voice.error_not_configured')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
         # Create WhisperClient
@@ -158,7 +159,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         file_extension = 'oga'  # Default for Telegram voice messages
         if not whisper_client.is_format_supported(file_extension):
             error_text = translator.translate('voice.error_unsupported_format')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
         # Create temporary directory
@@ -174,20 +175,20 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         except Exception as e:
             logger.error(f"Failed to download voice file: {e}")
             error_text = translator.translate('voice.error_download')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
         # Determine language for transcription
         # Use user's preferred language if available, otherwise auto-detect
         from bot.database.user_operations import UserOperations
         user_ops = UserOperations(db_client, user_cache)
-        user_settings = await user_ops.get_user(user.id)
+        user_settings = await user_ops.get_user_settings(user.id)
         
         transcription_language = None
-        if user_settings and user_settings.language:
+        if user_settings and user_settings.get('language'):
             # Map bot language codes to Whisper language codes
             lang_map = {'ru': 'ru', 'en': 'en', 'es': 'es'}
-            transcription_language = lang_map.get(user_settings.language)
+            transcription_language = lang_map.get(user_settings['language'])
         
         # Transcribe audio
         try:
@@ -199,7 +200,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             
             if not transcribed_text or not transcribed_text.strip():
                 error_text = translator.translate('voice.error_empty_transcription')
-                await update_processing_message(update, processing_message_id, error_text)
+                await update_processing_message(update, processing_message_id, error_text, context.bot)
                 return
             
         except AudioTooLargeError:
@@ -207,7 +208,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 'voice.error_too_large',
                 max_size=config.max_voice_file_size_mb
             )
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
             
         except AudioTooLongError:
@@ -215,19 +216,19 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 'voice.error_too_long',
                 max_duration=config.max_voice_duration_seconds
             )
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
             
         except TranscriptionError as e:
             logger.error(f"Transcription error: {e}")
             error_text = translator.translate('voice.error_transcription')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
             
         except Exception as e:
             logger.error(f"Unexpected error during transcription: {e}")
             error_text = translator.translate('voice.error_api')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
         
         # Process transcribed text as regular message
@@ -270,23 +271,23 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     
                     # Update processing message with success
                     success_text = translator.translate('voice.success', text=transcribed_text)
-                    await update_processing_message(update, processing_message_id, success_text)
+                    await update_processing_message(update, processing_message_id, success_text, context.bot)
                 else:
                     error_text = translator.translate('voice.error_save')
-                    await update_processing_message(update, processing_message_id, error_text)
+                    await update_processing_message(update, processing_message_id, error_text, context.bot)
             else:
                 error_text = translator.translate('voice.error_no_question')
-                await update_processing_message(update, processing_message_id, error_text)
+                await update_processing_message(update, processing_message_id, error_text, context.bot)
                 
         except Exception as e:
             logger.error(f"Error processing transcribed text: {e}")
             error_text = translator.translate('voice.error_processing')
-            await update_processing_message(update, processing_message_id, error_text)
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
             
     except Exception as e:
         logger.error(f"Unexpected error in voice message handling: {e}")
         error_text = translator.translate('voice.error_general')
-        await update_processing_message(update, processing_message_id, error_text)
+        await update_processing_message(update, processing_message_id, error_text, context.bot)
         
     finally:
         # Clean up temporary files
