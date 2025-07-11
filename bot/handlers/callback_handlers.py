@@ -485,7 +485,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                     mutual_count = rec.get('mutual_friends_count', 0)
                     mutual_friends = rec.get('mutual_friends', [])
                     
-                    text += f"• **{first_name}** (@{username})\n"
+                    text += f"• **{first_name}** (\\@{username})\n"
                     text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
                     
                     # Показать имена первых 2-3 взаимных друзей
@@ -493,9 +493,9 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                         friend_names = []
                         for friend in mutual_friends[:3]:
                             if friend.startswith('@'):
-                                friend_names.append(friend)
+                                friend_names.append(f"\\{friend}")
                             else:
-                                friend_names.append(f"@{friend}")
+                                friend_names.append(f"\\@{friend}")
                         if friend_names:
                             text += f" (через {', '.join(friend_names)})"
                     
@@ -1066,7 +1066,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                     mutual_count = rec.get('mutual_friends_count', 0)
                     mutual_friends = rec.get('mutual_friends', [])
                     
-                    text += f"• **{first_name}** (@{username})\n"
+                    text += f"• **{first_name}** (\\@{username})\n"
                     text += f"  💫 {translator.translate('friends.mutual_friends', count=mutual_count)}"
                     
                     # Показать имена первых 2-3 взаимных друзей
@@ -1074,9 +1074,9 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                         friend_names = []
                         for friend in mutual_friends[:3]:
                             if friend.startswith('@'):
-                                friend_names.append(friend)
+                                friend_names.append(f"\\{friend}")
                             else:
-                                friend_names.append(f"@{friend}")
+                                friend_names.append(f"\\@{friend}")
                         if friend_names:
                             text += f" (через {', '.join(friend_names)})"
                     
