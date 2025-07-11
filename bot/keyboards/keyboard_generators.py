@@ -107,7 +107,8 @@ class KeyboardGenerator:
     @staticmethod
     def friend_requests_menu(
         incoming_count: int = 0,
-        outgoing_count: int = 0
+        outgoing_count: int = 0,
+        translator = None
     ) -> InlineKeyboardMarkup:
         """
         Generate friend requests menu keyboard.
@@ -115,6 +116,7 @@ class KeyboardGenerator:
         Args:
             incoming_count: Number of incoming requests
             outgoing_count: Number of outgoing requests
+            translator: Translator instance for localization
             
         Returns:
             InlineKeyboardMarkup for friend requests menu
@@ -122,35 +124,42 @@ class KeyboardGenerator:
         keyboard = []
         
         # Incoming requests with count
-        incoming_text = "📥 Incoming Requests"
+        incoming_text = translator.translate('friends.incoming_requests') if translator else "📥 Incoming Requests"
         if incoming_count > 0:
             incoming_text += f" ({incoming_count})"
         keyboard.append([InlineKeyboardButton(incoming_text, callback_data="requests_incoming")])
         
         # Outgoing requests with count
-        outgoing_text = "📤 Outgoing Requests"
+        outgoing_text = translator.translate('friends.outgoing_requests') if translator else "📤 Outgoing Requests"
         if outgoing_count > 0:
             outgoing_text += f" ({outgoing_count})"
         keyboard.append([InlineKeyboardButton(outgoing_text, callback_data="requests_outgoing")])
         
-        keyboard.append([InlineKeyboardButton("🔙 Back to Friends", callback_data="back_friends")])
+        keyboard.append([InlineKeyboardButton(
+            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+            callback_data="back_friends"
+        )])
         
         return InlineKeyboardMarkup(keyboard)
     
     @staticmethod
-    def friend_discovery_list(recommendations: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
+    def friend_discovery_list(recommendations: List[Dict[str, Any]], translator = None) -> InlineKeyboardMarkup:
         """
         Generate friend discovery keyboard.
         
         Args:
             recommendations: List of friend recommendations
+            translator: Translator instance for localization
             
         Returns:
             InlineKeyboardMarkup for friend discovery
         """
         if not recommendations:
             keyboard = [
-                [InlineKeyboardButton("🔙 Back to Friends", callback_data="back_friends")]
+                [InlineKeyboardButton(
+                    translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+                    callback_data="back_friends"
+                )]
             ]
             return InlineKeyboardMarkup(keyboard)
         
@@ -172,18 +181,33 @@ class KeyboardGenerator:
                 )
             ])
         
-        keyboard.append([InlineKeyboardButton("🔙 Back to Friends", callback_data="back_friends")])
+        keyboard.append([InlineKeyboardButton(
+            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+            callback_data="back_friends"
+        )])
         
         return InlineKeyboardMarkup(keyboard)
     
     @staticmethod
-    def admin_menu() -> InlineKeyboardMarkup:
+    def admin_menu(translator = None) -> InlineKeyboardMarkup:
         """Generate admin menu keyboard."""
         keyboard = [
-            [InlineKeyboardButton("📢 Send Broadcast", callback_data="admin_broadcast")],
-            [InlineKeyboardButton("📊 User Statistics", callback_data="admin_stats")],
-            [InlineKeyboardButton("🧪 Test Broadcast", callback_data="admin_test_broadcast")],
-            [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
+            [InlineKeyboardButton(
+                translator.translate('admin.broadcast') if translator else "📢 Send Broadcast", 
+                callback_data="admin_broadcast"
+            )],
+            [InlineKeyboardButton(
+                translator.translate('admin.user_statistics') if translator else "📊 User Statistics", 
+                callback_data="admin_stats"
+            )],
+            [InlineKeyboardButton(
+                translator.translate('admin.test_broadcast') if translator else "🧪 Test Broadcast", 
+                callback_data="admin_test_broadcast"
+            )],
+            [InlineKeyboardButton(
+                translator.translate('menu.back_main') if translator else "🔙 Back to Main Menu", 
+                callback_data="back_main"
+            )]
         ]
         return InlineKeyboardMarkup(keyboard)
     
@@ -618,9 +642,9 @@ def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0, tran
     return KeyboardGenerator.friends_menu(pending_requests, friends_count, translator)
 
 
-def get_admin_keyboard() -> InlineKeyboardMarkup:
+def get_admin_keyboard(translator = None) -> InlineKeyboardMarkup:
     """Get admin menu keyboard."""
-    return KeyboardGenerator.admin_menu()
+    return KeyboardGenerator.admin_menu(translator)
 
 
 # Aliases for new modular architecture

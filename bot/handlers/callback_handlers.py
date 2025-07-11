@@ -136,8 +136,7 @@ async def handle_main_menu(query, config: Config, user, translator=None, db_clie
     keyboard = KeyboardGenerator.main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
     
     welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-    welcome_text += f"🤖 **Doyobi Diary**\n"
-    welcome_text += translator.translate('welcome.choose_action')
+    welcome_text += translator.translate('welcome.description')
     
     await query.edit_message_text(
         welcome_text,
@@ -171,8 +170,8 @@ async def handle_settings_menu(query, db_client: DatabaseClient, user_cache: TTL
     
     settings_text = f"{translator.translate('settings.current_title')}\n\n"
     settings_text += f"{translator.translate('settings.notifications', status=enabled_status)}\n"
-    settings_text += f"⏰ {translator.translate('settings.time_window')}: {user_data['window_start']} - {user_data['window_end']}\n"
-    settings_text += f"📊 {translator.translate('settings.frequency')}: {translator.translate('settings.every_minutes', minutes=user_data['interval_min'])}"
+    settings_text += f"{translator.translate('settings.time_window')}: {user_data['window_start']} - {user_data['window_end']}\n"
+    settings_text += f"{translator.translate('settings.frequency')}: {translator.translate('settings.every_minutes', minutes=user_data['interval_min'])}"
 
     await query.edit_message_text(
         settings_text,
@@ -189,7 +188,7 @@ async def handle_friends_menu(query, db_client: DatabaseClient, user_cache: TTLC
     keyboard = create_friends_menu(0, 0, translator)
     
     await query.edit_message_text(
-        f"👥 **{translator.translate('menu.friends')}**\n\n"
+        f"**{translator.translate('menu.friends')}**\n\n"
         f"{translator.translate('friends.description', default='Управление друзьями и социальными связями:')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
@@ -206,12 +205,12 @@ async def handle_history(query, config: Config, db_client: DatabaseClient, user_
     # Сразу открываем веб-приложение без промежуточного меню
     web_app = WebAppInfo(url=config.webapp_url)  # Открываем главную страницу веб-приложения
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🌐 " + translator.translate('menu.history'), web_app=web_app)],
+        [InlineKeyboardButton(translator.translate('menu.history'), web_app=web_app)],
         [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
     ])
     
     await query.edit_message_text(
-        f"🌐 **{translator.translate('menu.history')}**\n\n"
+        f"**{translator.translate('menu.history')}**\n\n"
         f"{translator.translate('history.webapp_description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
@@ -476,7 +475,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                 keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
                 
                 # Создать текст с рекомендациями
-                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text = f"**{translator.translate('friends.discover_title')}**\n\n"
                 text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
                 
                 # Показать первые 3 рекомендации в тексте
@@ -506,7 +505,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
                     text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
             else:
                 # Нет рекомендаций - предложить добавить больше друзей
-                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text = f"**{translator.translate('friends.discover_title')}**\n\n"
                 text += translator.translate('friends.no_recommendations') + "\n\n"
                 text += translator.translate('friends.add_more_friends')
                 
@@ -1057,7 +1056,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                     })
                 
                 keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
-                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text = f"**{translator.translate('friends.discover_title')}**\n\n"
                 text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
                 
                 # Показать обновленные рекомендации  
@@ -1087,7 +1086,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
                     text += f"*{translator.translate('friends.more_in_buttons', count=len(recommendations) - 3)}*"
             else:
                 # Больше нет рекомендаций
-                text = f"🔍 **{translator.translate('friends.discover_title')}**\n\n"
+                text = f"**{translator.translate('friends.discover_title')}**\n\n"
                 text += translator.translate('friends.no_more_recommendations') + "\n\n"
                 text += translator.translate('friends.all_requests_sent')
                 keyboard = create_friends_menu(0, 0, translator)

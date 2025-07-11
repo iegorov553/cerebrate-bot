@@ -25,8 +25,8 @@
     "notifications": "🔔 Notifications: {status}",
     "notifications_enabled": "✅ Enabled",
     "notifications_disabled": "❌ Disabled",
-    "time_window": "Time",
-    "frequency": "Frequency",
+    "time_window": "⏰ Time",
+    "frequency": "📊 Frequency",
     "every_minutes": "every {minutes} minutes",
     "toggle_notifications": "🔔 Toggle Notifications",
     "set_time_window": "⏰ Set Time Window",
@@ -64,10 +64,13 @@
     "requests_help": "📥 **Friend Requests**\n\nUse commands:\n• `/friend_requests` - view requests\n• `/accept @username` - accept request\n• `/decline @username` - decline request",
     "discover_help": "🔍 **Find Friends**\n\nThis feature is under development.\nFor now use `/add_friend @username` command",
     "activities_help": "📊 **Friend Activities**\n\nUse command:\n`/activities [@username]`\n\nOr open web interface for detailed view",
-    "discover_title": "Find Friends",
+    "discover_title": "🔍 Find Friends",
     "recommendations_found": "Found {count} recommendations based on your friends",
     "no_recommendations": "No mutual friends found",
     "no_more_recommendations": "No more recommendations found",
+    "incoming_requests": "📥 Incoming Requests",
+    "outgoing_requests": "📤 Outgoing Requests",
+    "back_to_friends": "🔙 Back to Friends",
     "add_more_friends": "Add more friends to get recommendations!",
     "all_requests_sent": "All available requests sent",
     "mutual_friends": "Mutual friends: {count}",
@@ -98,7 +101,8 @@
     "admin_only": "This feature is only available to administrators.",
     "access_denied_full": "🔒 **Access Denied**\n\nThis function is available only to administrators.",
     "broadcast_starting": "🔄 **Starting broadcast system...**\n\nPlease wait a moment...",
-    "stats_help": "📊 **User Statistics**\n\nUse command:\n`/broadcast_info`"
+    "stats_help": "📊 **User Statistics**\n\nUse command:\n`/broadcast_info`",
+    "user_statistics": "📊 User Statistics"
   },
   
   "help": {

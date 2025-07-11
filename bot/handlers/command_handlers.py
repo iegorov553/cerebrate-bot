@@ -133,11 +133,11 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # Create web app button for main webapp page
     web_app = WebAppInfo(url=config.webapp_url)
     keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("🌐 " + translator.translate('menu.history'), web_app=web_app)
+        InlineKeyboardButton(translator.translate('menu.history'), web_app=web_app)
     ]])
     
     await update.message.reply_text(
-        f"🌐 **{translator.translate('menu.history')}**\n\n"
+        f"**{translator.translate('menu.history')}**\n\n"
         f"{translator.translate('history.webapp_description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'

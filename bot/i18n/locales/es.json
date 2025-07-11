@@ -25,8 +25,8 @@
     "notifications": "🔔 Notificaciones: {status}",
     "notifications_enabled": "✅ Activadas",
     "notifications_disabled": "❌ Desactivadas",
-    "time_window": "Tiempo",
-    "frequency": "Frecuencia",
+    "time_window": "⏰ Tiempo",
+    "frequency": "📊 Frecuencia",
     "every_minutes": "cada {minutes} minutos",
     "toggle_notifications": "🔔 Alternar Notificaciones",
     "set_time_window": "⏰ Establecer Horario",
@@ -64,10 +64,13 @@
     "requests_help": "📥 **Solicitudes de Amistad**\n\nUsa los comandos:\n• `/friend_requests` - ver solicitudes\n• `/accept @username` - aceptar solicitud\n• `/decline @username` - rechazar solicitud",
     "discover_help": "🔍 **Encontrar Amigos**\n\nEsta función está en desarrollo.\nPor ahora usa el comando `/add_friend @username`",
     "activities_help": "📊 **Actividades de Amigos**\n\nUsa el comando:\n`/activities [@username]`\n\nO abre la interfaz web para una vista detallada",
-    "discover_title": "Encontrar Amigos",
+    "discover_title": "🔍 Encontrar Amigos",
     "recommendations_found": "Se encontraron {count} recomendaciones basadas en tus amigos",
     "no_recommendations": "No se encontraron amigos mutuos",
     "no_more_recommendations": "No se encontraron más recomendaciones",
+    "incoming_requests": "📥 Solicitudes Entrantes",
+    "outgoing_requests": "📤 Solicitudes Salientes",
+    "back_to_friends": "🔙 Volver a Amigos",
     "add_more_friends": "¡Agrega más amigos para obtener recomendaciones!",
     "all_requests_sent": "Todas las solicitudes disponibles enviadas",
     "mutual_friends": "Amigos mutuos: {count}",
@@ -98,7 +101,8 @@
     "admin_only": "Esta función solo está disponible para administradores.",
     "access_denied_full": "🔒 **Acceso Denegado**\n\nEsta función está disponible solo para administradores.",
     "broadcast_starting": "🔄 **Iniciando sistema de difusión...**\n\nEspera un momento...",
-    "stats_help": "📊 **Estadísticas de Usuarios**\n\nUsa el comando:\n`/broadcast_info`"
+    "stats_help": "📊 **Estadísticas de Usuarios**\n\nUsa el comando:\n`/broadcast_info`",
+    "user_statistics": "📊 Estadísticas de Usuarios"
   },
   
   "help": {
