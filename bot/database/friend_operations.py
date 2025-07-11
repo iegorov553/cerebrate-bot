@@ -305,12 +305,12 @@ class FriendOperations:
             # Try using the optimized SQL function first
             try:
                 # Use fallback method as RPC function may not exist in current schema
-                return self.get_friends_of_friends_fallback(user_id, limit)
+                return await self.get_friends_of_friends_fallback(user_id, limit)
                 
             except Exception as sql_error:
                 logger.warning("Optimized SQL function failed, using fallback", 
                              user_id=user_id, error=str(sql_error))
-                return self.get_friends_of_friends_fallback(user_id, limit)
+                return await self.get_friends_of_friends_fallback(user_id, limit)
                 
         except Exception as exc:
             logger.error("Error in friends discovery", user_id=user_id, error=str(exc))
