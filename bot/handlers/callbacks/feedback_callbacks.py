@@ -79,7 +79,7 @@ class FeedbackCallbackHandler(BaseCallbackHandler):
             )],
             [InlineKeyboardButton(
                 translator.translate("menu.back"), 
-                callback_data="main_menu"
+                callback_data="back_main"
             )]
         ])
         
@@ -174,7 +174,7 @@ class FeedbackCallbackHandler(BaseCallbackHandler):
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton(
                 translator.translate("menu.back"), 
-                callback_data="main_menu"
+                callback_data="back_main"
             )]
         ])
         

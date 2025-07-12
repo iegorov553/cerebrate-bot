@@ -10,6 +10,7 @@ from telegram.ext import ContextTypes
 from bot.handlers.base.base_handler import BaseCallbackHandler
 from bot.i18n.translator import Translator
 from bot.keyboards.keyboard_generators import (
+    KeyboardGenerator,
     create_questions_menu,
     create_question_delete_confirm,
     create_question_edit_menu
@@ -162,6 +163,9 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 
             elif data.startswith("questions_create_from_template:"):
                 await self._handle_create_from_template(query, data, question_manager, translator)
+                
+            elif data == "questions_show_all":
+                await self._handle_show_all_settings(query, question_manager, translator)
                 
             else:
                 self.logger.warning("Unknown questions action", 
@@ -534,6 +538,83 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         self.logger.debug("Question creation from template initiated", 
                          user_id=query.from_user.id,
                          template=data)
+    
+    async def _handle_show_all_settings(self, 
+                                      query: CallbackQuery, 
+                                      question_manager, 
+                                      translator: Translator) -> None:
+        """Handle showing all user question settings."""
+        user = query.from_user
+        
+        try:
+            # Get user questions summary
+            questions_summary = await question_manager.get_user_questions_summary(user.id)
+            
+            # Get user settings for notifications status
+            from bot.database.user_operations import UserOperations
+            user_ops = UserOperations(self.db_client, self.user_cache)
+            user_data = await user_ops.get_user_settings(user.id)
+            notifications_enabled = user_data.get('enabled', True) if user_data else True
+            
+            # Build comprehensive settings text
+            settings_text = f"{translator.translate('questions.all_settings_title')}\n\n"
+            
+            # Notifications status
+            notif_status = "✅" if notifications_enabled else "❌"
+            settings_text += f"{translator.translate('questions.notifications_status', status=notif_status)}\n"
+            
+            # Questions count
+            stats = questions_summary.get('stats', {})
+            active_count = stats.get('active_questions', 0)
+            max_count = stats.get('max_questions', 5)
+            settings_text += f"{translator.translate('questions.active_questions_count', count=active_count, max=max_count)}\n\n"
+            
+            # Questions list
+            settings_text += f"{translator.translate('questions.questions_list')}\n"
+            
+            # Default question
+            default_q = questions_summary.get('default_question')
+            if default_q:
+                status = "✅" if default_q.get('active', True) else "❌"
+                settings_text += f"{translator.translate('questions.default_marker')} {translator.translate('questions.default_question')} {status}\n"
+                settings_text += f"   ⏰ {default_q.get('window_start', '09:00')}-{default_q.get('window_end', '22:00')}\n"
+                settings_text += f"   📊 каждые {default_q.get('interval_minutes', 120)} мин\n\n"
+            
+            # Custom questions
+            custom_questions = questions_summary.get('custom_questions', [])
+            if custom_questions:
+                for question in custom_questions:
+                    status = "✅" if question.get('active', True) else "❌"
+                    name = question.get('question_name', 'Вопрос')
+                    settings_text += f"{translator.translate('questions.custom_marker')} {name} {status}\n"
+                    settings_text += f"   ⏰ {question.get('window_start', '09:00')}-{question.get('window_end', '22:00')}\n"
+                    settings_text += f"   📊 каждые {question.get('interval_minutes', 120)} мин\n\n"
+            
+            # Back button
+            keyboard = KeyboardGenerator.single_button_keyboard(
+                translator.translate('questions.back'), 
+                'menu_questions'
+            )
+            
+            await query.edit_message_text(
+                settings_text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+            
+            self.logger.debug("All settings shown", 
+                            user_id=user.id,
+                            questions_count=len(custom_questions) + (1 if default_q else 0))
+        
+        except Exception as e:
+            self.logger.error("Error showing all settings", 
+                            user_id=user.id, 
+                            error=str(e))
+            
+            await query.edit_message_text(
+                translator.translate('errors.general'),
+                parse_mode='Markdown'
+            )
     
     async def _handle_back_to_main(self, 
                                  query: CallbackQuery, 

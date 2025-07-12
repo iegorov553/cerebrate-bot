@@ -1010,7 +1010,7 @@ async def test_integration_router_with_navigation_handler():
     
     # Mock callback query
     query = MagicMock(spec=CallbackQuery)
-    query.data = "main_menu"
+    query.data = "back_main"
     query.answer = AsyncMock()
     query.from_user = MagicMock(spec=User)
     query.from_user.id = 123456789
@@ -1030,4 +1030,4 @@ async def test_integration_router_with_navigation_handler():
     
     # Verify
     query.answer.assert_called_once()
-    nav_handler.execute.assert_called_once_with(query, "main_menu", context)
+    nav_handler.execute.assert_called_once_with(query, "back_main", context)
