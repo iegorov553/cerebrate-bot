@@ -30,10 +30,10 @@ class NavigationCallbackHandler(BaseCallbackHandler):
     def can_handle(self, data: str) -> bool:
         """Check if this handler can process the callback data."""
         navigation_callbacks = {
-            'main_menu',
-            'menu_language',
-            'menu_history', 
-            'history'
+            'back_main',      # Standard "back to main menu" button
+            'menu_language',  # Language selection menu
+            'menu_history',   # History/webapp access
+            'history'         # Direct history access
         }
         
         return (data in navigation_callbacks or 
@@ -46,7 +46,7 @@ class NavigationCallbackHandler(BaseCallbackHandler):
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle navigation callback queries."""
         
-        if data == "main_menu":
+        if data == "back_main":
             await self._handle_main_menu(query, translator)
             
         elif data == "menu_language":

@@ -273,7 +273,7 @@ class TestNavigationCallbackHandler:
     
     def test_can_handle_navigation_callbacks(self, handler):
         """Test callback data recognition."""
-        assert handler.can_handle("main_menu") == True
+        assert handler.can_handle("back_main") == True
         assert handler.can_handle("menu_language") == True
         assert handler.can_handle("language_en") == True
         assert handler.can_handle("menu_history") == True
@@ -297,7 +297,7 @@ class TestNavigationCallbackHandler:
         with patch('bot.handlers.callbacks.navigation_callbacks.KeyboardGenerator') as mock_keyboard:
             mock_keyboard.main_menu.return_value = "mock_keyboard"
             
-            await handler.handle_callback(query, "main_menu", translator, context)
+            await handler.handle_callback(query, "back_main", translator, context)
             
             query.edit_message_text.assert_called_once()
             mock_keyboard.main_menu.assert_called_once()
