@@ -100,7 +100,7 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
         elif data.startswith("add_friend:"):
             await handle_add_friend_callback(query, data, db_client, user, config, translator, user_cache, context)
         elif data.startswith("admin_"):
-            await handle_admin_action(query, data, db_client, user, config, translator, user_cache)
+            await handle_admin_action(query, data, db_client, user, config, translator, user_cache, context)
         elif data.startswith("feedback_") or data == "feedback_menu":
             if data.startswith("feedback_confirm_") or data.startswith("feedback_cancel_"):
                 # Handle feedback confirmation
@@ -527,7 +527,7 @@ async def handle_friends_action(query, data: str, db_client: DatabaseClient, use
         )
 
 
-async def handle_admin_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None, user_cache=None):
+async def handle_admin_action(query, data: str, db_client: DatabaseClient, user, config: Config, translator=None, user_cache=None, context=None):
     """Handle admin-related actions."""
     if translator is None:
         if user_cache:
@@ -564,7 +564,7 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
         )
     elif action == "health":
         # Health check для админа
-        await handle_admin_health_check(query, db_client, config, translator)
+        await handle_admin_health_check(query, db_client, config, translator, context)
     else:
         await handle_main_menu(query, config, user, translator)
 
@@ -1109,7 +1109,7 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
         )
 
 
-async def handle_admin_health_check(query, db_client: DatabaseClient, config: Config, translator):
+async def handle_admin_health_check(query, db_client: DatabaseClient, config: Config, translator, context=None):
     """Handle admin health check callback."""
     try:
         # Импортируем HealthService и версию
@@ -1126,8 +1126,11 @@ async def handle_admin_health_check(query, db_client: DatabaseClient, config: Co
             parse_mode='Markdown'
         )
         
+        # Получаем application из context
+        application = context.application if context else None
+        
         # Получаем статус здоровья системы
-        health_status = await health_service.get_system_health(query.bot._application)
+        health_status = await health_service.get_system_health(application)
         
         # Формируем красивое сообщение с использованием переводов
         status_emoji = {
