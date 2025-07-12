@@ -228,7 +228,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             list_text += f"{translator.translate('questions.interval_minutes', minutes=question['interval_minutes'])}\n\n"
 
         if len(questions) > 10:
-            list_text += f"...и ещё {len(questions) - 10} вопросов"
+            list_text += translator.translate('questions.and_more', count=len(questions) - 10)
 
         await query.edit_message_text(
             list_text,

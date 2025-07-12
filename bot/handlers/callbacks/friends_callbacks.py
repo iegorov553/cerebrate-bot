@@ -72,7 +72,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
         await query.edit_message_text(
             f"**{translator.translate('menu.friends')}**\n\n"
-            f"{translator.translate('friends.description', default='Управление друзьями и социальными связями:')}",
+            f"{translator.translate('friends.description')}",
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
@@ -267,7 +267,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             friend_names.append(f"@{friend}")
 
                     if friend_names:
-                        text += f" (через {', '.join(friend_names)})"
+                        text += f" {translator.translate('friends.via_friends', friends=', '.join(friend_names))}"
 
                 text += "\n\n"
 
@@ -430,7 +430,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             else:
                                 friend_names.append(f"@{friend}")
                         if friend_names:
-                            text += f" (через {', '.join(friend_names)})"
+                            text += f" {translator.translate('friends.via_friends', friends=', '.join(friend_names))}"
 
                     text += "\n\n"
 

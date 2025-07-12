@@ -77,7 +77,8 @@
     "more_in_buttons": "Restantes {count} en botones abajo",
     "request_sent": "✅ ¡Solicitud de amistad enviada!",
     "request_failed": "❌ Error al enviar solicitud",
-    "rate_limited": "⚠️ Demasiadas solicitudes. Inténtalo más tarde"
+    "rate_limited": "⚠️ Demasiadas solicitudes. Inténtalo más tarde",
+    "via_friends": "(a través de {friends})"
   },
   
   "history": {
@@ -142,6 +143,7 @@
     "subtitle": "Elige tu idioma preferido:",
     "current": "Idioma actual: {language_name} {flag}",
     "changed": "✅ Idioma cambiado a {language_name} {flag}",
+    "change_note": "📝 *Nota: los cambios se aplicarán después de agregar soporte de base de datos*",
     "russian": "🇷🇺 Русский",
     "english": "🇺🇸 English", 
     "spanish": "🇪🇸 Español"
@@ -250,6 +252,7 @@
     "default_marker": "🔸",
     "interval_minutes": "cada {minutes} min",
     "custom_marker": "•",
+    "and_more": "...y {count} preguntas más",
     
     "success_created": "✅ ¡Pregunta creada!",
     "success_updated": "✅ ¡Pregunta actualizada!",

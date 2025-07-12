@@ -77,7 +77,8 @@
     "more_in_buttons": "Remaining {count} in buttons below",
     "request_sent": "✅ Friend request sent!",
     "request_failed": "❌ Failed to send request",
-    "rate_limited": "⚠️ Too many requests. Try again later"
+    "rate_limited": "⚠️ Too many requests. Try again later",
+    "via_friends": "(via {friends})"
   },
   
   "history": {
@@ -142,6 +143,7 @@
     "subtitle": "Choose your preferred language:",
     "current": "Current language: {language_name} {flag}",
     "changed": "✅ Language changed to {language_name} {flag}",
+    "change_note": "📝 *Note: changes will be applied after database support is added*",
     "russian": "🇷🇺 Русский",
     "english": "🇺🇸 English", 
     "spanish": "🇪🇸 Español"
@@ -250,6 +252,7 @@
     "default_marker": "🔸",
     "interval_minutes": "every {minutes} min",
     "custom_marker": "•",
+    "and_more": "...and {count} more questions",
     
     "success_created": "✅ Question created!",
     "success_updated": "✅ Question updated!",
