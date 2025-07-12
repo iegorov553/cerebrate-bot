@@ -1,237 +1,117 @@
-# CLAUDE.md - Technical Documentation
+# CLAUDE.md - Technical Reference
 
-This file provides essential technical guidance for working with the Doyobi Diary Telegram bot project.
+This document provides essential technical guidance for working with the Doyobi Diary Telegram bot project. It serves as a technical reference for code maintenance and architecture understanding.
 
 ## Project Overview
 
-**Doyobi Diary** - Production-ready Telegram bot with modular architecture:
-- **🤖 Activity Tracking**: Smart scheduling and personalized notifications
-- **🎤 Voice Messages**: OpenAI Whisper integration for speech-to-text transcription
-- **👥 Social Features**: Friend system with intelligent "friends of friends" discovery algorithm
-- **📊 Analytics**: Web interface with real-time data visualization  
-- **💬 User Feedback**: GitHub Issues integration
-- **🌍 Multi-Language Support**: Russian, English, Spanish with auto-detection
-- **🔧 Version Management**: Automated versioning with git hooks and admin panel display
-- **🧪 Testing**: 50+ automated tests with CI/CD
-- **🚀 Deployment**: Railway + Vercel with GitHub integration
+**Doyobi Diary** is a production-ready Telegram bot built with modular architecture for activity tracking, social features, and voice message processing.
+
+**Core Features:**
+- Activity tracking with personalized notifications
+- Voice message transcription via OpenAI Whisper API
+- Social friend system with discovery algorithms
+- Multi-language support (Russian, English, Spanish)
+- Health monitoring and admin management
+- Web interface integration
+
+**Version:** 2.1.19
+**Architecture:** Modular async Python with dependency injection
+**Database:** Supabase (PostgreSQL)
+**Deployment:** Railway (bot) + Vercel (webapp)
 
 ## Environment Variables
 
 ### Required Configuration
 ```bash
-# Core Bot Configuration
-TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-SUPABASE_URL=https://your_project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+TELEGRAM_BOT_TOKEN=<bot_token_from_botfather>
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
+```
 
-# Voice Messages (OpenAI Whisper) - NEW
-OPENAI_API_KEY=sk-xxx...  # OpenAI API key for Whisper transcription
-
-# Admin System (Optional)
-ADMIN_USER_ID=123456789  # Your Telegram ID for admin access
-
-# GitHub Feedback System (Optional)
-GITHUB_FEEDBACK_TOKEN=ghp_xxx...  # GitHub Personal Access Token
+### Optional Services
+```bash
+OPENAI_API_KEY=sk-<key>              # Voice message transcription
+ADMIN_USER_ID=<telegram_id>          # Admin access
+GITHUB_FEEDBACK_TOKEN=ghp-<token>    # GitHub Issues integration
 GITHUB_REPO=iegorov553/cerebrate-bot
-
-# Version Management (Production)
-BOT_VERSION=2.1.2  # Current bot version (auto-updated by git hooks)
-RAILWAY_GIT_COMMIT_SHA=a47b040...  # Git commit hash (Railway env)
-ENVIRONMENT=production  # Environment identifier
-
-# Web App Configuration (Vercel)
-NEXT_PUBLIC_SUPABASE_URL=https://your_project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-```
-
-### Voice Messages Configuration (Optional)
-```bash
-# OpenAI Whisper Settings
-WHISPER_MODEL=whisper-1  # Default: whisper-1
-MAX_VOICE_FILE_SIZE_MB=25  # Default: 25MB
-MAX_VOICE_DURATION_SECONDS=120  # Default: 120 seconds (2 minutes)
-```
-
-## Development Commands
-
-```bash
-# Run the bot
-python3 main.py
-
-# Run tests
-python3 -m pytest                    # All tests
-python3 -m pytest --cov=. --cov-report=html  # With coverage
-
-# Code quality
-flake8 .                            # Linting
-black .                             # Auto-formatting
-
-# Database operations
-supabase start                       # Local development
-supabase db push                     # Apply migrations
-
-# Version management
-python3 scripts/update_version.py    # Manually update version
-git commit -m "message"              # Auto-increments version via git hooks
-
-# Deployment
-railway up                          # Deploy bot
-vercel --prod                       # Deploy webapp
+SENTRY_DSN=https://<dsn>@sentry.io   # Error monitoring
+WEBAPP_URL=https://doyobi-diary.vercel.app
+BOT_VERSION=2.1.19
+ENVIRONMENT=production
 ```
 
 ## Architecture Overview
 
-### Entry Point (`main.py`)
-Modern modular architecture with clean separation of concerns using `bot/` package components.
+### Entry Point
+**File:** `main.py`
+**Pattern:** Factory + Dependency Injection
+**Components:**
+- `create_application()` - application factory
+- Component initialization: DatabaseClient, MultiTierRateLimiter, TTLCache
+- Handler setup via `setup_*` functions
+- Multi-question scheduler service startup
 
-### Modular Structure (`bot/` directory)
+### Core Components
+
+#### Configuration (`bot/config.py`)
+- `Config` dataclass with environment variable loading
+- `from_env()` factory method
+- `validate()` for required parameter checking
+
+#### Database Layer (`bot/database/`)
+- `DatabaseClient` - Supabase wrapper with health checks
+- `UserOperations` - user management with TTL caching
+- `FriendOperations` - optimized friend operations and discovery
+- `QuestionOperations` - custom question system
+
+#### Handlers (`bot/handlers/`)
+- `command_handlers.py` - slash commands (/start, /settings, etc.)
+- `callback_handlers.py` - inline keyboard callbacks with central dispatcher
+- `voice_handlers.py` - OpenAI Whisper integration
+- `admin_handlers.py` - admin functionality
+- Rate limiting via decorators, monitoring via structlog
+
+#### Services (`bot/services/`)
+- `MultiQuestionScheduler` - time-based notification system
+- `WhisperClient` - OpenAI Whisper API integration
+- `HealthService` - system health monitoring
+
+#### Utilities (`bot/utils/`)
+- `MultiTierRateLimiter` - sliding window rate limiting
+- `TTLCache` - time-to-live caching with background cleanup
+- `version.py` - version management and display
+
+### Architectural Patterns
+
+#### Core Patterns
+- **Repository Pattern** - database operations abstraction
+- **Factory Pattern** - application and component creation
+- **Strategy Pattern** - different handler types and languages
+- **Decorator Pattern** - rate limiting and monitoring
+- **Chain of Responsibility** - handler processing
+
+#### Optimization Patterns
+- **TTL Caching** - reduce database load
+- **Batch Loading** - avoid N+1 queries in friend operations
+- **Background Workers** - async cleanup and maintenance
+- **Circuit Breaker** - external service failure handling
+
+## Development Commands
+
+```bash
+python3 main.py                      # Run bot
+python3 -m pytest                    # Run tests
+python3 -m pytest --cov=. --cov-report=html  # Coverage report
+flake8 .                             # Linting
+black .                              # Code formatting
+python3 scripts/update_version.py    # Version increment
 ```
-bot/
-├── config.py                  # Configuration management
-├── database/                  # Database operations (Supabase)
-│   ├── client.py
-│   ├── user_operations.py
-│   ├── friend_operations.py
-│   └── question_operations.py
-├── handlers/                  # Request handlers
-│   ├── callback_handlers.py   # Inline keyboard callbacks
-│   ├── message_handlers.py    # Text message processing
-│   ├── command_handlers.py    # Slash commands
-│   ├── admin_handlers.py      # Admin functionality
-│   ├── voice_handlers.py      # Voice message processing (NEW)
-│   └── error_handler.py       # Error handling
-├── services/                  # External service integrations (NEW)
-│   ├── whisper_client.py      # OpenAI Whisper API client
-│   ├── scheduler_service.py   # Notification scheduling
-│   └── multi_question_scheduler.py  # Multi-question scheduler
-├── i18n/                      # Internationalization
-│   ├── translator.py
-│   └── locales/              # ru.json, en.json, es.json
-├── feedback/                  # GitHub Issues integration
-├── keyboards/                 # UI generation
-├── cache/                     # TTL caching system
-├── questions/                 # Custom questions system
-│   ├── question_manager.py
-│   └── question_templates.py
-├── admin/                     # Admin functionality
-│   ├── admin_operations.py
-│   └── broadcast_manager.py
-└── utils/                     # Utilities and helpers
-    ├── rate_limiter.py        # Rate limiting
-    ├── version.py             # Version management (NEW)
-    ├── exceptions.py          # Custom exceptions
-    └── datetime_utils.py      # Date/time utilities
-```
-
-## User Interface
-
-### Main Menu Navigation
-- ⚙️ **Settings**: User preferences and notifications
-- 👥 **Friends**: Social features and friend management
-- 📊 **History**: Activity tracking via web interface
-- 🌍 **Language**: Multi-language support (ru/en/es)
-- 💬 **Feedback**: User feedback and bug reporting
-- 📢 **Admin Panel**: Broadcast system (admin only)
-
-### Multi-Language Support
-- **3 languages**: Russian (default), English, Spanish
-- **Auto-detection**: From Telegram user.language_code
-- **User-specific translators**: Each user gets isolated translator instance
-- **Database persistence**: Language preferences saved in `users.language` column
-- **Template support**: Dynamic variables in translations
-
-### Voice Messages System (NEW)
-- **OpenAI Whisper Integration**: Speech-to-text transcription using OpenAI API
-- **Multi-format Support**: MP3, MP4, MPEG, MPGA, M4A, WAV, WebM, OGG, OGA
-- **Size Limits**: Max 25MB file size, 120 seconds duration (configurable)
-- **Error Handling**: Comprehensive error handling with localized messages
-- **Caching**: TTL caching for transcription results to avoid re-processing
-- **Processing Flow**: Download → Validate → Transcribe → Process as text message
-- **Rate Limiting**: Special rate limiting for voice messages to manage API costs
-
-## Commands Reference
-
-### User Commands
-- `/start` - Show main menu and register user
-- `/settings` - Show current user settings
-- `/notify_on` / `/notify_off` - Toggle notifications
-- `/window HH:MM-HH:MM` - Set active time window
-- `/freq N` - Set notification frequency in minutes
-- `/history` - Open web interface for activity history
-
-### Friend Commands
-- `/add_friend @username` - Send friend request
-- `/friend_requests` - View incoming/outgoing requests
-- `/accept @username` - Accept friend request
-- `/decline @username` - Decline friend request
-- `/friends` - List all friends
-- `/activities [@username]` - View friend's recent activities
-
-### Admin Commands
-- `/broadcast <message>` - Send broadcast message
-- `/broadcast_info` - Show user statistics
-
-## Friend Discovery System (NEW)
-
-### Overview
-Полная реализация интеллектуального поиска друзей с алгоритмом "друзья друзей", позволяющая пользователям находить новых друзей на основе социальных связей их текущих друзей.
-
-### Key Features
-- **🔍 Smart Discovery**: Алгоритм поиска друзей друзей с оптимизированными SQL запросами
-- **🚫 Auto-filtering**: Исключение уже добавленных друзей и пользователей с pending запросами
-- **💫 Mutual Friends**: Отображение общих друзей и их имен для контекста
-- **⚡ One-click Adding**: Отправка запросов в друзья одним кликом из рекомендаций
-- **🔄 Real-time Updates**: Автоматическое обновление списка после отправки запроса
-- **🌍 Multi-language**: Полная локализация на 3 языках
-
-### User Interface
-- **Кнопка "🔍 Найти друзей"** в меню друзей открывает интеллектуальные рекомендации
-- **Детальная информация** о рекомендациях с именами взаимных друзей
-- **Кнопки "➕ Добавить"** для мгновенной отправки запросов в друзья
-- **Умное обновление** списка после каждого действия
-
-### Database Operations
-- `get_friends_of_friends_optimized(user_id, limit)` - Получение рекомендаций с оптимизацией
-- `send_friend_request_by_id(requester_id, target_id)` - Отправка запроса с валидацией
-- **Filtering Logic**: Исключение друзей, pending запросов и самого пользователя
-- **Batch Queries**: Оптимизированные запросы для минимизации обращений к БД
-
-### Technical Implementation
-```python
-# Пример использования в callback handlers
-recommendations = await friend_ops.get_friends_of_friends_optimized(user.id, limit=10)
-keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
-
-# Обработка добавления друга
-success, message = await friend_ops.send_friend_request_by_id(user.id, target_user_id)
-```
-
-### Rate Limiting
-- **Friend requests**: 5 запросов в час на пользователя
-- **Callback protection**: Общие ограничения на callback запросы
-- **Auto-blocking**: Временная блокировка при превышении лимитов
-
-### Localization Keys (New)
-```json
-"friends": {
-    "discover_title": "Поиск друзей",
-    "recommendations_found": "Найдено {count} рекомендаций на основе ваших друзей",
-    "mutual_friends": "Общих друзей: {count}",
-    "request_sent": "✅ Запрос в друзья отправлен!",
-    "no_recommendations": "Друзья друзей не найдены"
-}
-```
-
-### Performance Metrics
-- **90% faster** discovery through SQL optimization vs N+1 queries
-- **Auto-pagination** limited to 10 recommendations for optimal UX
-- **Smart caching** of user data in friend operations
-- **Error resilience** with comprehensive exception handling
 
 ## Database Schema
 
+### Core Tables
 ```sql
--- User management with language preferences
+-- User management
 CREATE TABLE users (
     tg_id BIGINT PRIMARY KEY,
     tg_username TEXT,
@@ -240,38 +120,37 @@ CREATE TABLE users (
     window_start TIME DEFAULT '09:00',
     window_end TIME DEFAULT '22:00',
     interval_min INTEGER DEFAULT 120,
-    language VARCHAR(5) DEFAULT 'ru' CHECK (language IN ('ru', 'en', 'es')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    language VARCHAR(5) DEFAULT 'ru'
 );
 
 -- Activity logging
 CREATE TABLE tg_jobs (
     id BIGSERIAL PRIMARY KEY,
-    tg_id BIGINT,
+    tg_id BIGINT REFERENCES users(tg_id),
     job_text TEXT NOT NULL,
     jobs_timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Friend relationships
+-- Friend system
 CREATE TABLE friendships (
     id BIGSERIAL PRIMARY KEY,
-    requester_id BIGINT NOT NULL,
-    addressee_id BIGINT NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'declined')),
+    requester_id BIGINT REFERENCES users(tg_id),
+    addressee_id BIGINT REFERENCES users(tg_id),
+    status TEXT CHECK (status IN ('pending', 'accepted', 'declined')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Custom questions system
+-- Custom questions
 CREATE TABLE user_questions (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
+    user_id BIGINT REFERENCES users(tg_id),
     question_text TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true
 );
 
 CREATE TABLE user_question_schedules (
     id BIGSERIAL PRIMARY KEY,
-    user_question_id BIGINT NOT NULL,
+    user_question_id BIGINT REFERENCES user_questions(id),
     window_start TIME NOT NULL,
     window_end TIME NOT NULL,
     interval_minutes INTEGER NOT NULL
@@ -280,149 +159,155 @@ CREATE TABLE user_question_schedules (
 
 ## Key Technical Features
 
-### Rate Limiting System
+### Rate Limiting
 ```python
 LIMITS = {
-    "general": (20, 60),        # 20 requests per minute
-    "friend_request": (5, 3600), # 5 requests per hour
-    "feedback": (3, 3600),      # 3 feedback messages per hour
-    "voice_message": (10, 3600), # 10 voice messages per hour (NEW)
-    "admin": (50, 60),          # 50 requests per minute
+    "general": (20, 60),           # 20 requests per minute
+    "friend_request": (5, 3600),   # 5 requests per hour
+    "feedback": (3, 3600),         # 3 feedback messages per hour
+    "voice_message": (10, 3600),   # 10 voice messages per hour
+    "admin": (50, 60),             # 50 requests per minute
 }
 ```
 
-### Internationalization Usage
+### Internationalization
+- **Languages:** Russian (default), English, Spanish
+- **Implementation:** `bot.i18n.translator.Translator`
+- **Usage:** `translator.translate('key', variable=value)`
+- **Fallback:** English if key missing in target language
+- **Auto-detection:** From Telegram user.language_code
+
+### Voice Message Processing
+- **Service:** OpenAI Whisper API integration
+- **Formats:** MP3, MP4, MPEG, MPGA, M4A, WAV, WebM, OGG, OGA
+- **Limits:** 25MB file size, 120 seconds duration
+- **Caching:** TTL cache for transcription results
+- **Flow:** Download → Validate → Transcribe → Process as text
+
+### Friend Discovery Algorithm
+- **Method:** "friends of friends" with SQL optimization
+- **Implementation:** `FriendOperations.get_friends_of_friends_optimized()`
+- **Filtering:** Excludes existing friends and pending requests
+- **UI:** Inline keyboards with mutual friend details
+- **Performance:** Batch queries to avoid N+1 problems
+
+### Health Monitoring
+- **Command:** `/health` for basic checks
+- **Admin Interface:** Detailed system health via admin panel
+- **Components:** Database, Telegram API, scheduler status
+- **Metrics:** Response time, error rates, uptime
+- **Implementation:** `bot.services.health_service.HealthService`
+
+## Error Handling
+
+### Exception Hierarchy
 ```python
-# Get user-specific translator
-translator = await get_user_translator(user.id, db_client, user_cache)
-
-# Translate with template variables
-text = translator.translate('welcome.greeting', name=user.first_name)
-# Result: "Hello, John!" / "Привет, John!" / "¡Hola, John!"
+# Custom exceptions in bot.utils.exceptions
+class BotException(Exception): pass
+class RateLimitExceeded(BotException): pass
+class AdminRequired(BotException): pass
+class ValidationError(BotException): pass
 ```
 
-### Error Handling
-- Custom exceptions: `RateLimitExceeded`, `AdminRequired`, `ValidationError`
-- User-friendly localized error messages
-- Comprehensive logging with Sentry integration
-- Graceful degradation for database failures
-
-## Custom Questions System
-
-### NEW Features
-- **Multiple questions per user**: Users can create custom activity tracking questions
-- **Individual schedules**: Each question can have its own notification schedule
-- **Flexible timing**: Different time windows and intervals per question
-- **Database integration**: Full CRUD operations for questions and schedules
-
-### Database Operations
-- `get_user_questions(user_id)` - Get all active questions for user
-- `create_user_question(user_id, text, schedules)` - Create question with schedules
-- `update_question_schedules(question_id, schedules)` - Update schedules
-- `delete_user_question(question_id)` - Remove question
-
-### Scheduler Service
-- **Multi-question scheduler**: Manages individual schedules for each question
-- **Per-question notifications**: Independent timing for each user question
-- **Database-driven**: Loads schedules from database on startup
-- **Real-time updates**: Automatically updates when questions are modified
-
-## Voice Messages Integration (NEW)
-
-### OpenAI Whisper Client (`bot/services/whisper_client.py`)
-- **API Integration**: Async OpenAI client for Whisper API
-- **File Validation**: Size and duration limits with custom exceptions
-- **Caching System**: TTL cache for transcription results
-- **Multi-format Support**: All Whisper-supported audio formats
-- **Error Handling**: Specific exceptions for different error types
-
-### Voice Handler (`bot/handlers/voice_handlers.py`)
-- **File Download**: Downloads voice files from Telegram servers
-- **Progress Updates**: Real-time processing messages for users
-- **Text Integration**: Processes transcribed text as regular activity messages
-- **Cleanup**: Automatic temporary file removal
-- **Rate Limiting**: Prevents abuse of expensive API calls
-
-### Voice Message Flow
-1. **User sends voice message** → Rate limit check
-2. **Download audio file** → Temporary storage
-3. **Validate file** → Size/duration limits
-4. **Transcribe with Whisper** → OpenAI API call
-5. **Process as text** → Regular message handler
-6. **Update user** → Success/error feedback
-7. **Cleanup** → Remove temporary files
-
-### Error Handling
-- **Configuration errors**: Missing API key
-- **File size errors**: Exceeds 25MB limit  
-- **Duration errors**: Exceeds 120 seconds
-- **API errors**: OpenAI service issues
-- **Transcription errors**: Empty or failed results
-- **Processing errors**: Database or message handling failures
-
-## Version Management System (NEW)
-
-### Automated Versioning
-- **Git Hooks**: Pre-commit hook auto-increments patch version
-- **Version File**: `VERSION` file in project root (current: 2.1.2)
-- **Update Script**: `scripts/update_version.py` for manual updates
-- **Format**: Semantic versioning (major.minor.patch)
-
-### Version Display
-- **Admin Panel**: Shows version and commit hash
-- **Environment Info**: Production/development environment indicator
-- **Git Integration**: Displays Railway commit SHA when available
-
-### Version Management Files
-```bash
-VERSION                        # Current version (2.1.2)
-scripts/update_version.py      # Version increment script
-.githooks/pre-commit          # Git hook for auto-versioning
-bot/utils/version.py          # Version utilities and display
-```
+### Monitoring Integration
+- **Sentry:** Error tracking and performance monitoring
+- **Structlog:** Structured logging with context
+- **Health Checks:** System component monitoring
+- **Rate Limiting:** Multi-tier protection against abuse
 
 ## Testing Infrastructure
 
-### Test Coverage (50+ tests)
-```bash
+### Test Structure
+```
 tests/
-├── test_new_components.py         # 7 architectural component tests
-├── test_rate_limiter.py           # 14 rate limiting tests
-├── test_i18n.py                   # 24 internationalization tests
-├── test_handlers_integration.py   # 7 handler integration tests
-└── test_integration.py            # 4 integration tests
+├── test_new_components.py      # 7 architectural component tests
+├── test_rate_limiter.py        # 14 rate limiting tests  
+├── test_i18n.py               # 24 internationalization tests
+├── test_handlers_integration.py # 7 handler integration tests
+└── test_integration.py        # 4 integration tests
 ```
 
-## Deployment Status
+### Coverage Areas
+- Handler functionality and error cases
+- Rate limiting behavior and edge cases
+- Internationalization with template variables
+- Database operations and caching
+- Voice message processing workflow
 
-**Current State**: **100% PRODUCTION DEPLOYED & OPERATIONAL** ✅
+## Deployment Configuration
 
-### Production Environment
-- **Railway Bot**: ✅ RUNNING with environment variables configured
-- **Vercel Web App**: ✅ RUNNING at doyobi-diary.vercel.app
-- **GitHub CI/CD**: ✅ SUCCESS (Tests passing)
-- **Supabase Database**: ✅ CONNECTED with RLS policies active
-- **Monitoring**: ✅ ACTIVE with Sentry error tracking
+### Production Stack
+- **Bot Service:** Railway with automatic deployments
+- **Web Interface:** Vercel with Next.js
+- **Database:** Supabase (managed PostgreSQL)
+- **Monitoring:** Sentry for error tracking
+- **Version Control:** Git hooks for automated versioning
 
-### Performance Metrics
-- **90% faster**: Friend discovery through SQL optimization
-- **80% faster**: Settings UI with TTL caching
-- **70+ tests**: Comprehensive automated testing coverage (includes voice message tests)
-- **3 languages**: Full i18n support with voice message localization
-- **Voice transcription**: <30 seconds average processing time for 2-minute audio
-- **100% working**: All menu buttons, friend system, and voice message functionality
+### Docker Support
+- **Dockerfile:** Multi-stage build with security best practices
+- **docker-compose.yml:** Development and production configurations
+- **Health Checks:** Built-in container health monitoring
+- **Security:** Non-root user, minimal attack surface
 
-### New Features (v2.1.3)
-- ✅ **Friend Discovery System**: Complete "friends of friends" recommendation engine
-- ✅ **Smart Friend Recommendations**: Auto-filtering with mutual friend details
-- ✅ **One-click Friend Requests**: Instant friend request sending from recommendations
-- ✅ **Real-time UI Updates**: Dynamic list refreshing after friend actions
-- ✅ **Enhanced Localization**: Friend discovery messages in 3 languages
+### Environment-Specific Settings
+```bash
+# Development
+ENVIRONMENT=development
+LOG_LEVEL=DEBUG
 
-### Previous Features (v2.1.2)
-- ✅ **Voice Messages**: Complete OpenAI Whisper integration
-- ✅ **Version Management**: Automated versioning with git hooks  
-- ✅ **Admin Panel Enhancement**: Version display with environment info
-- ✅ **Rate Limiting**: Voice message specific limits
-- ✅ **Error Handling**: Comprehensive voice processing error management
-- ✅ **Multi-language**: Voice error messages in 3 languages
+# Production  
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+RAILWAY_GIT_COMMIT_SHA=<commit_hash>
+```
+
+## Code Organization Principles
+
+### Modular Design
+- **Separation of Concerns:** Each module has single responsibility
+- **Loose Coupling:** Modules interact through well-defined interfaces
+- **High Cohesion:** Related functionality grouped together
+- **Dependency Injection:** Components passed through bot_data
+
+### Naming Conventions
+- **Files:** snake_case for Python modules
+- **Classes:** PascalCase with descriptive names
+- **Functions:** snake_case with verb_noun pattern
+- **Constants:** UPPER_SNAKE_CASE
+
+### Import Organization
+```python
+# Standard library imports
+import asyncio
+from typing import Optional
+
+# Third-party imports
+from telegram import Update
+from telegram.ext import Application
+
+# Local imports
+from bot.database.client import DatabaseClient
+from bot.utils.exceptions import BotException
+```
+
+## Security Considerations
+
+### Input Validation
+- All user inputs sanitized before database operations
+- Markdown escaping for message formatting
+- File size and type validation for voice messages
+- SQL injection prevention through parameterized queries
+
+### Access Control
+- Admin functionality restricted by user ID validation
+- Rate limiting to prevent abuse
+- Sensitive data excluded from logs
+- Service role keys for database access
+
+### Data Protection
+- User data encrypted in transit and at rest
+- Minimal data collection principle
+- GDPR compliance considerations
+- Secure API key management through environment variables
+
+This technical reference should be updated when architectural changes are made to maintain accuracy for code maintenance and development decisions.
