@@ -66,9 +66,16 @@ ENVIRONMENT=production
 
 #### Handlers (`bot/handlers/`)
 - `command_handlers.py` - slash commands (/start, /settings, etc.)
-- `callback_handlers.py` - inline keyboard callbacks with central dispatcher
+- `base/callback_router.py` - central callback dispatcher with handler registry
+- `base/base_handler.py` - abstract base class for all callback handlers
+- `callbacks/navigation_callbacks.py` - main menu and navigation handlers
+- `callbacks/settings_callbacks.py` - user settings management
+- `callbacks/friends_callbacks.py` - social features and friend discovery
+- `callbacks/questions_callbacks.py` - custom question system
+- `callbacks/feedback_callbacks.py` - user feedback submission
+- `callbacks/admin_callbacks.py` - administrative functions
 - `voice_handlers.py` - OpenAI Whisper integration
-- `admin_handlers.py` - admin functionality
+- `message_handlers.py` - text message processing
 - Rate limiting via decorators, monitoring via structlog
 
 #### Services (`bot/services/`)

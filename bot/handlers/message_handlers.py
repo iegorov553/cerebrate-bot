@@ -156,7 +156,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                            message_length=len(message.text))
                 
                 # Get user translator for response
-                from bot.handlers.callback_handlers import get_user_translator
+                from bot.utils.translation_helpers import get_user_translator
                 translator = await get_user_translator(user.id, db_client, user_cache)
                 
                 # Получаем текст вопроса

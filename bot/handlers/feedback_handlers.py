@@ -9,7 +9,7 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.feedback import FeedbackManager
-from bot.handlers.callback_handlers import get_user_translator
+from bot.utils.translation_helpers import get_user_translator
 from bot.keyboards.keyboard_generators import create_main_menu
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async

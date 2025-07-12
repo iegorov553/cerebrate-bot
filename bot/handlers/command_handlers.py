@@ -127,7 +127,7 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     user_cache: TTLCache = context.bot_data['user_cache']
     
     # Get user translator
-    from bot.handlers.callback_handlers import get_user_translator
+    from bot.utils.translation_helpers import get_user_translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
     # Create web app button for main webapp page

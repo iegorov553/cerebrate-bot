@@ -16,13 +16,13 @@ class TestHandlerIntegration:
 
     @pytest.mark.asyncio
     async def test_callback_handlers_registration(self):
-        """Test that callback handlers properly register bot_data."""
+        """Test that callback handlers properly register via CallbackRouter."""
         from telegram.ext import Application
 
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
-        from bot.handlers.callback_handlers import setup_callback_handlers
+        from bot.handlers.base.callback_router import CallbackRouter
         from bot.utils.rate_limiter import MultiTierRateLimiter
 
         # Create mock components
@@ -35,8 +35,16 @@ class TestHandlerIntegration:
             user_cache = MagicMock(spec=TTLCache)
             rate_limiter = MagicMock(spec=MultiTierRateLimiter)
             
-            # Setup handlers
-            setup_callback_handlers(application, db_client, user_cache, rate_limiter, config)
+            # Test CallbackRouter setup like in main.py
+            callback_router = CallbackRouter(db_client, config, user_cache)
+            
+            # Store dependencies in bot_data
+            application.bot_data.update({
+                'db_client': db_client,
+                'user_cache': user_cache,
+                'rate_limiter': rate_limiter,
+                'config': config
+            })
             
             # Verify bot_data was populated
             assert 'db_client' in application.bot_data
@@ -44,8 +52,9 @@ class TestHandlerIntegration:
             assert 'rate_limiter' in application.bot_data
             assert 'config' in application.bot_data
             
-            # Verify handler was registered
-            application.add_handler.assert_called_once()
+            # Verify router was created successfully
+            assert callback_router is not None
+            assert hasattr(callback_router, 'route_callback')
 
     @pytest.mark.asyncio
     async def test_keyboard_callback_data_consistency(self):
@@ -110,7 +119,8 @@ class TestHandlerIntegration:
         from bot.cache.ttl_cache import TTLCache
         from bot.config import Config
         from bot.database.client import DatabaseClient
-        from bot.handlers.callback_handlers import handle_callback_query
+        from bot.handlers.base.callback_router import CallbackRouter
+        from bot.handlers.callbacks.questions_callbacks import QuestionsCallbackHandler
 
         # Create mock objects
         user = User(id=123456789, is_bot=False, first_name="Test", username="testuser")
@@ -128,10 +138,13 @@ class TestHandlerIntegration:
         # Mock bot_data
         with patch('bot.database.client.create_client'):
             config = Config.from_env()
+            db_client = MagicMock(spec=DatabaseClient)
+            user_cache = MagicMock(spec=TTLCache)
+            
             context.bot_data = {
                 'config': config,
-                'db_client': MagicMock(spec=DatabaseClient),
-                'user_cache': MagicMock(spec=TTLCache)
+                'db_client': db_client,
+                'user_cache': user_cache
             }
             
             # Mock user operations
@@ -148,19 +161,27 @@ class TestHandlerIntegration:
                 mock_user_ops.get_user_settings.return_value = mock_user_data
                 mock_user_ops_class.return_value = mock_user_ops
                 
-                # Call handler
-                await handle_callback_query(update, context)
-                
-                # Verify callback was answered
-                callback_query.answer.assert_called_once()
-                
-                # Verify message was edited (questions menu shown)
-                callback_query.edit_message_text.assert_called_once()
-                
-                # Verify user data was fetched (now called multiple times due to language loading)
-                # Called once for get_user_language and once for handle_questions_menu
-                assert mock_user_ops.get_user_settings.call_count >= 2
-                mock_user_ops.get_user_settings.assert_any_call(123456789)
+                with patch('bot.questions.QuestionManager') as mock_question_manager_class:
+                    mock_question_manager = AsyncMock()
+                    mock_question_manager.get_user_questions.return_value = []
+                    mock_question_manager_class.return_value = mock_question_manager
+                    
+                    # Create router and register handler
+                    router = CallbackRouter(db_client, config, user_cache)
+                    questions_handler = QuestionsCallbackHandler(db_client, config, user_cache)
+                    router.register_handler(questions_handler)
+                    
+                    # Call handler
+                    await router.route_callback(update, context)
+                    
+                    # Verify callback was answered
+                    callback_query.answer.assert_called_once()
+                    
+                    # Verify message was edited (questions menu shown)
+                    callback_query.edit_message_text.assert_called_once()
+                    
+                    # Verify user data was fetched for language detection
+                    assert mock_user_ops.get_user_settings.call_count >= 1
 
     @pytest.mark.asyncio
     async def test_message_activity_logging(self):

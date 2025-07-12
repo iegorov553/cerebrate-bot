@@ -130,7 +130,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     config: Config = context.bot_data['config']
     
     # Get user translator
-    from bot.handlers.callback_handlers import get_user_translator
+    from bot.utils.translation_helpers import get_user_translator
     translator = await get_user_translator(user.id, db_client, user_cache)
     
     # Send processing message
