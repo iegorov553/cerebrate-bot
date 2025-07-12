@@ -372,7 +372,7 @@ class TestSettingsCallbackHandler:
         assert handler.can_handle("settings_back") == True
         assert handler.can_handle("settings_view") == True
         assert handler.can_handle("friends_list") == False
-        assert handler.can_handle("main_menu") == False
+        assert handler.can_handle("back_main") == False
     
     @pytest.mark.asyncio
     async def test_handle_settings_menu_success(self, handler):

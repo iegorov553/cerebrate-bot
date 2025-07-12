@@ -247,6 +247,7 @@
     "active_questions_count": "📝 Активных вопросов: {count}/{max}",
     "questions_list": "📝 **Ваши вопросы:**",
     "default_marker": "🔸",
+    "interval_minutes": "каждые {minutes} мин",
     "custom_marker": "•",
     
     "success_created": "✅ Вопрос создан!",

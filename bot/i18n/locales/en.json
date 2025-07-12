@@ -248,6 +248,7 @@
     "active_questions_count": "📝 Active questions: {count}/{max}",
     "questions_list": "📝 **Your questions:**",
     "default_marker": "🔸",
+    "interval_minutes": "every {minutes} min",
     "custom_marker": "•",
     
     "success_created": "✅ Question created!",
