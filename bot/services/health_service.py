@@ -71,8 +71,18 @@ class HealthService:
         start_time = time.time()
         
         try:
+            # Проверяем, подключен ли клиент
+            if not self.db_client.is_connected():
+                latency_ms = (time.time() - start_time) * 1000
+                return HealthStatus(
+                    status="unhealthy",
+                    latency_ms=latency_ms,
+                    error="Database client not connected",
+                    details={"connection": "failed", "client_initialized": False}
+                )
+            
             # Простой запрос для проверки соединения
-            result = self.db_client.supabase.table("users").select("count").limit(1).execute()
+            result = self.db_client.table("users").select("tg_id").limit(1).execute()
             
             latency_ms = (time.time() - start_time) * 1000
             
@@ -80,7 +90,11 @@ class HealthService:
                 return HealthStatus(
                     status="healthy",
                     latency_ms=latency_ms,
-                    details={"connection": "active", "query_success": True}
+                    details={
+                        "connection": "active", 
+                        "query_success": True,
+                        "client_initialized": True
+                    }
                 )
             else:
                 return HealthStatus(

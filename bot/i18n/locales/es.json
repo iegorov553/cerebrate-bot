@@ -97,12 +97,18 @@
     "stats": "📊 Estadísticas",
     "statistics": "📊 Estadísticas",
     "test_broadcast": "🧪 Prueba de Difusión",
+    "health_check": "🏥 Verificación de Salud",
     "access_denied": "Acceso Denegado",
     "admin_only": "Esta función solo está disponible para administradores.",
     "access_denied_full": "🔒 **Acceso Denegado**\n\nEsta función está disponible solo para administradores.",
     "broadcast_starting": "🔄 **Iniciando sistema de difusión...**\n\nEspera un momento...",
     "stats_help": "📊 **Estadísticas de Usuarios**\n\nUsa el comando:\n`/broadcast_info`",
-    "user_statistics": "📊 Estadísticas de Usuarios"
+    "user_statistics": "📊 Estadísticas de Usuarios",
+    "health_check_title": "🏥 **Verificación de Salud del Sistema**",
+    "health_status": "**Estado General:** {status}",
+    "health_uptime": "**Tiempo Activo:** {uptime} segundos",
+    "health_version": "**Versión:** {version}",
+    "health_components": "**Componentes:**"
   },
   
   "help": {

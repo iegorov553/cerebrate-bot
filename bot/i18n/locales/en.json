@@ -97,12 +97,18 @@
     "stats": "📊 Statistics",
     "statistics": "📊 Statistics",
     "test_broadcast": "🧪 Test Broadcast",
+    "health_check": "🏥 Health Check",
     "access_denied": "Access Denied",
     "admin_only": "This feature is only available to administrators.",
     "access_denied_full": "🔒 **Access Denied**\n\nThis function is available only to administrators.",
     "broadcast_starting": "🔄 **Starting broadcast system...**\n\nPlease wait a moment...",
     "stats_help": "📊 **User Statistics**\n\nUse command:\n`/broadcast_info`",
-    "user_statistics": "📊 User Statistics"
+    "user_statistics": "📊 User Statistics",
+    "health_check_title": "🏥 **System Health Check**",
+    "health_status": "**Overall Status:** {status}",
+    "health_uptime": "**Uptime:** {uptime} seconds",
+    "health_version": "**Version:** {version}",
+    "health_components": "**Components:**"
   },
   
   "help": {

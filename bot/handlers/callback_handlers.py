@@ -567,6 +567,9 @@ async def handle_admin_action(query, data: str, db_client: DatabaseClient, user,
             reply_markup=KeyboardGenerator.main_menu(True, translator),
             parse_mode='Markdown'
         )
+    elif action == "health":
+        # Health check для админа
+        await handle_admin_health_check(query, db_client, config, translator)
     else:
         await handle_main_menu(query, config, user, translator)
 
@@ -1108,6 +1111,116 @@ async def handle_add_friend_callback(query, data: str, db_client: DatabaseClient
         await query.answer(
             translator.translate('errors.general'),
             show_alert=True
+        )
+
+
+async def handle_admin_health_check(query, db_client: DatabaseClient, config: Config, translator):
+    """Handle admin health check callback."""
+    try:
+        # Импортируем HealthService и версию
+        from bot.services.health_service import HealthService
+        from bot.utils.version import get_bot_version
+        
+        # Создаем health service
+        version = get_bot_version()
+        health_service = HealthService(db_client, version)
+        
+        # Показываем индикатор загрузки
+        await query.edit_message_text(
+            "🔄 **Проверка состояния системы...**\n\nПожалуйста, подождите...",
+            parse_mode='Markdown'
+        )
+        
+        # Получаем статус здоровья системы
+        health_status = await health_service.get_system_health(query.bot._application)
+        
+        # Формируем красивое сообщение с использованием переводов
+        status_emoji = {
+            "healthy": "✅",
+            "degraded": "⚠️", 
+            "unhealthy": "❌"
+        }
+        
+        # Основная информация
+        message = f"{translator.translate('admin.health_check_title')}\n\n"
+        message += f"{status_emoji.get(health_status.status, '❓')} {translator.translate('admin.health_status', status=health_status.status.upper())}\n"
+        message += f"📅 **Время проверки:** {health_status.timestamp}\n"
+        message += f"{translator.translate('admin.health_version', version=health_status.version)}\n"
+        message += f"{translator.translate('admin.health_uptime', uptime=f'{health_status.uptime_seconds:.1f}')}\n\n"
+        
+        # Компоненты системы
+        message += f"{translator.translate('admin.health_components')}\n"
+        for name, component in health_status.components.items():
+            emoji = status_emoji.get(component.status, '❓')
+            component_name = {
+                'database': '💾 База данных',
+                'telegram_api': '📡 Telegram API',
+                'scheduler': '⏰ Планировщик'
+            }.get(name, f'🔧 {name.title()}')
+            
+            message += f"{emoji} **{component_name}:** {component.status.upper()}"
+            
+            if component.latency_ms:
+                message += f" ({component.latency_ms:.0f}ms)"
+            
+            message += "\n"
+            
+            if component.error:
+                message += f"   ⚠️ Ошибка: {component.error}\n"
+            
+            if component.details:
+                # Показываем только важные детали
+                important_details = {k: v for k, v in component.details.items() 
+                                   if k in ['connection', 'query_success', 'api_accessible', 'scheduler_running']}
+                if important_details:
+                    details_str = ', '.join([f"{k}: {v}" for k, v in important_details.items()])
+                    message += f"   ℹ️ {details_str}\n"
+            
+            message += "\n"
+        
+        # Добавляем рекомендации при проблемах
+        if health_status.status == "unhealthy":
+            message += "⚠️ **Обнаружены критические проблемы!**\n"
+            message += "Требуется немедленное вмешательство администратора.\n"
+        elif health_status.status == "degraded":
+            message += "⚠️ **Система работает с ограничениями.**\n"
+            message += "Рекомендуется проверить компоненты с проблемами.\n"
+        else:
+            message += "✅ **Все системы работают нормально!**\n"
+        
+        # Кнопка возврата в админ панель
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔄 Обновить", callback_data="admin_health")],
+            [InlineKeyboardButton(translator.translate('menu.back'), callback_data="menu_admin")]
+        ])
+        
+        await query.edit_message_text(
+            message,
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
+        
+        logger.info(f"Health check executed via admin panel, status: {health_status.status}")
+        
+    except Exception as e:
+        logger.error(f"Admin health check failed: {e}")
+        
+        # Fallback сообщение при ошибке
+        error_message = "❌ **Ошибка при проверке здоровья системы**\n\n"
+        error_message += f"Произошла ошибка: {str(e)}\n\n"
+        error_message += "Попробуйте еще раз или свяжитесь с технической поддержкой."
+        
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔄 Попробовать снова", callback_data="admin_health")],
+            [InlineKeyboardButton(translator.translate('menu.back'), callback_data="menu_admin")]
+        ])
+        
+        await query.edit_message_text(
+            error_message,
+            reply_markup=keyboard,
+            parse_mode='Markdown'
         )
 
 

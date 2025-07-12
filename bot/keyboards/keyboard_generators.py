@@ -201,6 +201,10 @@ class KeyboardGenerator:
                 callback_data="admin_stats"
             )],
             [InlineKeyboardButton(
+                translator.translate('admin.health_check') if translator else "🏥 Health Check", 
+                callback_data="admin_health"
+            )],
+            [InlineKeyboardButton(
                 translator.translate('admin.test_broadcast') if translator else "🧪 Test Broadcast", 
                 callback_data="admin_test_broadcast"
             )],
