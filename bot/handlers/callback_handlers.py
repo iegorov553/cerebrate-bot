@@ -235,13 +235,8 @@ async def handle_admin_panel(query, config: Config, user, db_client: DatabaseCli
         )
         return
     
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-    
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(translator.translate('admin.broadcast'), callback_data="admin_broadcast")],
-        [InlineKeyboardButton(translator.translate('admin.stats'), callback_data="admin_stats")],
-        [InlineKeyboardButton(translator.translate('menu.back'), callback_data="main_menu")]
-    ])
+    # Используем обновленный админ генератор с кнопкой Health Check
+    keyboard = KeyboardGenerator.admin_menu(translator)
     
     # Get version info
     from bot.utils.version import format_version_string, get_version_info
