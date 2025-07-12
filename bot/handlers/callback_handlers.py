@@ -1139,10 +1139,25 @@ async def handle_admin_health_check(query, db_client: DatabaseClient, config: Co
             "unhealthy": "❌"
         }
         
-        # Основная информация
+        # Функция для безопасного экранирования текста для Markdown
+        def escape_markdown(text):
+            """Escape special characters for Markdown."""
+            if not text:
+                return ""
+            # Экранируем специальные символы Markdown
+            special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+            escaped_text = str(text)
+            for char in special_chars:
+                escaped_text = escaped_text.replace(char, f'\\{char}')
+            return escaped_text
+        
+        # Основная информация с безопасным экранированием
         message = f"{translator.translate('admin.health_check_title')}\n\n"
         message += f"{status_emoji.get(health_status.status, '❓')} {translator.translate('admin.health_status', status=health_status.status.upper())}\n"
-        message += f"📅 **Время проверки:** {health_status.timestamp}\n"
+        
+        # Безопасное время без экранирования (только дата/время)
+        timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
+        message += f"📅 **Время проверки:** `{timestamp_safe}`\n"
         message += f"{translator.translate('admin.health_version', version=health_status.version)}\n"
         message += f"{translator.translate('admin.health_uptime', uptime=f'{health_status.uptime_seconds:.1f}')}\n\n"
         
@@ -1152,7 +1167,7 @@ async def handle_admin_health_check(query, db_client: DatabaseClient, config: Co
             emoji = status_emoji.get(component.status, '❓')
             component_name = {
                 'database': '💾 База данных',
-                'telegram_api': '📡 Telegram API',
+                'telegram_api': '📡 Telegram API', 
                 'scheduler': '⏰ Планировщик'
             }.get(name, f'🔧 {name.title()}')
             
@@ -1164,15 +1179,20 @@ async def handle_admin_health_check(query, db_client: DatabaseClient, config: Co
             message += "\n"
             
             if component.error:
-                message += f"   ⚠️ Ошибка: {component.error}\n"
+                # Безопасно экранируем сообщение об ошибке
+                safe_error = escape_markdown(component.error)
+                message += f"   ⚠️ Ошибка: `{safe_error}`\n"
             
             if component.details:
-                # Показываем только важные детали
+                # Показываем только важные детали с экранированием
                 important_details = {k: v for k, v in component.details.items() 
                                    if k in ['connection', 'query_success', 'api_accessible', 'scheduler_running']}
                 if important_details:
-                    details_str = ', '.join([f"{k}: {v}" for k, v in important_details.items()])
-                    message += f"   ℹ️ {details_str}\n"
+                    safe_details = []
+                    for k, v in important_details.items():
+                        safe_details.append(f"{k}: {v}")
+                    details_str = ', '.join(safe_details)
+                    message += f"   ℹ️ `{details_str}`\n"
             
             message += "\n"
         
@@ -1204,9 +1224,14 @@ async def handle_admin_health_check(query, db_client: DatabaseClient, config: Co
     except Exception as e:
         logger.error(f"Admin health check failed: {e}")
         
-        # Fallback сообщение при ошибке
+        # Fallback сообщение при ошибке с безопасным экранированием
+        def escape_markdown_simple(text):
+            """Simple escape for error messages."""
+            return str(text).replace('_', '\\_').replace('*', '\\*').replace('`', '\\`').replace('[', '\\[').replace(']', '\\]')
+        
         error_message = "❌ **Ошибка при проверке здоровья системы**\n\n"
-        error_message += f"Произошла ошибка: {str(e)}\n\n"
+        safe_error = escape_markdown_simple(str(e))
+        error_message += f"Произошла ошибка: `{safe_error}`\n\n"
         error_message += "Попробуйте еще раз или свяжитесь с технической поддержкой."
         
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup

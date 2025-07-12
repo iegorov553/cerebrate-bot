@@ -627,9 +627,18 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "unhealthy": "❌"
         }
         
+        # Безопасное экранирование для Markdown
+        def escape_markdown_safe(text):
+            if not text:
+                return ""
+            return str(text).replace('_', '\\_').replace('*', '\\*').replace('`', '\\`').replace('[', '\\[').replace(']', '\\]')
+        
         message = f"🏥 **System Health Check**\n\n"
         message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {health_status.status}\n"
-        message += f"📅 **Timestamp:** {health_status.timestamp}\n"
+        
+        # Безопасное время
+        timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
+        message += f"📅 **Timestamp:** `{timestamp_safe}`\n"
         message += f"🔢 **Version:** {health_status.version}\n"
         message += f"⏱️ **Uptime:** {health_status.uptime_seconds:.1f}s\n\n"
         
@@ -642,7 +651,8 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 message += f" ({component.latency_ms:.0f}ms)"
             
             if component.error:
-                message += f"\n   ⚠️ Error: {component.error}"
+                safe_error = escape_markdown_safe(component.error)
+                message += f"\n   ⚠️ Error: `{safe_error}`"
                 
             message += "\n"
         
