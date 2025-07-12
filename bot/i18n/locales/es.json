@@ -152,6 +152,7 @@
     "registration": "❌ Error de registro. Por favor intenta más tarde.",
     "database": "❌ Error de base de datos. Por favor intenta más tarde.",
     "unknown_callback": "❌ Comando desconocido.",
+    "unknown_action": "❌ Acción desconocida.",
     "notification_failed": "⚠️ Error al enviar notificación al usuario {user_id}"
   },
   

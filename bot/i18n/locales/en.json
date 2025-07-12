@@ -152,6 +152,7 @@
     "registration": "❌ Registration error. Please try later.",
     "database": "❌ Database error. Please try later.",
     "unknown_callback": "❌ Unknown command.",
+    "unknown_action": "❌ Unknown action.",
     "notification_failed": "⚠️ Failed to send notification to user {user_id}"
   },
   

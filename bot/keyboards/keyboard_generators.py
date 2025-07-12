@@ -28,10 +28,21 @@ class KeyboardGenerator:
             from bot.i18n.translator import Translator
             translator = Translator()
             
+        # Import WebAppInfo here to avoid circular imports
+        from telegram import WebAppInfo
+        from bot.config import Config
+        
+        # Get webapp URL from config
+        try:
+            config = Config.from_env()
+            webapp_url = config.webapp_url
+        except:
+            webapp_url = "https://doyobi-diary.vercel.app"  # fallback
+        
         keyboard = [
             [InlineKeyboardButton(translator.translate("menu.questions"), callback_data="menu_questions")],
             [InlineKeyboardButton(translator.translate("menu.friends"), callback_data="menu_friends")],
-            [InlineKeyboardButton(translator.translate("menu.history"), callback_data="menu_history")],
+            [InlineKeyboardButton(translator.translate("menu.history"), web_app=WebAppInfo(url=webapp_url))],
         ]
         
         if is_admin:
@@ -371,10 +382,10 @@ class KeyboardGenerator:
         Returns:
             InlineKeyboardMarkup with web app button
         """
-        from telegram import WebApp
+        from telegram import WebAppInfo
         
         keyboard = [
-            [InlineKeyboardButton(text, web_app=WebApp(url=url))],
+            [InlineKeyboardButton(text, web_app=WebAppInfo(url=url))],
             [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
         ]
         return InlineKeyboardMarkup(keyboard)

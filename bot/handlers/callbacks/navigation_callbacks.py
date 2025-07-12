@@ -31,9 +31,7 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         """Check if this handler can process the callback data."""
         navigation_callbacks = {
             'back_main',      # Standard "back to main menu" button
-            'menu_language',  # Language selection menu
-            'menu_history',   # History/webapp access
-            'history'         # Direct history access
+            'menu_language'   # Language selection menu
         }
         
         return (data in navigation_callbacks or 
@@ -54,9 +52,6 @@ class NavigationCallbackHandler(BaseCallbackHandler):
             
         elif data.startswith("language_"):
             await self._handle_language_change(query, data, translator)
-            
-        elif data in ["menu_history", "history"]:
-            await self._handle_history(query, translator)
             
         else:
             self.logger.warning("Unhandled navigation callback", callback_data=data)

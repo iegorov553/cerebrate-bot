@@ -276,8 +276,8 @@ class TestNavigationCallbackHandler:
         assert handler.can_handle("back_main") == True
         assert handler.can_handle("menu_language") == True
         assert handler.can_handle("language_en") == True
-        assert handler.can_handle("menu_history") == True
-        assert handler.can_handle("history") == True
+        assert handler.can_handle("menu_history") == False  # Now handled by WebApp directly
+        assert handler.can_handle("history") == False       # Now handled by WebApp directly
         assert handler.can_handle("settings_enable") == False
     
     @pytest.mark.asyncio
