@@ -17,7 +17,15 @@ from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.handlers.admin_conversations import setup_admin_conversations
 from bot.handlers.admin_handlers import setup_admin_handlers
-from bot.handlers.callback_handlers import setup_callback_handlers
+from bot.handlers.base.callback_router import CallbackRouter
+from bot.handlers.callbacks import (
+    NavigationCallbackHandler,
+    SettingsCallbackHandler,
+    FeedbackCallbackHandler,
+    FriendsCallbackHandler,
+    AdminCallbackHandler,
+    QuestionsCallbackHandler,
+)
 from bot.handlers.command_handlers import setup_command_handlers
 from bot.handlers.error_handler import setup_error_handler
 from bot.handlers.message_handlers import setup_message_handlers
@@ -74,7 +82,21 @@ async def create_application() -> Application:
     setup_command_handlers(application, db_client, user_cache, rate_limiter, config)
     setup_admin_handlers(application, db_client, rate_limiter, config)
     setup_admin_conversations(application, db_client, rate_limiter, config)  # NEW: Admin conversations
-    setup_callback_handlers(application, db_client, user_cache, rate_limiter, config)
+    # Setup modular callback handlers
+    callback_router = CallbackRouter(db_client, config, user_cache)
+    callback_router.register_handler(NavigationCallbackHandler(db_client, config, user_cache))
+    callback_router.register_handler(SettingsCallbackHandler(db_client, config, user_cache))
+    callback_router.register_handler(FeedbackCallbackHandler(db_client, config, user_cache))
+    callback_router.register_handler(FriendsCallbackHandler(db_client, config, user_cache))
+    callback_router.register_handler(AdminCallbackHandler(db_client, config, user_cache))
+    callback_router.register_handler(QuestionsCallbackHandler(db_client, config, user_cache))
+    
+    # Register the router's main handler
+    from telegram.ext import CallbackQueryHandler
+    application.add_handler(CallbackQueryHandler(callback_router.route_callback))
+    
+    logger.info("Modular callback handlers configured", 
+               total_handlers=len(callback_router.handlers))
     setup_message_handlers(application, db_client, user_cache, rate_limiter, config)
     setup_voice_handlers(application, db_client, user_cache, rate_limiter, config)
     
