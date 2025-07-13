@@ -21,9 +21,7 @@ from bot.config import Config
 from supabase import create_client, Client
 import os
 import sys
-import asyncio
-from datetime import datetime
-from typing import Dict, List, Any
+# Removed unused imports: asyncio, datetime, typing imports
 
 # Добавляем путь к проекту
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

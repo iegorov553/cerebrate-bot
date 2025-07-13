@@ -5,8 +5,7 @@ This module handles the scheduling of notifications and periodic tasks.
 """
 
 import asyncio
-from datetime import datetime, time, timezone
-from typing import Optional
+from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram.ext import Application

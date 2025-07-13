@@ -3,7 +3,7 @@ Main translation engine for Doyobi Diary.
 """
 import json
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from monitoring import get_logger
 

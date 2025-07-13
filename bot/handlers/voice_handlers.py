@@ -9,7 +9,7 @@ This module handles voice messages by:
 
 import os
 import tempfile
-from typing import Optional
+# typing imports removed - using modern Python syntax
 from telegram import Update, Voice
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 

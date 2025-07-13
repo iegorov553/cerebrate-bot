@@ -5,8 +5,8 @@ This module handles the scheduling of notifications for multiple user questions
 with individual schedules and reply tracking.
 """
 
-from datetime import datetime, time, timedelta, timezone
-from typing import Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Dict, Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram.ext import Application

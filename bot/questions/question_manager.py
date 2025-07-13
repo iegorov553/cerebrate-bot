@@ -5,8 +5,8 @@ This module provides high-level business logic for managing user questions,
 including versioning, validation, and reply tracking.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, Optional, Tuple
 
 from bot.database.question_operations import QuestionOperations
 from monitoring import get_logger, track_errors_async
