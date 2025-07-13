@@ -92,18 +92,30 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     user_data = await user_ops.get_user_settings(user.id)
 
     if not user_data:
+        # Get user language and translator
+        user_language = detect_user_language(user)
+        translator = get_translator()
+        translator.set_language(user_language)
+        
         await update.message.reply_text(
-            "❌ Не удалось получить настройки. Попробуйте /start"
+            translator.translate('settings.error_missing')
         )
         return
 
-    # Create settings menu
-    keyboard = create_settings_menu()
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
 
-    settings_text = f"⚙️ **Твои настройки:**\n\n" \
-        f"🔔 Уведомления: {'✅ Включены' if user_data['enabled'] else '❌ Отключены'}\n" \
-        f"⏰ Время: {user_data['window_start']} - {user_data['window_end']}\n" \
-        f"📊 Частота: каждые {user_data['interval_min']} минут"
+    # Create settings menu
+    keyboard = create_settings_menu(translator)
+
+    status = translator.translate('settings.enabled') if user_data['enabled'] else translator.translate('settings.disabled')
+    
+    settings_text = f"{translator.translate('settings.settings_title')}\n\n" \
+        f"{translator.translate('settings.notifications_status', status=status)}\n" \
+        f"{translator.translate('settings.time_display', start=user_data['window_start'], end=user_data['window_end'])}\n" \
+        f"{translator.translate('settings.frequency_display', minutes=user_data['interval_min'])}"
 
     await update.message.reply_text(
         settings_text,
@@ -154,11 +166,16 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     set_user_context(user.id, user.username, user.first_name)
 
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+
     if not context.args:
         await update.message.reply_text(
-            "👥 **Добавить друга**\n\n"
-            "Использование: `/add_friend @username`\n\n"
-            "Пример: `/add_friend @john_doe`",
+            f"{translator.translate('friends.add_friend_title')}\n\n"
+            f"{translator.translate('friends.add_friend_usage')}\n\n"
+            f"{translator.translate('friends.add_friend_example')}",
             parse_mode='Markdown'
         )
         return
@@ -171,7 +188,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not is_valid:
         await update.message.reply_text(
             f"❌ {error_msg}\n\n"
-            "Пример: `/add_friend @username`",
+            f"{translator.translate('friends.add_friend_example')}",
             parse_mode='Markdown'
         )
         return
@@ -191,8 +208,8 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     target_user = await user_ops.find_user_by_username(target_username)
     if not target_user:
         await update.message.reply_text(
-            f"❌ Пользователь @{target_username} не найден.\n\n"
-            "Убедитесь, что пользователь зарегистрирован в боте."
+            f"{translator.translate('friends.user_not_found', username=target_username)}\n\n"
+            f"{translator.translate('friends.add_friend_note')}"
         )
         return
 
@@ -202,8 +219,8 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     success = await friend_ops.create_friend_request(user.id, target_id)
     if success:
         await update.message.reply_text(
-            f"📤 Запрос в друзья отправлен пользователю @{target_username}!\n\n"
-            "Ожидайте подтверждения."
+            f"{translator.translate('friends.request_sent', username=target_username)}\n\n"
+            f"{translator.translate('friends.add_friend_waiting')}"
         )
 
         # Notify target user if possible
@@ -211,14 +228,14 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await context.bot.send_message(
                 chat_id=target_id,
                 text=f"👤 Пользователь @{user.username or user.first_name} хочет добавить вас в друзья!\n\n"
-                     f"Используйте /friend_requests для управления запросами."
+                     f"{translator.translate('friends.add_friend_help')}"
             )
         except Exception as e:
             logger.warning(f"Could not notify user {target_id}: {e}")
 
     else:
         await update.message.reply_text(
-            "❌ Ошибка при отправке запроса в друзья. Попробуйте позже."
+            translator.translate('friends.request_failed')
         )
 
 
@@ -232,12 +249,17 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     set_user_context(user.id, user.username, user.first_name)
 
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+
     # Create friends menu
     keyboard = create_friends_menu()
 
     await update.message.reply_text(
-        "👥 **Друзья**\n\n"
-        "Выбери действие:",
+        f"{translator.translate('friends.title')}\n\n"
+        f"{translator.translate('friends.choose_action')}",
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
@@ -253,6 +275,11 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
 
     set_user_context(user.id, user.username, user.first_name)
 
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
 
@@ -265,26 +292,26 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     incoming = requests_data.get('incoming', [])
     outgoing = requests_data.get('outgoing', [])
 
-    text = "📥 **Запросы в друзья**\n\n"
+    text = f"📥 **{translator.translate('friends.requests')}**\n\n"
 
     if incoming:
-        text += "**Входящие запросы:**\n"
+        text += f"{translator.translate('friends.requests_incoming')}\n"
         for req in incoming[:5]:  # Показываем только первые 5
-            username = req.get('tg_username', 'Неизвестно')
+            username = req.get('tg_username', translator.translate('common.unknown'))
             name = req.get('tg_first_name', '')
             text += f"• @{username} ({name})\n"
             text += f"  `/accept @{username}` | `/decline @{username}`\n\n"
     else:
-        text += "**Входящие запросы:** нет\n\n"
+        text += f"{translator.translate('friends.requests_none_incoming')}\n\n"
 
     if outgoing:
-        text += "**Исходящие запросы:**\n"
+        text += f"{translator.translate('friends.requests_outgoing')}\n"
         for req in outgoing[:5]:  # Показываем только первые 5
-            username = req.get('tg_username', 'Неизвестно')
+            username = req.get('tg_username', translator.translate('common.unknown'))
             name = req.get('tg_first_name', '')
-            text += f"• @{username} ({name}) - ожидает ответа\n"
+            text += f"• @{username} ({name}) {translator.translate('friends.request_waiting')}\n"
     else:
-        text += "**Исходящие запросы:** нет"
+        text += translator.translate('friends.requests_none_outgoing')
 
     await update.message.reply_text(text, parse_mode='Markdown')
 
@@ -299,10 +326,15 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     set_user_context(user.id, user.username, user.first_name)
 
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+
     if not context.args:
         await update.message.reply_text(
-            "👥 **Принять в друзья**\n\n"
-            "Использование: `/accept @username`",
+            f"👥 **Принять в друзья**\n\n"
+            f"{translator.translate('friends.accept_usage')}",
             parse_mode='Markdown'
         )
         return
@@ -323,7 +355,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
         await update.message.reply_text(
-            f"❌ Пользователь @{target_username} не найден."
+            translator.translate('friends.user_not_found', username=target_username)
         )
         return
 
@@ -331,15 +363,15 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
     success = await friend_ops.accept_friend_request(requester['tg_id'], user.id)
     if success:
         await update.message.reply_text(
-            f"✅ Заявка в друзья от @{target_username} принята!\n\n"
-            "Теперь вы друзья! 🎉"
+            f"{translator.translate('friends.request_accepted', username=target_username)}\n\n"
+            f"{translator.translate('friends.accept_success')}"
         )
 
         # Notify requester if possible
         try:
             await context.bot.send_message(
                 chat_id=requester['tg_id'],
-                text=f"🎉 @{user.username or user.first_name} принял вашу заявку в друзья!"
+                text=translator.translate('friends.request_notification_sent', username=user.username or user.first_name)
             )
         except Exception as e:
             logger.warning(f"Could not notify user {requester['tg_id']}: {e}")

@@ -74,7 +74,7 @@ async def send_response_by_status(
         try:
             await message.reply_text("✅ " + translator.translate('activity.recorded'))
         except BaseException:
-            await message.reply_text("✅ Записано!")
+            await message.reply_text(translator.translate('common.recorded'))
 
 
 @rate_limit("general")
@@ -176,12 +176,12 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             else:
                 logger.warning("Failed to log activity", user_id=user.id)
                 await message.reply_text(
-                    "❌ Не удалось записать активность. Попробуйте ещё раз."
+                    translator.translate('common.error_save')
                 )
         else:
             logger.error("No question found for user", user_id=user.id)
             await message.reply_text(
-                "❌ Ошибка системы вопросов. Попробуйте команду /start"
+                translator.translate('common.error_system')
             )
 
     except Exception as e:
