@@ -1,320 +1,347 @@
-# CLAUDE.md - Technical Reference
+# CLAUDE.md
 
-This document provides essential technical guidance for working with the Doyobi Diary Telegram bot project. It serves as a technical reference for code maintenance and architecture understanding.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**Doyobi Diary** is a production-ready Telegram bot built with modular architecture for activity tracking, social features, and voice message processing.
+**Doyobi Diary** is a modern Telegram bot for activity tracking and social connections with Enterprise-grade architecture. The project features a comprehensive ecosystem including a bot, web application, and monitoring system with hybrid modular architecture.
 
-**Core Features:**
-- Activity tracking with personalized notifications
-- Voice message transcription via OpenAI Whisper API
-- Social friend system with discovery algorithms
-- Multi-language support (Russian, English, Spanish)
-- Health monitoring and admin management
-- Web interface integration
+## Technology Stack
 
-**Version:** 2.1.19
-**Architecture:** Modular async Python with dependency injection
-**Database:** Supabase (PostgreSQL)
-**Deployment:** Railway (bot) + Vercel (webapp)
-
-## Environment Variables
-
-### Required Configuration
-```bash
-TELEGRAM_BOT_TOKEN=<bot_token_from_botfather>
-SUPABASE_URL=https://<project>.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
-```
-
-### Optional Services
-```bash
-OPENAI_API_KEY=sk-<key>              # Voice message transcription
-ADMIN_USER_ID=<telegram_id>          # Admin access
-GITHUB_FEEDBACK_TOKEN=ghp-<token>    # GitHub Issues integration
-GITHUB_REPO=iegorov553/cerebrate-bot
-SENTRY_DSN=https://<dsn>@sentry.io   # Error monitoring
-WEBAPP_URL=https://doyobi-diary.vercel.app
-BOT_VERSION=2.1.19
-ENVIRONMENT=production
-```
-
-## Architecture Overview
-
-### Entry Point
-**File:** `main.py`
-**Pattern:** Factory + Dependency Injection
-**Components:**
-- `create_application()` - application factory
-- Component initialization: DatabaseClient, MultiTierRateLimiter, TTLCache
-- Handler setup via `setup_*` functions
-- Multi-question scheduler service startup
-
-### Core Components
-
-#### Configuration (`bot/config.py`)
-- `Config` dataclass with environment variable loading
-- `from_env()` factory method
-- `validate()` for required parameter checking
-
-#### Database Layer (`bot/database/`)
-- `DatabaseClient` - Supabase wrapper with health checks
-- `UserOperations` - user management with TTL caching
-- `FriendOperations` - optimized friend operations and discovery
-- `QuestionOperations` - custom question system
-
-#### Handlers (`bot/handlers/`)
-- `command_handlers.py` - slash commands (/start, /settings, etc.)
-- `base/callback_router.py` - central callback dispatcher with handler registry
-- `base/base_handler.py` - abstract base class for all callback handlers
-- `callbacks/navigation_callbacks.py` - main menu and navigation handlers
-- `callbacks/settings_callbacks.py` - user settings management
-- `callbacks/friends_callbacks.py` - social features and friend discovery
-- `callbacks/questions_callbacks.py` - custom question system
-- `callbacks/feedback_callbacks.py` - user feedback submission
-- `callbacks/admin_callbacks.py` - administrative functions
-- `voice_handlers.py` - OpenAI Whisper integration
-- `message_handlers.py` - text message processing
-- Rate limiting via decorators, monitoring via structlog
-
-#### Services (`bot/services/`)
-- `MultiQuestionScheduler` - time-based notification system
-- `WhisperClient` - OpenAI Whisper API integration
-- `HealthService` - system health monitoring
-
-#### Utilities (`bot/utils/`)
-- `MultiTierRateLimiter` - sliding window rate limiting
-- `TTLCache` - time-to-live caching with background cleanup
-- `version.py` - version management and display
-
-### Architectural Patterns
-
-#### Core Patterns
-- **Repository Pattern** - database operations abstraction
-- **Factory Pattern** - application and component creation
-- **Strategy Pattern** - different handler types and languages
-- **Decorator Pattern** - rate limiting and monitoring
-- **Chain of Responsibility** - handler processing
-
-#### Optimization Patterns
-- **TTL Caching** - reduce database load
-- **Batch Loading** - avoid N+1 queries in friend operations
-- **Background Workers** - async cleanup and maintenance
-- **Circuit Breaker** - external service failure handling
+- **Backend**: Python 3.8+ with python-telegram-bot==20.3, Supabase (PostgreSQL), APScheduler
+- **Frontend**: Next.js 15 with TypeScript, React 18.3.1, Tailwind CSS
+- **Infrastructure**: Docker, Railway (bot), Vercel (web app), GitHub Actions
+- **Development**: pytest, black, flake8, mypy, bandit, pre-commit
+- **Monitoring**: Sentry, structured logging, health checks
 
 ## Development Commands
 
+### Testing
 ```bash
-python3 main.py                      # Run bot
-python3 -m pytest                    # Run tests
-python3 -m pytest --cov=. --cov-report=html  # Coverage report
-flake8 .                             # Linting
-black .                              # Code formatting
-python3 scripts/update_version.py    # Version increment
+# Run all tests
+python3 -m pytest
+
+# Run with coverage
+python3 -m pytest --cov=. --cov-report=html
+
+# Run only unit tests
+python3 -m pytest tests/ -m "not integration"
+
+# Run integration tests
+python3 -m pytest tests/ -m "integration"
 ```
 
-## Database Schema
+### Code Quality
+```bash
+# Linting
+flake8 . --max-line-length=127
 
-### Core Tables
-```sql
--- User management
-CREATE TABLE users (
-    tg_id BIGINT PRIMARY KEY,
-    tg_username TEXT,
-    tg_first_name TEXT,
-    enabled BOOLEAN DEFAULT true,
-    window_start TIME DEFAULT '09:00',
-    window_end TIME DEFAULT '22:00',
-    interval_min INTEGER DEFAULT 120,
-    language VARCHAR(5) DEFAULT 'ru'
-);
+# Formatting
+black .
 
--- Activity logging
-CREATE TABLE tg_jobs (
-    id BIGSERIAL PRIMARY KEY,
-    tg_id BIGINT REFERENCES users(tg_id),
-    job_text TEXT NOT NULL,
-    jobs_timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+# Type checking
+mypy . --ignore-missing-imports
 
--- Friend system
-CREATE TABLE friendships (
-    id BIGSERIAL PRIMARY KEY,
-    requester_id BIGINT REFERENCES users(tg_id),
-    addressee_id BIGINT REFERENCES users(tg_id),
-    status TEXT CHECK (status IN ('pending', 'accepted', 'declined')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Custom questions
-CREATE TABLE user_questions (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(tg_id),
-    question_text TEXT NOT NULL,
-    is_active BOOLEAN DEFAULT true
-);
-
-CREATE TABLE user_question_schedules (
-    id BIGSERIAL PRIMARY KEY,
-    user_question_id BIGINT REFERENCES user_questions(id),
-    window_start TIME NOT NULL,
-    window_end TIME NOT NULL,
-    interval_minutes INTEGER NOT NULL
-);
+# Security scanning
+bandit -r . -ll
 ```
 
-## Key Technical Features
+### Docker Development
+```bash
+# Build image
+docker build -t doyobi-diary .
 
-### Rate Limiting
-```python
-LIMITS = {
-    "general": (20, 60),           # 20 requests per minute
-    "friend_request": (5, 3600),   # 5 requests per hour
-    "feedback": (3, 3600),         # 3 feedback messages per hour
-    "voice_message": (10, 3600),   # 10 voice messages per hour
-    "admin": (50, 60),             # 50 requests per minute
-}
+# Run with docker-compose
+docker-compose up -d
+
+# Development with live reload
+docker-compose -f docker-compose.dev.yml up
 ```
 
-### Internationalization
-- **Languages:** Russian (default), English, Spanish
-- **Implementation:** `bot.i18n.translator.Translator`
-- **Usage:** `translator.translate('key', variable=value)`
-- **Fallback:** English if key missing in target language
-- **Auto-detection:** From Telegram user.language_code
+## Architecture
 
-### Voice Message Processing
-- **Service:** OpenAI Whisper API integration
-- **Formats:** MP3, MP4, MPEG, MPGA, M4A, WAV, WebM, OGG, OGA
-- **Limits:** 25MB file size, 120 seconds duration
-- **Caching:** TTL cache for transcription results
-- **Flow:** Download → Validate → Transcribe → Process as text
+### Hybrid Architecture (75% Migration Complete)
+The project uses a hybrid approach combining:
+- **Modular structure** for new components (`/bot/` directory) ✅ 
+- **Legacy monolithic handlers** being gradually refactored ⚠️
+- **Backward compatibility** maintained during transition
 
-### Friend Discovery Algorithm
-- **Method:** "friends of friends" with SQL optimization
-- **Implementation:** `FriendOperations.get_friends_of_friends_optimized()`
-- **Filtering:** Excludes existing friends and pending requests
-- **UI:** Inline keyboards with mutual friend details
-- **Performance:** Batch queries to avoid N+1 problems
-
-### Health Monitoring
-- **Command:** `/health` for basic checks
-- **Admin Interface:** Detailed system health via admin panel
-- **Components:** Database, Telegram API, scheduler status
-- **Metrics:** Response time, error rates, uptime
-- **Implementation:** `bot.services.health_service.HealthService`
-
-## Error Handling
-
-### Exception Hierarchy
-```python
-# Custom exceptions in bot.utils.exceptions
-class BotException(Exception): pass
-class RateLimitExceeded(BotException): pass
-class AdminRequired(BotException): pass
-class ValidationError(BotException): pass
+### Current Module Structure
+```
+bot/
+├── config.py              # ✅ Centralized configuration (dataclass)
+├── database/              # ✅ Repository pattern data access
+│   ├── client.py          #     Database client with connection pooling
+│   ├── user_operations.py #     User management with caching
+│   ├── friend_operations.py #   90% faster friend discovery
+│   └── question_operations.py # Question management
+├── admin/                 # ✅ Administrative functions  
+│   ├── admin_operations.py #    Admin utilities and verification
+│   └── broadcast_manager.py #   Mass messaging with batching
+├── questions/             # ✅ Question system with versioning
+│   ├── question_manager.py #    Business logic with 5-question limit
+│   └── question_templates.py #  Predefined templates
+├── services/              # ✅ Background services
+│   ├── scheduler_service.py #   APScheduler integration
+│   ├── multi_question_scheduler.py # Individual schedules
+│   ├── health_service.py  #     System monitoring
+│   └── whisper_client.py  #     OpenAI voice transcription
+├── cache/                 # ✅ TTL caching (80% UI speed improvement)
+│   └── ttl_cache.py       #     5-minute TTL with auto-cleanup
+├── handlers/              # ⚠️ REFACTORING NEEDED
+│   ├── base/              # ✅ Modular callback routing
+│   ├── callbacks/         # ⚠️ Large files need splitting
+│   ├── command_handlers.py # ⚠️ 736 lines - needs refactoring
+│   ├── error_handler.py   # ✅ Centralized error handling
+│   └── rate_limit_handler.py # ✅ Rate limiting integration
+├── utils/                 # ✅ Cross-cutting utilities
+│   ├── rate_limiter.py    #     Multi-tier rate limiting
+│   ├── datetime_utils.py  #     Safe parsing utilities
+│   ├── cache_manager.py   #     Cache operations
+│   └── exceptions.py      #     Custom exceptions
+├── keyboards/             # ✅ UI generation
+│   └── keyboard_generators.py # Inline keyboard creation
+├── i18n/                  # ✅ Internationalization (3 languages)
+│   ├── translator.py      #     Template-based translations
+│   ├── language_detector.py #   Auto language detection
+│   └── locales/           #     ru.json, en.json, es.json
+└── feedback/              # ✅ GitHub Issues integration
+    ├── feedback_manager.py #    User feedback collection
+    └── github_client.py   #     GitHub API automation
 ```
 
-### Monitoring Integration
-- **Sentry:** Error tracking and performance monitoring
-- **Structlog:** Structured logging with context
-- **Health Checks:** System component monitoring
-- **Rate Limiting:** Multi-tier protection against abuse
+### Core Components
+
+#### Configuration Management (`bot/config.py`)
+- **Dataclass-based** configuration with validation
+- **Environment variable** loading with defaults  
+- **Feature flags** for optional services (Whisper, Feedback, Monitoring)
+- **Safe parsing** of admin IDs and numeric values
+
+#### Database Layer (`bot/database/`)
+- **Repository pattern** with domain separation
+- **Connection pooling** and health checks
+- **Optimized queries** - 90% performance improvement for friend discovery
+- **SQL functions** for complex operations (friends-of-friends)
+- **Cache integration** for frequently accessed data
+
+#### Multi-Tier Rate Limiting (`bot/utils/rate_limiter.py`)
+- **Action-specific limits**:
+  - General commands: 20/minute
+  - Friend requests: 5/hour (anti-spam)
+  - Discovery: 3/minute (resource-intensive)
+  - Voice messages: 10/hour (API costs)
+  - Feedback: 3/hour (GitHub API)
+  - Admin: 50/minute
+- **Sliding window algorithm** for fair distribution
+- **User isolation** preventing cross-user impact
+
+#### TTL Caching System (`bot/cache/ttl_cache.py`)
+- **5-minute TTL** for user settings
+- **Automatic invalidation** on data updates
+- **80% performance improvement** for UI operations
+- **Background cleanup** of expired entries
+- **Memory-efficient** with size limits
+
+#### Internationalization (`bot/i18n/`)
+- **3 languages**: Russian (default), English, Spanish
+- **Automatic detection** from Telegram user preferences
+- **Template variables** with parameter substitution
+- **Fallback mechanism** for missing translations
+- **Pluralization support** for complex grammar
+
+#### Service Layer (`bot/services/`)
+- **Multi-question scheduler** with individual user schedules
+- **Health monitoring** for system components
+- **Whisper AI integration** for voice message transcription
+- **Background task management** with error tracking
+
+#### Feedback System (`bot/feedback/`)
+- **GitHub Issues automation** for bug reports and feature requests
+- **3 feedback types**: bug_report, feature_request, general
+- **Rate limiting** and session management
+- **Admin notification** integration
 
 ## Testing Infrastructure
 
-### Test Structure
-```
-tests/
-├── test_new_components.py      # 7 architectural component tests
-├── test_rate_limiter.py        # 14 rate limiting tests  
-├── test_i18n.py               # 24 internationalization tests
-├── test_handlers_integration.py # 7 handler integration tests
-└── test_integration.py        # 4 integration tests
-```
+### Test Coverage: 60%+ and Growing
+- **pytest** with async support and fixtures
+- **pytest-cov** for coverage analysis  
+- **pytest-mock** for dependency isolation
+- **25+ automated tests** covering:
+  - Unit tests (utility functions)
+  - Component tests (rate limiter, cache)
+  - Integration tests (database operations)
+  - i18n tests (translation validation)
 
-### Coverage Areas
-- Handler functionality and error cases
-- Rate limiting behavior and edge cases
-- Internationalization with template variables
-- Database operations and caching
-- Voice message processing workflow
+### Test Configuration
+- `/pytest.ini` - test discovery and markers
+- `/pyproject.toml` - coverage configuration  
+- `/tests/conftest.py` - shared fixtures and mocks
+- CI/CD integration with GitHub Actions
 
-## Deployment Configuration
+## Performance Achievements
 
-### Production Stack
-- **Bot Service:** Railway with automatic deployments
-- **Web Interface:** Vercel with Next.js
-- **Database:** Supabase (managed PostgreSQL)
-- **Monitoring:** Sentry for error tracking
-- **Version Control:** Git hooks for automated versioning
+### Measured Improvements
+- **Friend discovery**: 90% faster (500ms+ → 50ms) via SQL optimization
+- **Settings loading**: 80% faster (200ms → 40ms) via TTL caching
+- **Database queries**: N+1 problems eliminated
+- **Test coverage**: 0% → 60%+ with automated testing
+- **Cache hit rate**: 85%+ efficiency
 
-### Docker Support
-- **Dockerfile:** Multi-stage build with security best practices
-- **docker-compose.yml:** Development and production configurations
-- **Health Checks:** Built-in container health monitoring
-- **Security:** Non-root user, minimal attack surface
+### Performance Targets
+- Response time: <100ms for cached operations
+- Throughput: 1000+ requests/minute
+- Uptime: 99.9%+ availability
+- Error rate: <0.1% unhandled errors
 
-### Environment-Specific Settings
-```bash
-# Development
-ENVIRONMENT=development
-LOG_LEVEL=DEBUG
+## Security Features
 
-# Production  
-ENVIRONMENT=production
-LOG_LEVEL=INFO
-RAILWAY_GIT_COMMIT_SHA=<commit_hash>
-```
+### Multi-Layer Security
+- **Input validation** with Python type hints
+- **SQL injection prevention** via Supabase ORM
+- **Rate limiting** by action type and user
+- **Admin authorization** with secure verification
+- **Error boundary isolation** preventing system failures
+- **Secure configuration** with environment variable validation
 
-## Code Organization Principles
+## Monitoring and Operations
 
-### Modular Design
-- **Separation of Concerns:** Each module has single responsibility
-- **Loose Coupling:** Modules interact through well-defined interfaces
-- **High Cohesion:** Related functionality grouped together
-- **Dependency Injection:** Components passed through bot_data
+### Production Monitoring
+- **Sentry integration** for error tracking and alerting
+- **Structured logging** with correlation IDs
+- **Health checks** for all system components
+- **Performance metrics** collection
+- **GitHub Actions** for CI/CD monitoring
 
-### Naming Conventions
-- **Files:** snake_case for Python modules
-- **Classes:** PascalCase with descriptive names
-- **Functions:** snake_case with verb_noun pattern
-- **Constants:** UPPER_SNAKE_CASE
+### Deployment Architecture
+- **Railway** for bot hosting with auto-scaling
+- **Vercel** for web application with CDN
+- **Supabase** for PostgreSQL with RLS policies
+- **GitHub Actions** for automated testing and deployment
 
-### Import Organization
-```python
-# Standard library imports
-import asyncio
-from typing import Optional
+## Code Guidelines
 
-# Third-party imports
-from telegram import Update
-from telegram.ext import Application
+### Development Standards
+- **Python 3.8+** with comprehensive type hints
+- **Modular architecture** with clear separation of concerns
+- **Repository pattern** for data access
+- **Dependency injection** through constructors
+- **Error handling** with custom exceptions
+- **Never hardcode** user-facing text (use i18n system)
 
-# Local imports
-from bot.database.client import DatabaseClient
-from bot.utils.exceptions import BotException
-```
+### Quality Requirements
+- **All new features** must have automated tests
+- **Code coverage** minimum 60% for new modules
+- **PEP 8 compliance** enforced by black formatter
+- **Type checking** with mypy
+- **Security scanning** with bandit
+- **Documentation** updated before commits
 
-## Security Considerations
+## Architectural Patterns
 
-### Input Validation
-- All user inputs sanitized before database operations
-- Markdown escaping for message formatting
-- File size and type validation for voice messages
-- SQL injection prevention through parameterized queries
+- **Repository Pattern**: Data access abstraction (`database/` modules)
+- **Dependency Injection**: Configuration and services via constructors
+- **Strategy Pattern**: Multiple rate limiting strategies
+- **Factory Pattern**: Service and scheduler creation
+- **Command Pattern**: Handler architecture
+- **Observer Pattern**: Event-driven scheduler notifications
 
-### Access Control
-- Admin functionality restricted by user ID validation
-- Rate limiting to prevent abuse
-- Sensitive data excluded from logs
-- Service role keys for database access
+## Migration Status and Refactoring Needs
 
-### Data Protection
-- User data encrypted in transit and at rest
-- Minimal data collection principle
-- GDPR compliance considerations
-- Secure API key management through environment variables
+### ✅ Fully Migrated (Modular)
+- Configuration management
+- Database layer with optimization
+- Caching and rate limiting
+- Internationalization system
+- Service layer and background tasks
+- Feedback and monitoring systems
 
-This technical reference should be updated when architectural changes are made to maintain accuracy for code maintenance and development decisions.
+### ⚠️ Requires Refactoring
+According to `REFACTORING_PLAN.md`, these files exceed recommended sizes:
+- `handlers/command_handlers.py` - 736 lines (CRITICAL)
+- `handlers/callbacks/friends_callbacks.py` - 719 lines (CRITICAL)  
+- `handlers/callbacks/questions_callbacks.py` - 642 lines (HIGH)
+- `handlers/callbacks/admin_callbacks.py` - 537 lines (HIGH)
+
+### Recommended Refactoring Approach
+1. Split monolithic handlers by domain
+2. Extract business logic to service layer
+3. Implement command pattern for handlers
+4. Add comprehensive tests for refactored components
+
+## Important Development Notes
+
+- Always use `python3` command, never `python`
+- Push changes **only** to `staging` branch; `main` branch pushes are forbidden
+- Run tests before every commit to ensure all pass
+- Use Docker for both production and testing environments
+- Update documentation before each commit
+- File size limit: 400 lines per file, 50 lines per function
+- Rate limiting is enabled by default - test with appropriate delays
+
+## 📚 Documentation Links
+
+### 🏗️ Architecture and Development
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Detailed system architecture
+  - Hybrid modular architecture (75% migration complete)
+  - Component diagrams and data flow
+  - Migration roadmap and patterns
+  - Performance architecture details
+
+### 🚀 Deployment and Operations
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
+  - Railway (bot) + Vercel (webapp) + Supabase setup
+  - Environment variables and CI/CD configuration
+  - Health checks and monitoring setup
+  - Troubleshooting and rollback procedures
+
+- **[docs/MONITORING.md](docs/MONITORING.md)** - Production monitoring
+  - Sentry integration and error tracking
+  - Structured logging with correlation IDs
+  - Performance metrics and alerting
+  - Dashboard configuration and best practices
+
+### ⚡ Performance and Quality
+- **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)** - Performance optimization
+  - 90% faster friend discovery (500ms → 50ms)
+  - 80% faster UI with TTL caching
+  - Database optimization and N+1 elimination
+  - Benchmark results and monitoring
+
+- **[docs/TESTING.md](docs/TESTING.md)** - Testing strategy
+  - 25+ automated tests with 60%+ coverage
+  - Unit, integration, and performance testing
+  - CI/CD pipeline and test automation
+  - Test fixtures and mocking patterns
+
+### 🌍 Internationalization and UX
+- **[docs/I18N_GUIDE.md](docs/I18N_GUIDE.md)** - Translation system
+  - 3 languages: Russian, English, Spanish
+  - Automatic language detection
+  - Template variables and fallback mechanisms
+  - Adding new languages guide
+
+### 📋 Project Management
+- **[docs/README.md](docs/README.md)** - Documentation overview
+  - Complete documentation structure
+  - Quick start guides for different roles
+  - File relationships and dependencies
+  - Documentation standards and guidelines
+
+- **[REFACTORING_PLAN.md](REFACTORING_PLAN.md)** - Architecture evolution
+  - Files requiring refactoring (handlers layer)
+  - Priority levels and size limits
+  - Migration timeline and strategy
+
+### 🗂️ Core Project Files
+- **[README.md](README.md)** - User-facing project documentation
+  - Feature overview and capabilities
+  - Installation and setup instructions
+  - User guide and API reference
+  - Performance achievements and updates
+
+- **[pyproject.toml](pyproject.toml)** - Development tools configuration
+- **[pytest.ini](pytest.ini)** - Testing framework setup
+- **[requirements.txt](requirements.txt)** - Python dependencies
+- **[Dockerfile](Dockerfile)** - Container configuration
