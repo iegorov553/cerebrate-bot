@@ -25,7 +25,13 @@ from bot.handlers.callbacks import (
     AdminCallbackHandler,
     QuestionsCallbackHandler,
 )
-from bot.handlers.command_handlers import setup_command_handlers
+from bot.handlers.commands import (
+    setup_user_commands,
+    setup_social_commands,
+    setup_config_commands,
+    setup_history_commands,
+    setup_system_commands
+)
 from bot.handlers.error_handler import setup_error_handler
 from bot.handlers.message_handlers import setup_message_handlers
 from bot.handlers.voice_handlers import setup_voice_handlers
@@ -79,8 +85,20 @@ async def create_application() -> Application:
     setup_error_handler(application)
     logger.info("Error handling configured")
 
-    # Setup all handlers
-    setup_command_handlers(application, db_client, user_cache, rate_limiter, config)
+    # Store dependencies in bot_data for access in handlers
+    application.bot_data.update({
+        'db_client': db_client,
+        'user_cache': user_cache,
+        'rate_limiter': rate_limiter,
+        'config': config
+    })
+
+    # Setup all command handlers modularly
+    setup_user_commands(application)
+    setup_social_commands(application)
+    setup_config_commands(application)
+    setup_history_commands(application)
+    setup_system_commands(application)
     setup_admin_handlers(application, db_client, rate_limiter, config)
     setup_admin_conversations(application, db_client, rate_limiter, config)  # NEW: Admin conversations
     # Setup modular callback handlers
