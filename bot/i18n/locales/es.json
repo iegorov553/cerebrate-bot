@@ -154,7 +154,6 @@
     "subtitle": "Elige tu idioma preferido:",
     "current": "Idioma actual: {language_name} {flag}",
     "changed": "✅ Idioma cambiado a {language_name} {flag}",
-    "change_note": "📝 *Nota: los cambios se aplicarán después de agregar soporte de base de datos*",
     "russian": "🇷🇺 Русский",
     "english": "🇺🇸 English", 
     "spanish": "🇪🇸 Español"
