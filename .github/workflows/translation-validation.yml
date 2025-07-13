@@ -1,0 +1,229 @@
+name: Translation Validation
+
+on:
+  push:
+    branches: [ staging, main ]
+  pull_request:
+    branches: [ staging, main ]
+    paths:
+      - 'bot/i18n/locales/*.json'
+      - 'bot/**/*.py'
+      - 'tests/test_translation_completeness.py'
+      - 'tests/test_markdown_validation.py'
+      - 'sync_translations.py'
+
+jobs:
+  validate-translations:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-mock
+    
+    - name: Check for translation placeholders
+      id: check_placeholders
+      run: |
+        echo "Checking for [TO_TRANSLATE] placeholders..."
+        
+        # Count placeholders in translation files
+        PLACEHOLDER_COUNT=$(grep -r "\[TO_TRANSLATE\]" bot/i18n/locales/ | wc -l || echo "0")
+        echo "Found $PLACEHOLDER_COUNT placeholder(s)"
+        
+        # Save count for later steps
+        echo "placeholder_count=$PLACEHOLDER_COUNT" >> $GITHUB_OUTPUT
+        
+        # List files with placeholders for better visibility
+        if [ "$PLACEHOLDER_COUNT" -gt 0 ]; then
+          echo "Files containing [TO_TRANSLATE] placeholders:"
+          grep -r "\[TO_TRANSLATE\]" bot/i18n/locales/ || true
+        fi
+    
+    - name: Auto-sync translation structure
+      if: steps.check_placeholders.outputs.placeholder_count > 0
+      run: |
+        echo "Auto-syncing translation structure..."
+        python sync_translations.py
+        
+        # Check if sync made changes
+        if git diff --quiet bot/i18n/locales/; then
+          echo "No changes made by sync_translations.py"
+        else
+          echo "Translation files were updated by sync_translations.py"
+          git diff --name-only bot/i18n/locales/
+        fi
+    
+    - name: Run translation completeness tests
+      run: |
+        echo "Running translation completeness tests..."
+        pytest tests/test_translation_completeness.py -v --tb=short
+    
+    - name: Run Markdown validation tests
+      run: |
+        echo "Running Markdown validation tests..."
+        pytest tests/test_markdown_validation.py -v --tb=short
+    
+    - name: Check translation quality
+      run: |
+        echo "Running translation quality checks..."
+        python -c "
+        import json
+        from pathlib import Path
+        
+        issues = []
+        for lang_file in Path('bot/i18n/locales').glob('*.json'):
+            with open(lang_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+                if '[TO_TRANSLATE]' in content:
+                    count = content.count('[TO_TRANSLATE]')
+                    issues.append(f'{lang_file.name}: {count} untranslated keys')
+        
+        if issues:
+            print('❌ Translation issues found:')
+            for issue in issues:
+                print(f'  - {issue}')
+            print()
+            print('Please translate the [TO_TRANSLATE] placeholders before merging.')
+            exit(1)
+        else:
+            print('✅ All translations are complete!')
+        "
+    
+    - name: Validate translation file integrity
+      run: |
+        echo "Validating JSON structure..."
+        python -c "
+        import json
+        from pathlib import Path
+        
+        for lang_file in Path('bot/i18n/locales').glob('*.json'):
+            try:
+                with open(lang_file, 'r', encoding='utf-8') as f:
+                    json.load(f)
+                print(f'✅ {lang_file.name}: Valid JSON')
+            except json.JSONDecodeError as e:
+                print(f'❌ {lang_file.name}: Invalid JSON - {e}')
+                exit(1)
+        "
+    
+    - name: Generate translation report
+      if: always()
+      run: |
+        echo "Generating translation coverage report..."
+        python -c "
+        import json
+        from pathlib import Path
+        
+        print('## Translation Coverage Report')
+        print()
+        
+        languages = ['ru', 'en', 'es']
+        stats = {}
+        
+        for lang in languages:
+            lang_file = Path(f'bot/i18n/locales/{lang}.json')
+            if lang_file.exists():
+                with open(lang_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    total_keys = content.count('\":')
+                    placeholder_keys = content.count('[TO_TRANSLATE]')
+                    completed_keys = total_keys - placeholder_keys
+                    completion_rate = (completed_keys / total_keys * 100) if total_keys > 0 else 0
+                    
+                    stats[lang] = {
+                        'total': total_keys,
+                        'completed': completed_keys,
+                        'pending': placeholder_keys,
+                        'rate': completion_rate
+                    }
+        
+        for lang, data in stats.items():
+            status_emoji = '✅' if data['pending'] == 0 else '⚠️' if data['rate'] > 50 else '❌'
+            print(f'{status_emoji} **{lang.upper()}**: {data[\"completed\"]}/{data[\"total\"]} ({data[\"rate\"]:.1f}%) - {data[\"pending\"]} pending')
+        
+        print()
+        if any(data['pending'] > 0 for data in stats.values()):
+            print('❌ **Action required**: Complete translations before merging to main branch')
+        else:
+            print('✅ **All translations complete!**')
+        " >> $GITHUB_STEP_SUMMARY
+
+  validate-hardcoded-text:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-mock
+    
+    - name: Check for hardcoded text in interface
+      run: |
+        echo "Checking for hardcoded Russian text..."
+        pytest tests/test_no_hardcoded_text.py -v --tb=short
+
+  security-and-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-mock ruff bandit
+    
+    - name: Run linting with Ruff
+      run: |
+        echo "Running Ruff linter..."
+        ruff check . --output-format=github
+    
+    - name: Run security check with Bandit
+      run: |
+        echo "Running Bandit security scan..."
+        bandit -r bot/ -f json -o bandit-report.json || true
+        if [ -f bandit-report.json ]; then
+          python -c "
+          import json
+          with open('bandit-report.json', 'r') as f:
+              report = json.load(f)
+          
+          high_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'HIGH']
+          medium_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'MEDIUM']
+          
+          if high_severity:
+              print(f'❌ Found {len(high_severity)} HIGH severity security issues!')
+              for issue in high_severity:
+                  print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
+              exit(1)
+          elif medium_severity:
+              print(f'⚠️ Found {len(medium_severity)} MEDIUM severity security issues')
+              for issue in medium_severity:
+                  print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
+          else:
+              print('✅ No high-severity security issues found')
+          "
+        fi

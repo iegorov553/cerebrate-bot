@@ -231,7 +231,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
         except Exception as e:
             self.logger.error("Error getting user statistics", user_id=user.id, error=str(e))
             await query.edit_message_text(
-                f"❌ Ошибка при загрузке статистики: {str(e)[:100]}",
+                f"{translator.translate('errors.stats_load_error')}: {str(e)[:100]}",
                 reply_markup=KeyboardGenerator.admin_menu(translator),
                 parse_mode='Markdown'
             )
@@ -465,7 +465,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
                             error=str(e))
             
             await query.edit_message_text(
-                f"❌ Ошибка при загрузке активности друзей: {str(e)[:100]}",
+                f"{translator.translate('errors.friends_activity_load_error')}: {str(e)[:100]}",
                 reply_markup=KeyboardGenerator.admin_menu(translator),
                 parse_mode='Markdown'
             )

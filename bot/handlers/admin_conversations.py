@@ -133,7 +133,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
         broadcast_text = context.user_data.get('broadcast_text')
         if not broadcast_text:
             await query.edit_message_text(
-                "❌ Ошибка: текст рассылки не найден. Попробуйте заново с /broadcast"
+                translator.translate('errors.broadcast_not_found')
             )
             return ConversationHandler.END
 
@@ -177,7 +177,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
         except Exception as e:
             logger.error(f"Error sending broadcast: {e}")
             await query.edit_message_text(
-                f"❌ **Ошибка отправки рассылки:**\n\n{str(e)}\n\nПопробуйте позже."
+                f"{translator.translate('errors.broadcast_send_error')}:\n\n{str(e)}\n\n{translator.translate('errors.general_error')}"
             )
 
     elif query.data == "broadcast_confirm_no":

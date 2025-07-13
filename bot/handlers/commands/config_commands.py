@@ -62,7 +62,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
             await update.message.reply_text(
-                "❌ Ошибка получения дефолтного вопроса. Попробуйте /start"
+                translator.translate('errors.default_question_error')
             )
             return
 
@@ -83,12 +83,12 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             logger.info(f"Time window updated for user {user.id}: {time_range}")
         else:
             await update.message.reply_text(
-                "❌ Ошибка при обновлении временного окна. Попробуйте позже."
+                translator.translate('errors.time_window_update_error')
             )
     except Exception as e:
         logger.error(f"Error updating time window for user {user.id}: {e}")
         await update.message.reply_text(
-            "❌ Ошибка при обновлении настроек. Попробуйте позже."
+            translator.translate('errors.settings_update_error')
         )
 
 
@@ -153,7 +153,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
             await update.message.reply_text(
-                "❌ Ошибка получения дефолтного вопроса. Попробуйте /start"
+                translator.translate('errors.default_question_error')
             )
             return
 
@@ -188,12 +188,12 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             logger.info(f"Frequency updated for user {user.id}: {interval_min} minutes")
         else:
             await update.message.reply_text(
-                "❌ Ошибка при обновлении частоты. Попробуйте позже."
+                translator.translate('errors.frequency_update_error')
             )
     except Exception as e:
         logger.error(f"Error updating frequency for user {user.id}: {e}")
         await update.message.reply_text(
-            "❌ Ошибка при обновлении настроек. Попробуйте позже."
+            translator.translate('errors.settings_update_error')
         )
 
 

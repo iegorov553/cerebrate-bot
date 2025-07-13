@@ -7,6 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.utils.exceptions import AdminRequired, RateLimitExceeded, ValidationError
+from bot.i18n.translator import Translator
 from monitoring import get_logger, set_user_context
 
 logger = get_logger(__name__)
@@ -122,7 +123,10 @@ async def handle_validation_error(update: Update, context: ContextTypes.DEFAULT_
         return
 
     try:
-        message = f"❌ **Ошибка валидации**\n\n{str(error)}"
+        # Use default translator for validation errors
+        translator = Translator()
+        
+        message = f"{translator.translate('errors.validation')}\n\n{str(error)}"
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
