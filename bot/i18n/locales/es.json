@@ -50,9 +50,9 @@
     "list": "👥 Mis Amigos",
     "discover": "🔍 Encontrar Amigos",
     "activities": "📊 Actividades de Amigos",
-    "add_instruction": "➕ **Agregar Amigo**\n\nEnvía el comando:\n`/add_friend @username`",
-    "list_empty": "👥 **Lista de Amigos**\n\nAún no tienes amigos.\nAgrega amigos usando el comando `/add_friend @username`",
-    "list_title": "👥 **Tus amigos:**",
+    "add_instruction": "➕ Agregar Amigo\n\nEnvía el comando:\n/add_friend @username",
+    "list_empty": "👥 Lista de Amigos\n\nAún no tienes amigos.\nAgrega amigos usando el comando /add_friend @username",
+    "list_title": "👥 Tus amigos:",
     "list_more": "... y {count} amigos más",
     "request_sent": "✅ ¡Solicitud de amistad enviada a @{username}!",
     "request_accepted": "✅ ¡Solicitud de amistad de @{username} aceptada!\n\n¡Ahora son amigos! 🎉",
@@ -61,8 +61,8 @@
     "user_not_found": "❌ Usuario @{username} no encontrado.",
     "request_notification_sent": "🎉 ¡@{username} aceptó tu solicitud de amistad!",
     "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad.",
-    "requests_help": "📥 **Solicitudes de Amistad**\n\nUsa los comandos:\n• `/friend_requests` - ver solicitudes\n• `/accept @username` - aceptar solicitud\n• `/decline @username` - rechazar solicitud",
-    "discover_help": "🔍 **Encontrar Amigos**\n\nEsta función está en desarrollo.\nPor ahora usa el comando `/add_friend @username`",
+    "requests_help": "📥 Solicitudes de Amistad\n\nUsa los comandos:\n• /friend_requests - ver solicitudes\n• /accept @username - aceptar solicitud\n• /decline @username - rechazar solicitud",
+    "discover_help": "🔍 Encontrar Amigos\n\nEsta función está en desarrollo.\nPor ahora usa el comando /add_friend @username",
     "activities_help": "📊 **Actividades de Amigos**\n\nUsa el comando:\n`/activities [@username]`\n\nO abre la interfaz web para una vista detallada",
     "discover_title": "🔍 Encontrar Amigos",
     "recommendations_found": "Se encontraron {count} recomendaciones basadas en tus amigos",
@@ -89,39 +89,6 @@
     "webapp_description": "Presiona el botón de abajo para abrir la aplicación web:"
   },
   
-  "admin": {
-    "title": "👨‍💼 Panel de Administrador",
-    "subtitle": "Elige una acción:",
-    "panel": "Panel de Administrador",
-    "choose_action": "Elige una acción:",
-    "broadcast": "📢 Difusión",
-    "stats": "📊 Estadísticas",
-    "statistics": "📊 Estadísticas",
-    "test_broadcast": "🧪 Prueba de Difusión",
-    "health_check": "🏥 Verificación de Salud",
-    "access_denied": "Acceso Denegado",
-    "admin_only": "Esta función solo está disponible para administradores.",
-    "access_denied_full": "🔒 **Acceso Denegado**\n\nEsta función está disponible solo para administradores.",
-    "broadcast_starting": "🔄 **Iniciando sistema de difusión...**\n\nEspera un momento...",
-    "stats_help": "📊 **Estadísticas de Usuarios**\n\nUsa el comando:\n`/broadcast_info`",
-    "user_statistics": "📊 Estadísticas de Usuarios",
-    "health_check_title": "🏥 **Verificación de Salud del Sistema**",
-    "health_status": "**Estado General:** {status}",
-    "health_uptime": "**Tiempo Activo:** {uptime} segundos",
-    "health_version": "**Versión:** {version}",
-    "health_components": "**Componentes:**",
-    "version": "🔧 **Versión:** `{version}`",
-    "environment": "🌍 **Entorno:** `{env}`",
-    "health_checking": "🔄 **Verificando estado del sistema...**\n\nPor favor espere...",
-    "health_error": "❌ **Error de verificación de salud del sistema**\n\nNo se pudo obtener el estado del sistema: {error}...",
-    "health_timestamp": "📅 **Hora de verificación:** `{timestamp}`",
-    "component_database": "💾 Base de datos",
-    "component_telegram_api": "📡 API de Telegram",
-    "component_scheduler": "⏰ Programador",
-    "error": "⚠️ Error: `{error}`",
-    "details": "📋 Detalles: `{details}`",
-    "system_metrics": "📊 **Métricas del Sistema:**"
-  },
   
   "help": {
     "title": "❓ **Ayuda**",
@@ -161,11 +128,13 @@
   
   "errors": {
     "general": "❌ Ocurrió un error. Por favor intenta de nuevo.",
+    "general_error": "❌ Ocurrió un error. Inténtalo más tarde.",
     "registration": "❌ Error de registro. Por favor intenta más tarde.",
     "database": "❌ Error de base de datos. Por favor intenta más tarde.",
     "unknown_callback": "❌ Comando desconocido.",
     "unknown_action": "❌ Acción desconocida.",
-    "notification_failed": "⚠️ Error al enviar notificación al usuario {user_id}"
+    "notification_failed": "⚠️ Error al enviar notificación al usuario {user_id}",
+    "rate_limit": "⚠️ Límite de velocidad excedido. Inténtalo más tarde."
   },
   
   "activity": {
@@ -284,6 +253,14 @@
   },
   
   "admin": {
+    "title": "🔧 Panel de Administración",
+    "version": "🤖 Versión: {version}",
+    "environment": "🌍 Entorno: {env}",
+    "choose_action": "Elige acción:",
+    "broadcast": "📢 Difusión",
+    "user_statistics": "📊 Estadísticas de Usuarios",
+    "health_check": "🏥 Verificación de Salud",
+    "friend_activities": "👥 Actividades de Amigos",
     "no_friend_activity": "📊 No hay actividad de amigos para mostrar",
     "activity_levels": {
       "high": "🔥 Alta",
@@ -295,17 +272,41 @@
     "stats_error": "❌ No se pudieron obtener las estadísticas de usuarios.",
     "loading_activity": "👥 Cargando actividad de amigos...",
     "no_activity_found": "📭 No se encontró actividad de amigos.\nEs posible que aún no tengas amigos o no hayan estado activos.",
-    "recent_activities": "👥 **Actividades Recientes de Amigos**",
-    "user_stats": "📊 **Estadísticas de Usuarios**",
+    "recent_activities": "👥 Actividades Recientes de Amigos",
+    "user_stats": "📊 Estadísticas de Usuarios",
     "total_users": "👥 Usuarios totales: {total}",
     "active_users": "✅ Activos: {active} ({percentage:.1f}%)",
     "new_users_week": "🆕 Nuevos esta semana: {count}",
-    "activity_level": "📈 Actividad: {level}"
+    "activity_level": "📈 Actividad: {level}",
+    "health_check_title": "🏥 Verificación de Salud del Sistema",
+    "health_status": "Estado General: {status}",
+    "health_uptime": "Tiempo Activo: {uptime} segundos", 
+    "health_version": "Versión: {version}",
+    "health_components": "Componentes:",
+    "health_checking": "🔄 Verificando estado del sistema...\n\nPor favor espere...",
+    "health_error": "❌ Error de verificación de salud del sistema\n\nNo se pudo obtener el estado del sistema: {error}...",
+    "health_timestamp": "📅 Hora de verificación: {timestamp}",
+    "component_database": "💾 Base de datos",
+    "component_telegram_api": "📡 API de Telegram",
+    "component_scheduler": "⏰ Programador",
+    "error": "⚠️ Error: {error}",
+    "details": "📋 Detalles: {details}",
+    "system_metrics": "📊 Métricas del Sistema:",
+    "stats_loading": "📊 Cargando estadísticas...",
+    "stats_failed": "❌ No se pudieron obtener las estadísticas de usuarios.",
+    "stats_title": "📊 Estadísticas de Usuarios",
+    "stats_total": "👥 Usuarios totales: {total}",
+    "stats_active": "✅ Activos: {active} ({percentage:.1f}%)",
+    "stats_new_week": "🆕 Nuevos esta semana: {count}",
+    "stats_activity": "📈 Actividad: {level}",
+    "friends_activity_loading": "👥 Cargando actividad de amigos...",
+    "friends_activity_title": "👥 Actividades de Amigos",
+    "friends_activity_empty": "📭 No se encontró actividad de amigos.",
+    "friends_activity_empty_note": "Es posible que aún no tengas amigos o no hayan estado activos.",
+    "friends_activity_recent": "👥 Actividades Recientes de Amigos",
+    "friends_activity_shown": "_Mostrando últimas {count} actividades_"
   },
   
-  "errors": {
-    "rate_limit": "⚠️ Límite de velocidad excedido. Inténtalo más tarde."
-  },
   
   "broadcast": {
     "enter_message": "📢 **Mensaje de Difusión**\n\nIntroduce el texto del mensaje para enviar a todos los usuarios:",

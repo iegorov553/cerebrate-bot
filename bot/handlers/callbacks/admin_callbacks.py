@@ -73,7 +73,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
         version_info = get_version_info()
 
         # Create admin panel message
-        admin_text = f"**{translator.translate('admin.title')}**\n\n"
+        admin_text = f"{translator.translate('admin.title')}\n\n"
         admin_text += f"{translator.translate('admin.version', version=version_string)}\n"
         admin_text += f"{translator.translate('admin.environment', env=version_info['environment'])}\n\n"
         admin_text += f"{translator.translate('admin.choose_action')}"

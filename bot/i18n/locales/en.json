@@ -89,39 +89,6 @@
     "webapp_description": "Press the button below to open the web application:"
   },
   
-  "admin": {
-    "title": "👨‍💼 Admin Panel",
-    "subtitle": "Choose an action:",
-    "panel": "Admin Panel",
-    "choose_action": "Choose an action:",
-    "broadcast": "📢 Broadcast",
-    "stats": "📊 Statistics",
-    "statistics": "📊 Statistics",
-    "test_broadcast": "🧪 Test Broadcast",
-    "health_check": "🏥 Health Check",
-    "access_denied": "Access Denied",
-    "admin_only": "This feature is only available to administrators.",
-    "access_denied_full": "🔒 **Access Denied**\n\nThis function is available only to administrators.",
-    "broadcast_starting": "🔄 **Starting broadcast system...**\n\nPlease wait a moment...",
-    "stats_help": "📊 **User Statistics**\n\nUse command:\n`/broadcast_info`",
-    "user_statistics": "📊 User Statistics",
-    "health_check_title": "🏥 **System Health Check**",
-    "health_status": "**Overall Status:** {status}",
-    "health_uptime": "**Uptime:** {uptime} seconds",
-    "health_version": "**Version:** {version}",
-    "health_components": "**Components:**",
-    "version": "🔧 **Version:** `{version}`",
-    "environment": "🌍 **Environment:** `{env}`",
-    "health_checking": "🔄 **Checking system status...**\n\nPlease wait...",
-    "health_error": "❌ **System health check error**\n\nFailed to get system status: {error}...",
-    "health_timestamp": "📅 **Check time:** `{timestamp}`",
-    "component_database": "💾 Database",
-    "component_telegram_api": "📡 Telegram API",
-    "component_scheduler": "⏰ Scheduler",
-    "error": "⚠️ Error: `{error}`",
-    "details": "📋 Details: `{details}`",
-    "system_metrics": "📊 **System Metrics:**"
-  },
   
   "help": {
     "title": "❓ **Help**",
@@ -161,11 +128,13 @@
   
   "errors": {
     "general": "❌ An error occurred. Please try again.",
+    "general_error": "❌ An error occurred. Please try again later.",
     "registration": "❌ Registration error. Please try later.",
     "database": "❌ Database error. Please try later.",
     "unknown_callback": "❌ Unknown command.",
     "unknown_action": "❌ Unknown action.",
-    "notification_failed": "⚠️ Failed to send notification to user {user_id}"
+    "notification_failed": "⚠️ Failed to send notification to user {user_id}",
+    "rate_limit": "⚠️ Rate limit exceeded. Please try again later."
   },
   
   "activity": {
@@ -284,6 +253,14 @@
   },
   
   "admin": {
+    "title": "🔧 Admin Panel",
+    "version": "🤖 Version: {version}",
+    "environment": "🌍 Environment: {env}",
+    "choose_action": "Choose action:",
+    "broadcast": "📢 Broadcast",
+    "user_statistics": "📊 User Statistics",
+    "health_check": "🏥 Health Check",
+    "friend_activities": "👥 Friend Activities",
     "no_friend_activity": "📊 No friend activity to display",
     "activity_levels": {
       "high": "🔥 High",
@@ -295,17 +272,41 @@
     "stats_error": "❌ Failed to get user statistics.",
     "loading_activity": "👥 Loading friend activity...",
     "no_activity_found": "📭 No friend activity found.\nYou may not have friends yet or they haven't been active.",
-    "recent_activities": "👥 **Recent Friend Activities**",
-    "user_stats": "📊 **User Statistics**",
+    "recent_activities": "👥 Recent Friend Activities",
+    "user_stats": "📊 User Statistics",
     "total_users": "👥 Total users: {total}",
     "active_users": "✅ Active: {active} ({percentage:.1f}%)",
     "new_users_week": "🆕 New this week: {count}",
-    "activity_level": "📈 Activity: {level}"
+    "activity_level": "📈 Activity: {level}",
+    "health_check_title": "🏥 System Health Check",
+    "health_status": "Overall Status: {status}",
+    "health_uptime": "Uptime: {uptime} seconds", 
+    "health_version": "Version: {version}",
+    "health_components": "Components:",
+    "health_checking": "🔄 Checking system status...\n\nPlease wait...",
+    "health_error": "❌ System health check error\n\nFailed to get system status: {error}...",
+    "health_timestamp": "📅 Check time: {timestamp}",
+    "component_database": "💾 Database",
+    "component_telegram_api": "📡 Telegram API",
+    "component_scheduler": "⏰ Scheduler",
+    "error": "⚠️ Error: {error}",
+    "details": "📋 Details: {details}",
+    "system_metrics": "📊 System Metrics:",
+    "stats_loading": "📊 Loading statistics...",
+    "stats_failed": "❌ Failed to get user statistics.",
+    "stats_title": "📊 User Statistics",
+    "stats_total": "👥 Total users: {total}",
+    "stats_active": "✅ Active: {active} ({percentage:.1f}%)",
+    "stats_new_week": "🆕 New this week: {count}",
+    "stats_activity": "📈 Activity: {level}",
+    "friends_activity_loading": "👥 Loading friend activity...",
+    "friends_activity_title": "👥 Friend Activities",
+    "friends_activity_empty": "📭 No friend activity found.",
+    "friends_activity_empty_note": "You may not have friends yet or they haven't been active.",
+    "friends_activity_recent": "👥 Recent Friend Activities",
+    "friends_activity_shown": "_Showing last {count} activities_"
   },
   
-  "errors": {
-    "rate_limit": "⚠️ Rate limit exceeded. Please try again later."
-  },
   
   "broadcast": {
     "enter_message": "📢 **Broadcast Message**\n\nEnter the message text to send to all users:",
