@@ -40,7 +40,9 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
         return (data in friends_callbacks
                 or data.startswith('friends_')
-                or data.startswith('add_friend:'))
+                or data.startswith('add_friend:')
+                or data.startswith('friend_accept:')
+                or data.startswith('friend_decline:'))
 
     async def handle_callback(self,
                             query: CallbackQuery,
@@ -57,6 +59,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
         elif data.startswith("add_friend:"):
             await self._handle_add_friend_callback(query, data, translator, context)
+
+        elif data.startswith("friend_accept:"):
+            await self._handle_friend_accept(query, data, translator, context)
+
+        elif data.startswith("friend_decline:"):
+            await self._handle_friend_decline(query, data, translator, context)
 
         else:
             self.logger.warning("Unhandled friends callback", callback_data=data)
@@ -182,7 +190,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             # Show error and fallback to menu
             await query.edit_message_text(
-                translator.translate('errors.general'),
+                "❌ Произошла ошибка при загрузке списка друзей. Попробуйте позже.",
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
@@ -190,15 +198,104 @@ class FriendsCallbackHandler(BaseCallbackHandler):
     async def _handle_requests_help(self,
                                   query: CallbackQuery,
                                   translator: Translator) -> None:
-        """Show friend requests help."""
-        await query.edit_message_text(
-            translator.translate('friends.requests_help'),
-            reply_markup=create_friends_menu(0, 0, translator),
-            parse_mode='Markdown'
-        )
-
-        self.logger.debug("Friend requests help shown",
-                         user_id=query.from_user.id)
+        """Show friend requests list with inline buttons."""
+        user = query.from_user
+        
+        try:
+            # Get friend requests from database
+            from bot.database.friend_operations import FriendOperations
+            friend_ops = FriendOperations(self.db_client)
+            
+            # Show loading indicator
+            await query.edit_message_text(
+                "📥 Загружаю запросы в друзья...",
+                parse_mode='Markdown'
+            )
+            
+            # Get friend requests
+            requests_data = await friend_ops.get_friend_requests_optimized(user.id)
+            
+            incoming = requests_data.get('incoming', [])
+            outgoing = requests_data.get('outgoing', [])
+            
+            text = "📥 **Запросы в друзья**\n\n"
+            
+            # Create keyboard with request actions
+            keyboard = []
+            
+            if incoming:
+                text += "**Входящие запросы:**\n"
+                for i, req in enumerate(incoming[:5]):  # Показываем только первые 5
+                    requester = req.get('requester', {})
+                    username = requester.get('tg_username', 'Неизвестно')
+                    name = requester.get('tg_first_name', '')
+                    requester_id = req.get('requester_id')
+                    
+                    display_name = f"@{username}" if username != 'Неизвестно' else name
+                    text += f"• {display_name}\n"
+                    
+                    # Add accept/decline buttons for each request
+                    if requester_id:
+                        from telegram import InlineKeyboardButton
+                        keyboard.append([
+                            InlineKeyboardButton(
+                                f"✅ Принять {display_name}",
+                                callback_data=f"friend_accept:{requester_id}"
+                            ),
+                            InlineKeyboardButton(
+                                f"❌ Отклонить {display_name}",
+                                callback_data=f"friend_decline:{requester_id}"
+                            )
+                        ])
+                        
+                text += "\n"
+            else:
+                text += "**Входящие запросы:** нет\n\n"
+            
+            if outgoing:
+                text += "**Исходящие запросы:**\n"
+                for req in outgoing[:5]:  # Показываем только первые 5
+                    addressee = req.get('addressee', {})
+                    username = addressee.get('tg_username', 'Неизвестно')
+                    name = addressee.get('tg_first_name', '')
+                    
+                    display_name = f"@{username}" if username != 'Неизвестно' else name
+                    text += f"• {display_name} - ожидает ответа\n"
+            else:
+                text += "**Исходящие запросы:** нет"
+            
+            # Add back button
+            from telegram import InlineKeyboardButton
+            keyboard.append([InlineKeyboardButton(
+                "🔙 Назад к друзьям",
+                callback_data="menu_friends"
+            )])
+            
+            from telegram import InlineKeyboardMarkup
+            reply_markup = InlineKeyboardMarkup(keyboard) if keyboard else create_friends_menu(0, 0, translator)
+            
+            await query.edit_message_text(
+                text,
+                reply_markup=reply_markup,
+                parse_mode='Markdown'
+            )
+            
+            self.logger.debug("Friend requests shown",
+                             user_id=user.id,
+                             incoming_count=len(incoming),
+                             outgoing_count=len(outgoing))
+                             
+        except Exception as e:
+            self.logger.error("Error getting friend requests",
+                            user_id=user.id,
+                            error=str(e))
+            
+            # Show error and fallback to menu
+            await query.edit_message_text(
+                "❌ Произошла ошибка при загрузке запросов в друзья. Попробуйте позже.",
+                reply_markup=create_friends_menu(0, 0, translator),
+                parse_mode='Markdown'
+            )
 
     async def _handle_friends_discovery(self,
                                       query: CallbackQuery,
@@ -292,7 +389,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             # Show error and fallback to menu
             await query.edit_message_text(
-                translator.translate('errors.general'),
+                "❌ Произошла ошибка. Попробуйте позже.",
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
@@ -367,7 +464,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             await query.answer(
-                translator.translate('errors.general'),
+                "❌ Произошла ошибка. Попробуйте позже.",
                 show_alert=True
             )
 
@@ -377,7 +474,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             await query.answer(
-                translator.translate('errors.general'),
+                "❌ Произошла ошибка. Попробуйте позже.",
                 show_alert=True
             )
 
@@ -479,3 +576,103 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         )
 
         self.logger.debug("Returned to main menu from friends", user_id=user.id)
+
+    async def _handle_friend_accept(self,
+                                  query: CallbackQuery,
+                                  data: str,
+                                  translator: Translator,
+                                  context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle accepting a friend request."""
+        user = query.from_user
+        
+        try:
+            # Extract requester ID from callback data
+            requester_id = int(data.split(':')[1])
+            
+            # Show processing indicator
+            await query.edit_message_text(
+                "✅ Принимаю запрос в друзья...",
+                parse_mode='Markdown'
+            )
+            
+            # Accept friend request
+            from bot.database.friend_operations import FriendOperations
+            friend_ops = FriendOperations(self.db_client)
+            
+            success = await friend_ops.accept_friend_request(requester_id, user.id)
+            
+            if success:
+                # Refresh friend requests list
+                await self._handle_requests_help(query, translator)
+                
+                self.logger.info("Friend request accepted",
+                               user_id=user.id,
+                               requester_id=requester_id)
+            else:
+                await query.edit_message_text(
+                    "❌ Не удалось принять запрос в друзья. Возможно, он уже был обработан.",
+                    reply_markup=create_friends_menu(0, 0, translator),
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            self.logger.error("Error accepting friend request",
+                            user_id=user.id,
+                            requester_id=data.split(':')[1] if ':' in data else 'unknown',
+                            error=str(e))
+            
+            await query.edit_message_text(
+                "❌ Произошла ошибка при принятии запроса. Попробуйте позже.",
+                reply_markup=create_friends_menu(0, 0, translator),
+                parse_mode='Markdown'
+            )
+
+    async def _handle_friend_decline(self,
+                                   query: CallbackQuery,
+                                   data: str,
+                                   translator: Translator,
+                                   context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle declining a friend request."""
+        user = query.from_user
+        
+        try:
+            # Extract requester ID from callback data
+            requester_id = int(data.split(':')[1])
+            
+            # Show processing indicator
+            await query.edit_message_text(
+                "❌ Отклоняю запрос в друзья...",
+                parse_mode='Markdown'
+            )
+            
+            # Decline friend request
+            from bot.database.friend_operations import FriendOperations
+            friend_ops = FriendOperations(self.db_client)
+            
+            success = await friend_ops.decline_friend_request(requester_id, user.id)
+            
+            if success:
+                # Refresh friend requests list
+                await self._handle_requests_help(query, translator)
+                
+                self.logger.info("Friend request declined",
+                               user_id=user.id,
+                               requester_id=requester_id)
+            else:
+                await query.edit_message_text(
+                    "❌ Не удалось отклонить запрос в друзья. Возможно, он уже был обработан.",
+                    reply_markup=create_friends_menu(0, 0, translator),
+                    parse_mode='Markdown'
+                )
+                
+        except Exception as e:
+            self.logger.error("Error declining friend request",
+                            user_id=user.id,
+                            requester_id=data.split(':')[1] if ':' in data else 'unknown',
+                            error=str(e))
+            
+            await query.edit_message_text(
+                "❌ Произошла ошибка при отклонении запроса. Попробуйте позже.",
+                reply_markup=create_friends_menu(0, 0, translator),
+                parse_mode='Markdown'
+            )

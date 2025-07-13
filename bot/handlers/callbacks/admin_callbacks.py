@@ -113,6 +113,9 @@ class AdminCallbackHandler(BaseCallbackHandler):
         elif action == "health":
             await self._handle_health_check(query, translator, context)
 
+        elif action == "friend_activities":
+            await self._handle_friend_activities(query, translator, context)
+
         elif action == "back":
             await self._handle_back_to_main(query, translator)
 
@@ -176,13 +179,54 @@ class AdminCallbackHandler(BaseCallbackHandler):
                           query: CallbackQuery,
                           translator: Translator) -> None:
         """Handle statistics display."""
-        await query.edit_message_text(
-            translator.translate('admin.stats_help'),
-            reply_markup=KeyboardGenerator.main_menu(True, translator),
-            parse_mode='Markdown'
-        )
-
-        self.logger.debug("Stats help displayed", user_id=query.from_user.id)
+        user = query.from_user
+        
+        try:
+            # Get admin operations from context (should be available)
+            from bot.admin.admin_operations import AdminOperations
+            admin_ops = AdminOperations(self.db_client, self.config)
+            
+            # Show loading indicator
+            await query.edit_message_text(
+                "📊 Загружаю статистику...",
+                parse_mode='Markdown'
+            )
+            
+            # Get user statistics
+            stats = await admin_ops.get_user_stats_optimized()
+            
+            if not stats:
+                await query.edit_message_text(
+                    "❌ Не удалось получить статистику пользователей.",
+                    reply_markup=KeyboardGenerator.admin_menu(translator),
+                    parse_mode='Markdown'
+                )
+                return
+            
+            # Use percentage from stats (already calculated)
+            active_percentage = stats.get('active_percentage', 0)
+            
+            stats_text = f"📊 **Статистика пользователей**\n\n" \
+                f"👥 Всего пользователей: {stats['total']}\n" \
+                f"✅ Активных: {stats['active']} ({active_percentage:.1f}%)\n" \
+                f"🆕 Новых за неделю: {stats['new_week']}\n\n" \
+                f"📈 Активность: {'Высокая' if active_percentage > 50 else 'Средняя' if active_percentage > 25 else 'Низкая'}"
+            
+            await query.edit_message_text(
+                stats_text,
+                reply_markup=KeyboardGenerator.admin_menu(translator),
+                parse_mode='Markdown'
+            )
+            
+            self.logger.info("User statistics displayed", user_id=user.id, total_users=stats['total'])
+            
+        except Exception as e:
+            self.logger.error("Error getting user statistics", user_id=user.id, error=str(e))
+            await query.edit_message_text(
+                f"❌ Ошибка при загрузке статистики: {str(e)[:100]}",
+                reply_markup=KeyboardGenerator.admin_menu(translator),
+                parse_mode='Markdown'
+            )
 
     async def _handle_health_check(self,
                                  query: CallbackQuery,
@@ -336,3 +380,158 @@ class AdminCallbackHandler(BaseCallbackHandler):
         )
 
         self.logger.debug("Returned to main menu from admin", user_id=user.id)
+
+    async def _handle_friend_activities(self,
+                                      query: CallbackQuery,
+                                      translator: Translator,
+                                      context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle friend activities display."""
+        user = query.from_user
+        
+        try:
+            # Show loading indicator
+            await query.edit_message_text(
+                "👥 Загружаю активность друзей...",
+                parse_mode='Markdown'
+            )
+            
+            # Get last 20 friend activities
+            activities = await self._get_friend_activities(user.id)
+            
+            if not activities:
+                await query.edit_message_text(
+                    "👥 **Активность друзей**\n\n"
+                    "📭 Активности друзей не найдено.\n"
+                    "Возможно, у вас ещё нет друзей или они не проявляли активность.",
+                    reply_markup=KeyboardGenerator.admin_menu(translator),
+                    parse_mode='Markdown'
+                )
+                return
+            
+            # Format activities
+            activities_text = "👥 **Последние активности друзей**\n\n"
+            
+            for i, activity in enumerate(activities[:20], 1):
+                username = activity.get('username', 'Неизвестно')
+                name = activity.get('name', '')
+                activity_text = activity.get('activity', '')
+                timestamp = activity.get('timestamp', '')
+                
+                # Format display name
+                display_name = f"@{username}" if username != 'Неизвестно' else name
+                if not display_name:
+                    display_name = "Аноним"
+                
+                # Format timestamp (just time)
+                try:
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    time_str = dt.strftime('%H:%M')
+                except Exception:
+                    time_str = "неизв."
+                
+                # Truncate long activities
+                if len(activity_text) > 50:
+                    activity_text = activity_text[:47] + "..."
+                
+                activities_text += f"`{time_str}` **{display_name}:** {activity_text}\n"
+            
+            # Add footer
+            activities_text += f"\n_Показаны последние {len(activities)} активностей_"
+            
+            await query.edit_message_text(
+                activities_text,
+                reply_markup=KeyboardGenerator.admin_menu(translator),
+                parse_mode='Markdown'
+            )
+            
+            self.logger.info("Friend activities displayed", 
+                           user_id=user.id, 
+                           activities_count=len(activities))
+                           
+        except Exception as e:
+            self.logger.error("Error getting friend activities",
+                            user_id=user.id,
+                            error=str(e))
+            
+            await query.edit_message_text(
+                f"❌ Ошибка при загрузке активности друзей: {str(e)[:100]}",
+                reply_markup=KeyboardGenerator.admin_menu(translator),
+                parse_mode='Markdown'
+            )
+
+    async def _get_friend_activities(self, user_id: int) -> list:
+        """Get last 20 activities of user's friends."""
+        try:
+            # Get user's friends first
+            from bot.database.friend_operations import FriendOperations
+            friend_ops = FriendOperations(self.db_client)
+            friends = await friend_ops.get_friends_list_optimized(user_id)
+            
+            if not friends:
+                return []
+            
+            # Get friend IDs
+            friend_ids = [friend['tg_id'] for friend in friends]
+            
+            # Query last 20 activities from friends
+            # SQL query to get activities with user info
+            query = """
+                SELECT 
+                    tj.job_text,
+                    tj.jobs_timestamp,
+                    u.tg_username,
+                    u.tg_first_name
+                FROM tg_jobs tj
+                JOIN users u ON tj.tg_id = u.tg_id
+                WHERE tj.tg_id = ANY(%s)
+                ORDER BY tj.jobs_timestamp DESC
+                LIMIT 20
+            """
+            
+            # Execute query directly (Supabase allows raw SQL)
+            result = self.db_client.rpc('exec_sql', {
+                'query': query,
+                'params': [friend_ids]
+            }).execute()
+            
+            if not result.data:
+                # Fallback: try with table queries
+                activities = []
+                for friend_id in friend_ids[:5]:  # Limit to avoid too many queries
+                    friend_activities = self.db_client.table('tg_jobs')\
+                        .select('job_text, jobs_timestamp')\
+                        .eq('tg_id', friend_id)\
+                        .order('jobs_timestamp', desc=True)\
+                        .limit(4)\
+                        .execute()
+                    
+                    if friend_activities.data:
+                        friend_info = next((f for f in friends if f['tg_id'] == friend_id), {})
+                        for activity in friend_activities.data:
+                            activities.append({
+                                'activity': activity['job_text'],
+                                'timestamp': activity['jobs_timestamp'],
+                                'username': friend_info.get('tg_username', 'Неизвестно'),
+                                'name': friend_info.get('tg_first_name', '')
+                            })
+                
+                # Sort by timestamp
+                activities.sort(key=lambda x: x['timestamp'], reverse=True)
+                return activities[:20]
+            
+            # Process SQL results
+            activities = []
+            for row in result.data:
+                activities.append({
+                    'activity': row['job_text'],
+                    'timestamp': row['jobs_timestamp'],
+                    'username': row['tg_username'],
+                    'name': row['tg_first_name']
+                })
+            
+            return activities
+            
+        except Exception as e:
+            self.logger.error("Error querying friend activities", error=str(e))
+            return []
