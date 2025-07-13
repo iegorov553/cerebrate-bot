@@ -408,15 +408,15 @@ class KeyboardGenerator:
 
         keyboard = [
             [InlineKeyboardButton(
-                "🇷🇺 Русский" + (" ✓" if current_language == 'ru' else ""),
+                translator.translate('language.russian') + (" ✓" if current_language == 'ru' else ""),
                 callback_data="language_ru"
             )],
             [InlineKeyboardButton(
-                "🇺🇸 English" + (" ✓" if current_language == 'en' else ""),
+                translator.translate('language.english') + (" ✓" if current_language == 'en' else ""),
                 callback_data="language_en"
             )],
             [InlineKeyboardButton(
-                "🇪🇸 Español" + (" ✓" if current_language == 'es' else ""),
+                translator.translate('language.spanish') + (" ✓" if current_language == 'es' else ""),
                 callback_data="language_es"
             )],
             [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]

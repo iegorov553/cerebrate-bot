@@ -188,7 +188,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
             
             # Show loading indicator
             await query.edit_message_text(
-                "📊 Загружаю статистику...",
+                translator.translate('admin.loading_stats'),
                 parse_mode='Markdown'
             )
             
@@ -197,7 +197,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
             
             if not stats:
                 await query.edit_message_text(
-                    "❌ Не удалось получить статистику пользователей.",
+                    translator.translate('admin.stats_error'),
                     reply_markup=KeyboardGenerator.admin_menu(translator),
                     parse_mode='Markdown'
                 )
@@ -206,11 +206,19 @@ class AdminCallbackHandler(BaseCallbackHandler):
             # Use percentage from stats (already calculated)
             active_percentage = stats.get('active_percentage', 0)
             
-            stats_text = f"📊 **Статистика пользователей**\n\n" \
-                f"👥 Всего пользователей: {stats['total']}\n" \
-                f"✅ Активных: {stats['active']} ({active_percentage:.1f}%)\n" \
-                f"🆕 Новых за неделю: {stats['new_week']}\n\n" \
-                f"📈 Активность: {'Высокая' if active_percentage > 50 else 'Средняя' if active_percentage > 25 else 'Низкая'}"
+            # Determine activity level
+            if active_percentage > 50:
+                activity_level = translator.translate('admin.activity_levels.high')
+            elif active_percentage > 25:
+                activity_level = translator.translate('admin.activity_levels.medium')
+            else:
+                activity_level = translator.translate('admin.activity_levels.low')
+            
+            stats_text = f"{translator.translate('admin.user_stats')}\n\n" \
+                f"{translator.translate('admin.total_users', total=stats['total'])}\n" \
+                f"{translator.translate('admin.active_users', active=stats['active'], percentage=active_percentage)}\n" \
+                f"{translator.translate('admin.new_users_week', count=stats['new_week'])}\n\n" \
+                f"{translator.translate('admin.activity_level', level=activity_level)}"
             
             await query.edit_message_text(
                 stats_text,
@@ -391,7 +399,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
         try:
             # Show loading indicator
             await query.edit_message_text(
-                "👥 Загружаю активность друзей...",
+                translator.translate('admin.loading_activity'),
                 parse_mode='Markdown'
             )
             
@@ -399,28 +407,30 @@ class AdminCallbackHandler(BaseCallbackHandler):
             activities = await self._get_friend_activities(user.id)
             
             if not activities:
+                empty_text = f"{translator.translate('admin.friends_activity_title')}\n\n"
+                empty_text += f"{translator.translate('admin.friends_activity_empty')}\n"
+                empty_text += f"{translator.translate('admin.friends_activity_empty_note')}"
+                
                 await query.edit_message_text(
-                    "👥 **Активность друзей**\n\n"
-                    "📭 Активности друзей не найдено.\n"
-                    "Возможно, у вас ещё нет друзей или они не проявляли активность.",
+                    empty_text,
                     reply_markup=KeyboardGenerator.admin_menu(translator),
                     parse_mode='Markdown'
                 )
                 return
             
             # Format activities
-            activities_text = "👥 **Последние активности друзей**\n\n"
+            activities_text = f"{translator.translate('admin.friends_activity_recent')}\n\n"
             
             for i, activity in enumerate(activities[:20], 1):
-                username = activity.get('username', 'Неизвестно')
+                username = activity.get('username', translator.translate('common.unknown'))
                 name = activity.get('name', '')
                 activity_text = activity.get('activity', '')
                 timestamp = activity.get('timestamp', '')
                 
                 # Format display name
-                display_name = f"@{username}" if username != 'Неизвестно' else name
+                display_name = f"@{username}" if username != translator.translate('common.unknown') else name
                 if not display_name:
-                    display_name = "Аноним"
+                    display_name = translator.translate('common.anonymous')
                 
                 # Format timestamp (just time)
                 try:
@@ -428,7 +438,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
                     dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
                     time_str = dt.strftime('%H:%M')
                 except Exception:
-                    time_str = "неизв."
+                    time_str = translator.translate('common.time_unknown')
                 
                 # Truncate long activities
                 if len(activity_text) > 50:
@@ -437,7 +447,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
                 activities_text += f"`{time_str}` **{display_name}:** {activity_text}\n"
             
             # Add footer
-            activities_text += f"\n_Показаны последние {len(activities)} активностей_"
+            activities_text += f"\n{translator.translate('admin.friends_activity_shown', count=len(activities))}"
             
             await query.edit_message_text(
                 activities_text,
