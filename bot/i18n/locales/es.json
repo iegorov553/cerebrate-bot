@@ -281,5 +281,38 @@
     "prompt_schedule": "⏰ Introduce el horario en formato:\n`09:00-18:00 120`\n(hora_inicio-fin intervalo_en_minutos)",
     
     "help_variables": "💡 **Variables disponibles:**\n• `{name}` - nombre del usuario\n• `{time}` - hora actual\n\nEjemplo: \"¡Hola, {name}! ¿Qué estás haciendo a las {time}?\""
+  },
+  
+  "admin": {
+    "no_friend_activity": "📊 No hay actividad de amigos para mostrar",
+    "activity_levels": {
+      "high": "🔥 Alta",
+      "medium": "📊 Media", 
+      "low": "💤 Baja"
+    },
+    "access_denied": "🔒 Este comando solo está disponible para administradores.",
+    "loading_stats": "📊 Cargando estadísticas...",
+    "stats_error": "❌ No se pudieron obtener las estadísticas de usuarios.",
+    "loading_activity": "👥 Cargando actividad de amigos...",
+    "no_activity_found": "📭 No se encontró actividad de amigos.\nEs posible que aún no tengas amigos o no hayan estado activos.",
+    "recent_activities": "👥 **Actividades Recientes de Amigos**",
+    "user_stats": "📊 **Estadísticas de Usuarios**",
+    "total_users": "👥 Usuarios totales: {total}",
+    "active_users": "✅ Activos: {active} ({percentage:.1f}%)",
+    "new_users_week": "🆕 Nuevos esta semana: {count}",
+    "activity_level": "📈 Actividad: {level}"
+  },
+  
+  "errors": {
+    "rate_limit": "⚠️ Límite de velocidad excedido. Inténtalo más tarde."
+  },
+  
+  "broadcast": {
+    "enter_message": "📢 **Mensaje de Difusión**\n\nIntroduce el texto del mensaje para enviar a todos los usuarios:",
+    "confirm_send": "✅ Enviar difusión",
+    "create_title": "📢 **Creando Difusión**",
+    "create_description": "Envía texto del mensaje para difundir a todos los usuarios.",
+    "markdown_support": "💡 Se admite formato Markdown.",
+    "cancel_help": "📝 Usa /cancel para cancelar"
   }
 }

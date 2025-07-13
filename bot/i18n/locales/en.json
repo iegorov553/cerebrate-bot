@@ -281,5 +281,38 @@
     "prompt_schedule": "⏰ Enter schedule in format:\n`09:00-18:00 120`\n(start-end_time interval_in_minutes)",
     
     "help_variables": "💡 **Available variables:**\n• `{name}` - user name\n• `{time}` - current time\n\nExample: \"Hello, {name}! What are you doing at {time}?\""
+  },
+  
+  "admin": {
+    "no_friend_activity": "📊 No friend activity to display",
+    "activity_levels": {
+      "high": "🔥 High",
+      "medium": "📊 Medium", 
+      "low": "💤 Low"
+    },
+    "access_denied": "🔒 This command is only available to administrators.",
+    "loading_stats": "📊 Loading statistics...",
+    "stats_error": "❌ Failed to get user statistics.",
+    "loading_activity": "👥 Loading friend activity...",
+    "no_activity_found": "📭 No friend activity found.\nYou may not have friends yet or they haven't been active.",
+    "recent_activities": "👥 **Recent Friend Activities**",
+    "user_stats": "📊 **User Statistics**",
+    "total_users": "👥 Total users: {total}",
+    "active_users": "✅ Active: {active} ({percentage:.1f}%)",
+    "new_users_week": "🆕 New this week: {count}",
+    "activity_level": "📈 Activity: {level}"
+  },
+  
+  "errors": {
+    "rate_limit": "⚠️ Rate limit exceeded. Please try again later."
+  },
+  
+  "broadcast": {
+    "enter_message": "📢 **Broadcast Message**\n\nEnter the message text to send to all users:",
+    "confirm_send": "✅ Send broadcast",
+    "create_title": "📢 **Creating Broadcast**",
+    "create_description": "Send message text to broadcast to all users.",
+    "markdown_support": "💡 Markdown formatting supported.",
+    "cancel_help": "📝 Use /cancel to cancel"
   }
 }
