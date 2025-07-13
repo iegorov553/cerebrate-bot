@@ -74,8 +74,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         # Create admin panel message
         admin_text = f"**{translator.translate('admin.title')}**\n\n"
-        admin_text += f"🔧 **Версия:** `{version_string}`\n"
-        admin_text += f"🌍 **Среда:** `{version_info['environment']}`\n\n"
+        admin_text += f"{translator.translate('admin.version', version=version_string)}\n"
+        admin_text += f"{translator.translate('admin.environment', env=version_info['environment'])}\n\n"
         admin_text += f"{translator.translate('admin.choose_action')}"
 
         await query.edit_message_text(
@@ -202,7 +202,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
             # Show loading indicator
             await query.edit_message_text(
-                "🔄 **Проверка состояния системы...**\n\nПожалуйста, подождите...",
+                translator.translate('admin.health_checking'),
                 parse_mode='Markdown'
             )
 
@@ -235,8 +235,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
             # Show error message
             await query.edit_message_text(
-                f"❌ **Ошибка проверки здоровья системы**\n\n"
-                f"Не удалось получить статус системы: {str(e)[:100]}...",
+                translator.translate('admin.health_error', error=str(e)[:100]),
                 reply_markup=KeyboardGenerator.admin_menu(translator),
                 parse_mode='Markdown'
             )
@@ -269,7 +268,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         # Safe timestamp without escaping (date/time only)
         timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
-        message += f"📅 **Время проверки:** `{timestamp_safe}`\n"
+        message += f"{translator.translate('admin.health_timestamp', timestamp=timestamp_safe)}\n"
         message += f"{translator.translate('admin.health_version', version=health_status.version)}\n"
         message += f"{translator.translate('admin.health_uptime', uptime=f'{health_status.uptime_seconds:.1f}')}\n\n"
 
@@ -277,11 +276,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
         message += f"{translator.translate('admin.health_components')}\n"
         for name, component in health_status.components.items():
             emoji = status_emoji.get(component.status, '❓')
-            component_name = {
-                'database': '💾 База данных',
-                'telegram_api': '📡 Telegram API', 
-                'scheduler': '⏰ Планировщик'
-            }.get(name, f'🔧 {name.title()}')
+            component_name = translator.translate(f'admin.component_{name}', default=f'🔧 {name.title()}')
 
             message += f"{emoji} **{component_name}:** {component.status.upper()}"
 
@@ -293,7 +288,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
             if component.error:
                 # Safely escape error message
                 safe_error = escape_markdown(component.error)
-                message += f"   ⚠️ Ошибка: `{safe_error}`\n"
+                message += f"   {translator.translate('admin.error', error=safe_error)}\n"
 
             if component.details:
                 # Show only important details with escaping
@@ -305,11 +300,11 @@ class AdminCallbackHandler(BaseCallbackHandler):
                         safe_value = escape_markdown(str(v))
                         safe_details.append(f"{k}: {safe_value}")
                     if safe_details:
-                        message += f"   📋 Детали: `{', '.join(safe_details)}`\n"
+                        message += f"   {translator.translate('admin.details', details=', '.join(safe_details))}\n"
 
         # System metrics if available
         if hasattr(health_status, 'metrics') and health_status.metrics:
-            message += f"\n📊 **Метрики системы:**\n"
+            message += f"\n{translator.translate('admin.system_metrics')}\n"
             for metric, value in health_status.metrics.items():
                 safe_metric = escape_markdown(str(metric))
                 safe_value = escape_markdown(str(value))

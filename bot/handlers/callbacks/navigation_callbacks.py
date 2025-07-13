@@ -161,7 +161,6 @@ class NavigationCallbackHandler(BaseCallbackHandler):
                     language_name=lang_info['native'], 
                     flag=lang_info['flag']
                 )
-                success_message += f"\n\n{new_translator.translate('language.change_note')}"
 
             await query.edit_message_text(
                 success_message,

@@ -13,15 +13,15 @@ logger = get_logger(__name__)
 
 async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_TYPE, error: RateLimitExceeded):
     """Handle rate limit exceeded with user-friendly message."""
-    
+
     if not update.effective_chat:
         return
-    
+
     try:
         # Get current usage stats
         user_id = update.effective_user.id if update.effective_user else 0
         stats = rate_limiter.get_usage_stats(user_id, error.action)
-        
+
         # Format time message
         if error.retry_after < 60:
             time_msg = f"{error.retry_after} сек."
@@ -31,7 +31,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         else:
             hours = error.retry_after // 3600
             time_msg = f"{hours} ч."
-        
+
         # Create user-friendly action names
         action_names = {
             "general": "общих команд",
@@ -41,23 +41,23 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             "admin": "админских команд",
             "callback": "нажатий кнопок"
         }
-        
+
         action_display = action_names.get(error.action, error.action)
-        
+
         # Create message with emoji and formatting
         message = f"🚫 **Превышен лимит {action_display}**\n\n" \
-                  f"📊 Использовано: {stats['current_count']}/{stats['max_requests']}\n" \
-                  f"⏰ Попробуйте через: {time_msg}\n" \
-                  f"🔄 Окно сброса: {stats['window_seconds']} сек.\n\n" \
-                  f"_Лимиты защищают бот от перегрузки._"
-        
+            f"📊 Использовано: {stats['current_count']}/{stats['max_requests']}\n" \
+            f"⏰ Попробуйте через: {time_msg}\n" \
+            f"🔄 Окно сброса: {stats['window_seconds']} сек.\n\n" \
+            f"_Лимиты защищают бот от перегрузки._"
+
         # Add helpful keyboard
         keyboard = [
             [InlineKeyboardButton("🏠 Главное меню", callback_data="menu_main")],
             [InlineKeyboardButton("❓ Помощь", callback_data="menu_help")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        
+
         # Send message (try edit first, then send new)
         if update.callback_query:
             try:
@@ -82,7 +82,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
                 reply_markup=reply_markup,
                 parse_mode='Markdown'
             )
-        
+
         logger.info(
             "Rate limit notification sent",
             user_id=user_id,
@@ -91,10 +91,10 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             current_usage=stats['current_count'],
             max_requests=stats['max_requests']
         )
-        
+
     except Exception as exc:
         logger.error("Failed to handle rate limit error", error=str(exc))
-        
+
         # Fallback simple message
         try:
             await context.bot.send_message(

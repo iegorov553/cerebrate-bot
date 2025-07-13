@@ -23,51 +23,51 @@ async def handle_feedback_message(update: Update, context: ContextTypes.DEFAULT_
     """Handle feedback message from user."""
     if not update.message or not update.effective_user:
         return
-    
+
     user = update.effective_user
     message_text = update.message.text
-    
+
     if not message_text or len(message_text.strip()) == 0:
         return
-    
+
     # Skip commands
     if message_text.startswith('/'):
         return
-    
+
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Get dependencies
     config: Config = context.bot_data['config']
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Check if feedback is enabled
     if not config.is_feedback_enabled():
         return
-    
+
     # Initialize feedback manager
     rate_limiter = MultiTierRateLimiter(feedback_rate_limit=config.feedback_rate_limit)
     feedback_manager = FeedbackManager(config, rate_limiter, user_cache)
-    
+
     # Check if user has active feedback session
     session = await feedback_manager.get_feedback_session(user.id)
     if not session:
         return  # No active feedback session, handle as regular message
-    
+
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
-    
+
     try:
         if session.get("status") == "awaiting_description":
             # User is providing feedback description
             await handle_feedback_description(
                 update, context, feedback_manager, translator, message_text
             )
-        
+
     except Exception as e:
         logger.error(f"Error handling feedback message: {e}")
         await feedback_manager.clear_feedback_session(user.id)
-        
+
         await update.message.reply_text(
             translator.translate('feedback.error'),
             reply_markup=create_main_menu(
@@ -88,7 +88,7 @@ async def handle_feedback_description(
     """Handle feedback description submission."""
     user = update.effective_user
     config: Config = context.bot_data['config']
-    
+
     # Store description in session
     session = await feedback_manager.get_feedback_session(user.id)
     if not session:
@@ -97,27 +97,27 @@ async def handle_feedback_description(
             parse_mode='Markdown'
         )
         return
-    
+
     session["description"] = description
     session["status"] = "awaiting_confirmation"
-    
+
     # Store updated session
     await feedback_manager.user_cache.set(
         f"feedback_session_{user.id}",
         session,
         ttl=3600
     )
-    
+
     # Show confirmation
     feedback_type = session.get("feedback_type", "general")
-    
+
     # Preview message
     preview_text = (
         f"{translator.translate('feedback.confirm_title')}\n\n"
         f"**{translator.translate(f'feedback.{feedback_type}')}**\n\n"
         f"*{description[:500]}{'...' if len(description) > 500 else ''}*"
     )
-    
+
     keyboard = InlineKeyboardMarkup([
         [
             InlineKeyboardButton(
@@ -130,7 +130,7 @@ async def handle_feedback_description(
             )
         ]
     ])
-    
+
     await update.message.reply_text(
         preview_text,
         reply_markup=keyboard,
@@ -143,24 +143,24 @@ async def handle_feedback_confirmation(update: Update, context: ContextTypes.DEF
     """Handle feedback confirmation/cancellation."""
     query = update.callback_query
     user = update.effective_user
-    
+
     if not query or not user or user.id != user_id:
         return
-    
+
     await query.answer()
-    
+
     # Get dependencies
     config: Config = context.bot_data['config']
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Get user translator
     translator = await get_user_translator(user.id, db_client, user_cache)
-    
+
     # Initialize feedback manager
     rate_limiter = MultiTierRateLimiter(feedback_rate_limit=config.feedback_rate_limit)
     feedback_manager = FeedbackManager(config, rate_limiter, user_cache)
-    
+
     if action == "confirm":
         # Submit feedback
         session = await feedback_manager.get_feedback_session(user.id)
@@ -170,23 +170,23 @@ async def handle_feedback_confirmation(update: Update, context: ContextTypes.DEF
                 parse_mode='Markdown'
             )
             return
-        
+
         description = session["description"]
-        
+
         # Submit to GitHub
         issue_url = await feedback_manager.submit_feedback(
             user.id,
             user.username,
             description
         )
-        
+
         if issue_url:
             # Success with GitHub link
             success_text = translator.translate('feedback.success', issue_url=issue_url)
         else:
             # Success without GitHub link (disabled or failed)
             success_text = translator.translate('feedback.success_no_link')
-        
+
         await query.edit_message_text(
             success_text,
             reply_markup=create_main_menu(
@@ -195,11 +195,11 @@ async def handle_feedback_confirmation(update: Update, context: ContextTypes.DEF
             ),
             parse_mode='Markdown'
         )
-        
+
     elif action == "cancel":
         # Cancel feedback
         await feedback_manager.clear_feedback_session(user.id)
-        
+
         await query.edit_message_text(
             translator.translate('feedback.cancelled'),
             reply_markup=create_main_menu(

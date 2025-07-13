@@ -109,7 +109,18 @@
     "health_status": "**Overall Status:** {status}",
     "health_uptime": "**Uptime:** {uptime} seconds",
     "health_version": "**Version:** {version}",
-    "health_components": "**Components:**"
+    "health_components": "**Components:**",
+    "version": "🔧 **Version:** `{version}`",
+    "environment": "🌍 **Environment:** `{env}`",
+    "health_checking": "🔄 **Checking system status...**\n\nPlease wait...",
+    "health_error": "❌ **System health check error**\n\nFailed to get system status: {error}...",
+    "health_timestamp": "📅 **Check time:** `{timestamp}`",
+    "component_database": "💾 Database",
+    "component_telegram_api": "📡 Telegram API",
+    "component_scheduler": "⏰ Scheduler",
+    "error": "⚠️ Error: `{error}`",
+    "details": "📋 Details: `{details}`",
+    "system_metrics": "📊 **System Metrics:**"
   },
   
   "help": {

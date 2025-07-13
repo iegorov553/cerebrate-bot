@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle errors that occur during bot operation."""
-    
+
     # Set user context if available
     if isinstance(update, Update) and update.effective_user:
         set_user_context(
@@ -22,22 +22,22 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
             update.effective_user.username,
             update.effective_user.first_name
         )
-    
+
     error = context.error
-    
+
     # Handle specific error types
     if isinstance(error, RateLimitExceeded):
         await handle_rate_limit_error(update, context, error)
         return
-    
+
     if isinstance(error, AdminRequired):
         await handle_admin_required_error(update, context, error)
         return
-    
+
     if isinstance(error, ValidationError):
         await handle_validation_error(update, context, error)
         return
-    
+
     # Log all other errors
     logger.error(
         "Unhandled error occurred",
@@ -45,7 +45,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         error_message=str(error),
         traceback=traceback.format_exc()
     )
-    
+
     # Send generic error message to user
     if isinstance(update, Update) and update.effective_chat:
         try:
@@ -62,7 +62,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
     """Handle rate limit exceeded errors."""
     if not update.effective_chat:
         return
-    
+
     try:
         # Format retry time
         if error.retry_after < 60:
@@ -70,25 +70,25 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         else:
             minutes = error.retry_after // 60
             time_msg = f"{minutes} минут"
-        
+
         message = f"🚫 **Превышен лимит запросов**\n\n" \
-                  f"Вы отправляете команды слишком часто.\n" \
-                  f"Попробуйте снова через {time_msg}.\n\n" \
-                  f"Действие: {error.action}"
-        
+            f"Вы отправляете команды слишком часто.\n" \
+            f"Попробуйте снова через {time_msg}.\n\n" \
+            f"Действие: {error.action}"
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message,
             parse_mode='Markdown'
         )
-        
+
         logger.warning(
             "Rate limit message sent to user",
             user_id=update.effective_user.id if update.effective_user else None,
             action=error.action,
             retry_after=error.retry_after
         )
-        
+
     except Exception as exc:
         logger.error("Failed to send rate limit message", error=str(exc))
 
@@ -97,21 +97,21 @@ async def handle_admin_required_error(update: Update, context: ContextTypes.DEFA
     """Handle admin required errors."""
     if not update.effective_chat:
         return
-    
+
     try:
         message = "🔒 **Доступ запрещен**\n\nЭта команда доступна только администраторам."
-        
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message,
             parse_mode='Markdown'
         )
-        
+
         logger.warning(
             "Admin access denied",
             user_id=update.effective_user.id if update.effective_user else None
         )
-        
+
     except Exception as exc:
         logger.error("Failed to send admin required message", error=str(exc))
 
@@ -120,22 +120,22 @@ async def handle_validation_error(update: Update, context: ContextTypes.DEFAULT_
     """Handle validation errors."""
     if not update.effective_chat:
         return
-    
+
     try:
         message = f"❌ **Ошибка валидации**\n\n{str(error)}"
-        
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=message,
             parse_mode='Markdown'
         )
-        
+
         logger.warning(
             "Validation error",
             user_id=update.effective_user.id if update.effective_user else None,
             error_message=str(error)
         )
-        
+
     except Exception as exc:
         logger.error("Failed to send validation error message", error=str(exc))
 

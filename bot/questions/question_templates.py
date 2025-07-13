@@ -9,12 +9,12 @@ from typing import Dict, List
 
 class QuestionTemplates:
     """Predefined question templates for users."""
-    
+
     @staticmethod
     def get_templates() -> Dict[str, List[Dict]]:
         """
         Get all question templates organized by categories.
-        
+
         Returns:
             Dictionary with categories and their templates
         """
@@ -124,12 +124,12 @@ class QuestionTemplates:
                 }
             ]
         }
-    
+
     @staticmethod
     def get_category_names() -> Dict[str, str]:
         """
         Get localized category names.
-        
+
         Returns:
             Dictionary mapping category keys to display names
         """
@@ -139,56 +139,56 @@ class QuestionTemplates:
             "time_based": "⏰ По времени суток",
             "health": "💪 Здоровье"
         }
-    
+
     @staticmethod
     def get_template_by_name(name: str) -> Dict:
         """
         Get template by name.
-        
+
         Args:
             name: Template name
-            
+
         Returns:
             Template dictionary or None if not found
         """
         templates = QuestionTemplates.get_templates()
-        
+
         for category_templates in templates.values():
             for template in category_templates:
                 if template["name"] == name:
                     return template
-        
+
         return None
-    
+
     @staticmethod
     def search_templates(query: str) -> List[Dict]:
         """
         Search templates by query.
-        
+
         Args:
             query: Search query
-            
+
         Returns:
             List of matching templates
         """
         query_lower = query.lower()
         templates = QuestionTemplates.get_templates()
         results = []
-        
+
         for category_templates in templates.values():
             for template in category_templates:
-                if (query_lower in template["name"].lower() or 
-                    query_lower in template["text"].lower() or
-                    query_lower in template["description"].lower()):
+                if (query_lower in template["name"].lower() 
+                    or query_lower in template["text"].lower()
+                        or query_lower in template["description"].lower()):
                     results.append(template)
-        
+
         return results
-    
+
     @staticmethod
     def get_popular_templates() -> List[Dict]:
         """
         Get most popular/recommended templates.
-        
+
         Returns:
             List of popular templates
         """
@@ -199,36 +199,36 @@ class QuestionTemplates:
             "Вечерний отчёт",
             "Обучение"
         ]
-        
+
         popular = []
         for name in popular_names:
             template = QuestionTemplates.get_template_by_name(name)
             if template:
                 popular.append(template)
-        
+
         return popular
-    
+
     @staticmethod
     def customize_template(template: Dict, customizations: Dict) -> Dict:
         """
         Customize template with user preferences.
-        
+
         Args:
             template: Base template
             customizations: User customizations
-            
+
         Returns:
             Customized template
         """
         customized = template.copy()
-        
+
         # Apply customizations
         for key, value in customizations.items():
             if key in customized and value is not None:
                 customized[key] = value
-        
+
         # Ensure required fields
         if "interval_minutes" in customized:
             customized["interval_minutes"] = max(30, customized["interval_minutes"])
-        
+
         return customized

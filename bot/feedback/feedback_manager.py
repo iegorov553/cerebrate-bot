@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 class FeedbackManager:
     """Manages user feedback and GitHub integration."""
-    
+
     def __init__(
         self,
         config: Config,
@@ -25,7 +25,7 @@ class FeedbackManager:
     ):
         """
         Initialize feedback manager.
-        
+
         Args:
             config: Bot configuration
             rate_limiter: Rate limiter instance
@@ -34,7 +34,7 @@ class FeedbackManager:
         self.config = config
         self.rate_limiter = rate_limiter
         self.user_cache = user_cache
-        
+
         # Initialize GitHub client if token is available
         if config.is_feedback_enabled():
             self.github_client = GitHubFeedbackClient(
@@ -44,24 +44,24 @@ class FeedbackManager:
         else:
             self.github_client = None
             logger.warning("GitHub feedback not configured - feedback will be logged only")
-    
+
     def is_enabled(self) -> bool:
         """Check if feedback system is enabled."""
         return self.config.is_feedback_enabled() and self.github_client is not None
-    
+
     async def check_rate_limit(self, user_id: int) -> bool:
         """
         Check if user can send feedback.
-        
+
         Args:
             user_id: Telegram user ID
-            
+
         Returns:
             True if user can send feedback, False if rate limited
         """
         is_allowed, retry_after = await self.rate_limiter.check_limit(user_id, "feedback")
         return is_allowed
-    
+
     @track_errors_async("feedback_session")
     async def start_feedback_session(
         self,
@@ -71,12 +71,12 @@ class FeedbackManager:
     ) -> bool:
         """
         Start a feedback session for user.
-        
+
         Args:
             user_id: Telegram user ID
             feedback_type: Type of feedback (bug_report, feature_request, general)
             user_language: User's language preference
-            
+
         Returns:
             True if session started, False if rate limited
         """
@@ -84,20 +84,20 @@ class FeedbackManager:
         if not await self.check_rate_limit(user_id):
             logger.warning(f"User {user_id} rate limited for feedback")
             return False
-        
+
         # Store feedback session in cache
         session_data = {
             "feedback_type": feedback_type,
             "user_language": user_language,
             "status": "awaiting_description"
         }
-        
+
         await self.user_cache.set(
             f"feedback_session_{user_id}",
             session_data,
             ttl=3600  # 1 hour timeout for feedback session
         )
-        
+
         logger.info(
             f"Started feedback session for user {user_id}",
             extra={
@@ -106,17 +106,17 @@ class FeedbackManager:
                 "user_language": user_language
             }
         )
-        
+
         return True
-    
+
     async def get_feedback_session(self, user_id: int) -> Optional[Dict]:
         """Get active feedback session for user."""
         return await self.user_cache.get(f"feedback_session_{user_id}")
-    
+
     async def clear_feedback_session(self, user_id: int) -> None:
         """Clear feedback session for user."""
         await self.user_cache.invalidate(f"feedback_session_{user_id}")
-    
+
     @track_errors_async("submit_feedback")
     async def submit_feedback(
         self,
@@ -126,12 +126,12 @@ class FeedbackManager:
     ) -> Optional[str]:
         """
         Submit user feedback to GitHub.
-        
+
         Args:
             user_id: Telegram user ID
             username: Telegram username
             description: User's feedback description
-            
+
         Returns:
             GitHub issue URL if successful, None if failed
         """
@@ -140,13 +140,13 @@ class FeedbackManager:
         if not session:
             logger.warning(f"No active feedback session for user {user_id}")
             return None
-        
+
         feedback_type = session.get("feedback_type")
         user_language = session.get("user_language", "ru")
-        
+
         # Clear session
         await self.clear_feedback_session(user_id)
-        
+
         if not self.is_enabled():
             logger.info(
                 f"Feedback submitted (GitHub disabled): {feedback_type}",
@@ -158,7 +158,7 @@ class FeedbackManager:
                 }
             )
             return None
-        
+
         # Format issue based on feedback type
         if feedback_type == "bug_report":
             issue_data = self.github_client.format_bug_report(
@@ -175,7 +175,7 @@ class FeedbackManager:
         else:
             logger.error(f"Unknown feedback type: {feedback_type}")
             return None
-        
+
         # Create GitHub issue
         issue_url = await self.github_client.create_issue(
             title=issue_data["title"],
@@ -184,7 +184,7 @@ class FeedbackManager:
             user_id=user_id,
             username=username
         )
-        
+
         if issue_url:
             logger.info(
                 f"Successfully submitted feedback to GitHub: {issue_url}",
@@ -204,5 +204,5 @@ class FeedbackManager:
                     "feedback_type": feedback_type
                 }
             )
-        
+
         return issue_url

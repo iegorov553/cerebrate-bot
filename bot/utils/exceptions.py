@@ -20,7 +20,7 @@ class ValidationError(BotError):
 
 class RateLimitExceeded(BotError):
     """Exception raised when rate limit is exceeded."""
-    
+
     def __init__(self, message: str, retry_after: int, action: str):
         self.message = message
         self.retry_after = retry_after

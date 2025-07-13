@@ -28,19 +28,19 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Get dependencies from context
     db_client: DatabaseClient = context.bot_data['db_client']
     config: Config = context.bot_data['config']
-    
+
     # Get user cache
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Detect user language
     user_language = detect_user_language(user)
     translator = get_translator()
     translator.set_language(user_language)
-    
+
     # Ensure user exists in database
     user_ops = UserOperations(db_client, user_cache)
     try:
@@ -60,16 +60,16 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Create main menu
     keyboard = create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
-    
+
     welcome_text = f"{translator.translate('welcome.greeting', name=user.first_name)}\n\n" \
-                   f"{translator.translate('welcome.description')}"
+        f"{translator.translate('welcome.description')}"
 
     await update.message.reply_text(
         welcome_text,
         reply_markup=keyboard,
         parse_mode='Markdown'
     )
-    
+
     logger.info(f"User {user.id} opened main menu")
 
 
@@ -82,28 +82,28 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Get user settings from database
     user_ops = UserOperations(db_client, user_cache)
     user_data = await user_ops.get_user_settings(user.id)
-    
+
     if not user_data:
         await update.message.reply_text(
             "❌ Не удалось получить настройки. Попробуйте /start"
         )
         return
-    
+
     # Create settings menu
     keyboard = create_settings_menu()
-    
+
     settings_text = f"⚙️ **Твои настройки:**\n\n" \
-                   f"🔔 Уведомления: {'✅ Включены' if user_data['enabled'] else '❌ Отключены'}\n" \
-                   f"⏰ Время: {user_data['window_start']} - {user_data['window_end']}\n" \
-                   f"📊 Частота: каждые {user_data['interval_min']} минут"
+        f"🔔 Уведомления: {'✅ Включены' if user_data['enabled'] else '❌ Отключены'}\n" \
+        f"⏰ Время: {user_data['window_start']} - {user_data['window_end']}\n" \
+        f"📊 Частота: каждые {user_data['interval_min']} минут"
 
     await update.message.reply_text(
         settings_text,
@@ -121,21 +121,21 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     config: Config = context.bot_data['config']
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Get user translator
     from bot.utils.translation_helpers import get_user_translator
     translator = await get_user_translator(user.id, db_client, user_cache)
-    
+
     # Create web app button for main webapp page
     web_app = WebAppInfo(url=config.webapp_url)
     keyboard = InlineKeyboardMarkup([[
         InlineKeyboardButton(translator.translate('menu.history'), web_app=web_app)
     ]])
-    
+
     await update.message.reply_text(
         f"**{translator.translate('menu.history')}**\n\n"
         f"{translator.translate('history.webapp_description')}",
@@ -153,7 +153,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     if not context.args:
         await update.message.reply_text(
             "👥 **Добавить друга**\n\n"
@@ -162,10 +162,10 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             parse_mode='Markdown'
         )
         return
-    
+
     # Extract and validate username
     target_username_raw = context.args[0]
-    
+
     from bot.utils.datetime_utils import validate_username
     is_valid, error_msg = validate_username(target_username_raw)
     if not is_valid:
@@ -175,18 +175,18 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             parse_mode='Markdown'
         )
         return
-    
+
     target_username = target_username_raw.lstrip('@')
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Implement friend request logic
     from bot.database.friend_operations import FriendOperations
     friend_ops = FriendOperations(db_client)
     user_ops = UserOperations(db_client, user_cache)
-    
+
     # Find target user by username
     target_user = await user_ops.find_user_by_username(target_username)
     if not target_user:
@@ -195,9 +195,9 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "Убедитесь, что пользователь зарегистрирован в боте."
         )
         return
-    
+
     target_id = target_user['tg_id']
-    
+
     # Send friend request (will check for existing friendship internally)
     success = await friend_ops.create_friend_request(user.id, target_id)
     if success:
@@ -205,7 +205,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"📤 Запрос в друзья отправлен пользователю @{target_username}!\n\n"
             "Ожидайте подтверждения."
         )
-        
+
         # Notify target user if possible
         try:
             await context.bot.send_message(
@@ -215,7 +215,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             )
         except Exception as e:
             logger.warning(f"Could not notify user {target_id}: {e}")
-            
+
     else:
         await update.message.reply_text(
             "❌ Ошибка при отправке запроса в друзья. Попробуйте позже."
@@ -231,10 +231,10 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Create friends menu
     keyboard = create_friends_menu()
-    
+
     await update.message.reply_text(
         "👥 **Друзья**\n\n"
         "Выбери действие:",
@@ -252,21 +252,21 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
-    
+
     from bot.database.friend_operations import FriendOperations
     friend_ops = FriendOperations(db_client)
-    
+
     # Get friend requests
     requests_data = await friend_ops.get_friend_requests_optimized(user.id)
-    
+
     incoming = requests_data.get('incoming', [])
     outgoing = requests_data.get('outgoing', [])
-    
+
     text = "📥 **Запросы в друзья**\n\n"
-    
+
     if incoming:
         text += "**Входящие запросы:**\n"
         for req in incoming[:5]:  # Показываем только первые 5
@@ -276,7 +276,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
             text += f"  `/accept @{username}` | `/decline @{username}`\n\n"
     else:
         text += "**Входящие запросы:** нет\n\n"
-    
+
     if outgoing:
         text += "**Исходящие запросы:**\n"
         for req in outgoing[:5]:  # Показываем только первые 5
@@ -285,7 +285,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
             text += f"• @{username} ({name}) - ожидает ответа\n"
     else:
         text += "**Исходящие запросы:** нет"
-    
+
     await update.message.reply_text(text, parse_mode='Markdown')
 
 
@@ -298,7 +298,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     if not context.args:
         await update.message.reply_text(
             "👥 **Принять в друзья**\n\n"
@@ -306,19 +306,19 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
             parse_mode='Markdown'
         )
         return
-    
+
     target_username = context.args[0].lstrip('@')
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     from bot.database.friend_operations import FriendOperations
     from bot.database.user_operations import UserOperations
-    
+
     friend_ops = FriendOperations(db_client)
     user_ops = UserOperations(db_client, user_cache)
-    
+
     # Find requester by username
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
@@ -326,7 +326,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
             f"❌ Пользователь @{target_username} не найден."
         )
         return
-    
+
     # Accept friend request
     success = await friend_ops.accept_friend_request(requester['tg_id'], user.id)
     if success:
@@ -334,7 +334,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
             f"✅ Заявка в друзья от @{target_username} принята!\n\n"
             "Теперь вы друзья! 🎉"
         )
-        
+
         # Notify requester if possible
         try:
             await context.bot.send_message(
@@ -358,7 +358,7 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     if not context.args:
         await update.message.reply_text(
             "👥 **Отклонить заявку**\n\n"
@@ -366,19 +366,19 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
             parse_mode='Markdown'
         )
         return
-    
+
     target_username = context.args[0].lstrip('@')
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     from bot.database.friend_operations import FriendOperations
     from bot.database.user_operations import UserOperations
-    
+
     friend_ops = FriendOperations(db_client)
     user_ops = UserOperations(db_client, user_cache)
-    
+
     # Find requester by username
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
@@ -386,14 +386,14 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
             f"❌ Пользователь @{target_username} не найден."
         )
         return
-    
+
     # Decline friend request
     success = await friend_ops.decline_friend_request(requester['tg_id'], user.id)
     if success:
         await update.message.reply_text(
             f"❌ Заявка в друзья от @{target_username} отклонена."
         )
-        
+
         # Notify requester if possible
         try:
             await context.bot.send_message(
@@ -417,7 +417,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     if not context.args:
         await update.message.reply_text(
             "⏰ **Установить временное окно**\n\n"
@@ -428,9 +428,9 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             parse_mode='Markdown'
         )
         return
-    
+
     time_range = context.args[0]
-    
+
     # Validate time format
     from bot.utils.datetime_utils import validate_time_window
     is_valid, error_msg, start_time, end_time = validate_time_window(time_range)
@@ -442,19 +442,19 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             parse_mode='Markdown'
         )
         return
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Initialize question manager and ensure user has default question
     from bot.questions import QuestionManager
     question_manager = QuestionManager(db_client, user_cache)
-    
+
     try:
         # Ensure user has default question
         await question_manager.ensure_user_has_default_question(user.id)
-        
+
         # Get default question
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
@@ -462,14 +462,14 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 "❌ Ошибка получения дефолтного вопроса. Попробуйте /start"
             )
             return
-        
+
         # Update time window for default question
         success = await question_manager.question_ops.update_question_schedule(
             default_question['id'], 
             window_start=start_time.strftime('%H:%M:%S'),
             window_end=end_time.strftime('%H:%M:%S')
         )
-        
+
         if success:
             await update.message.reply_text(
                 f"✅ **Временное окно обновлено!**\n\n"
@@ -498,7 +498,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     if not context.args:
         await update.message.reply_text(
             "📊 **Установить частоту уведомлений**\n\n"
@@ -511,7 +511,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             parse_mode='Markdown'
         )
         return
-    
+
     try:
         interval_min = int(context.args[0])
         if interval_min < 5:
@@ -533,19 +533,19 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             "Пример: `/freq 60`"
         )
         return
-    
+
     # Get dependencies
     db_client: DatabaseClient = context.bot_data['db_client']
     user_cache: TTLCache = context.bot_data['user_cache']
-    
+
     # Initialize question manager and ensure user has default question
     from bot.questions import QuestionManager
     question_manager = QuestionManager(db_client, user_cache)
-    
+
     try:
         # Ensure user has default question
         await question_manager.ensure_user_has_default_question(user.id)
-        
+
         # Get default question
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
@@ -553,13 +553,13 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 "❌ Ошибка получения дефолтного вопроса. Попробуйте /start"
             )
             return
-        
+
         # Update frequency for default question
         success = await question_manager.question_ops.update_question_schedule(
             default_question['id'], 
             interval_minutes=interval_min
         )
-        
+
         if success:
             # Calculate human-readable frequency
             if interval_min < 60:
@@ -575,7 +575,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     freq_text = f"{hours} час{'а' if hours < 5 else 'ов'} {minutes} минут"
             else:
                 freq_text = f"{interval_min // 60} часов"
-            
+
             await update.message.reply_text(
                 f"✅ **Частота уведомлений обновлена!**\n\n"
                 f"📊 Новая частота: каждые {freq_text}\n\n"
@@ -603,66 +603,66 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     set_user_context(user.id, user.username, user.first_name)
-    
+
     # Get dependencies from context
     config: Config = context.bot_data['config']
     db_client: DatabaseClient = context.bot_data['db_client']
-    
+
     # Импортируем HealthService
     from bot.services.health_service import HealthService
     from bot.utils.version import get_bot_version
-    
+
     try:
         # Создаем health service
         version = get_bot_version()
         health_service = HealthService(db_client, version)
-        
+
         # Получаем статус здоровья системы
         health_status = await health_service.get_system_health(context.application)
-        
+
         # Формируем сообщение
         status_emoji = {
             "healthy": "✅",
             "degraded": "⚠️", 
             "unhealthy": "❌"
         }
-        
+
         # Безопасное экранирование для Markdown
         def escape_markdown_safe(text):
             if not text:
                 return ""
             return str(text).replace('_', '\\_').replace('*', '\\*').replace('`', '\\`').replace('[', '\\[').replace(']', '\\]')
-        
+
         message = f"🏥 **System Health Check**\n\n"
         message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {health_status.status}\n"
-        
+
         # Безопасное время
         timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
         message += f"📅 **Timestamp:** `{timestamp_safe}`\n"
         message += f"🔢 **Version:** {health_status.version}\n"
         message += f"⏱️ **Uptime:** {health_status.uptime_seconds:.1f}s\n\n"
-        
+
         message += "**Components:**\n"
         for name, component in health_status.components.items():
             emoji = status_emoji.get(component.status, '❓')
             message += f"{emoji} **{name.title()}:** {component.status}"
-            
+
             if component.latency_ms:
                 message += f" ({component.latency_ms:.0f}ms)"
-            
+
             if component.error:
                 safe_error = escape_markdown_safe(component.error)
                 message += f"\n   ⚠️ Error: `{safe_error}`"
-                
+
             message += "\n"
-        
+
         await update.message.reply_text(
             message,
             parse_mode='Markdown'
         )
-        
+
         logger.info(f"Health check command executed for user {user.id}, status: {health_status.status}")
-        
+
     except Exception as e:
         logger.error(f"Health command failed for user {user.id}: {e}")
         await update.message.reply_text(
@@ -679,7 +679,7 @@ def setup_command_handlers(
     config: Config
 ) -> None:
     """Setup all command handlers."""
-    
+
     # Store dependencies in bot_data for access in handlers
     application.bot_data.update({
         'db_client': db_client,
@@ -687,7 +687,7 @@ def setup_command_handlers(
         'rate_limiter': rate_limiter,
         'config': config
     })
-    
+
     # Register command handlers
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("settings", settings_command))
@@ -700,5 +700,5 @@ def setup_command_handlers(
     application.add_handler(CommandHandler("window", window_command))
     application.add_handler(CommandHandler("freq", freq_command))
     application.add_handler(CommandHandler("health", health_command))
-    
+
     logger.info("Command handlers registered successfully")
