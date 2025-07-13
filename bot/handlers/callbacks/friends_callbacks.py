@@ -164,10 +164,23 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     username = friend.get('tg_username', '')
                     name = friend.get('tg_first_name', 'Без имени')
 
+                    # Escape markdown special characters
+                    def escape_markdown(text):
+                        if not text:
+                            return ""
+                        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+                        escaped_text = str(text)
+                        for char in special_chars:
+                            escaped_text = escaped_text.replace(char, f'\\{char}')
+                        return escaped_text
+
+                    safe_username = escape_markdown(username)
+                    safe_name = escape_markdown(name)
+
                     if username:
-                        friends_text += f"• @{username} - {name}\n"
+                        friends_text += f"• @{safe_username} - {safe_name}\n"
                     else:
-                        friends_text += f"• {name}\n"
+                        friends_text += f"• {safe_name}\n"
 
                 # Show count if more than 10
                 if len(friends) > 10:
@@ -231,19 +244,34 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     name = requester.get('tg_first_name', '')
                     requester_id = req.get('requester_id')
                     
-                    display_name = f"@{username}" if username != 'Неизвестно' else name
+                    # Escape markdown special characters
+                    def escape_markdown(text):
+                        if not text:
+                            return ""
+                        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+                        escaped_text = str(text)
+                        for char in special_chars:
+                            escaped_text = escaped_text.replace(char, f'\\{char}')
+                        return escaped_text
+                    
+                    safe_username = escape_markdown(username)
+                    safe_name = escape_markdown(name)
+                    
+                    display_name = f"@{safe_username}" if username != 'Неизвестно' else safe_name
                     text += f"• {display_name}\n"
                     
                     # Add accept/decline buttons for each request
                     if requester_id:
                         from telegram import InlineKeyboardButton
+                        # Use simple names for buttons (no markdown escaping needed in button text)
+                        button_name = f"@{username}" if username != 'Неизвестно' else name
                         keyboard.append([
                             InlineKeyboardButton(
-                                f"✅ Принять {display_name}",
+                                f"✅ Принять {button_name}",
                                 callback_data=f"friend_accept:{requester_id}"
                             ),
                             InlineKeyboardButton(
-                                f"❌ Отклонить {display_name}",
+                                f"❌ Отклонить {button_name}",
                                 callback_data=f"friend_decline:{requester_id}"
                             )
                         ])
@@ -259,7 +287,20 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     username = addressee.get('tg_username', 'Неизвестно')
                     name = addressee.get('tg_first_name', '')
                     
-                    display_name = f"@{username}" if username != 'Неизвестно' else name
+                    # Escape markdown special characters
+                    def escape_markdown(text):
+                        if not text:
+                            return ""
+                        special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+                        escaped_text = str(text)
+                        for char in special_chars:
+                            escaped_text = escaped_text.replace(char, f'\\{char}')
+                        return escaped_text
+                    
+                    safe_username = escape_markdown(username)
+                    safe_name = escape_markdown(name)
+                    
+                    display_name = f"@{safe_username}" if username != 'Неизвестно' else safe_name
                     text += f"• {display_name} - ожидает ответа\n"
             else:
                 text += "**Исходящие запросы:** нет"
