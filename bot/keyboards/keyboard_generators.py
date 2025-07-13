@@ -72,7 +72,7 @@ class KeyboardGenerator:
 
     @staticmethod
     def friends_menu(
-        pending_requests: int = 0, 
+        pending_requests: int = 0,
         friends_count: int = 0,
         translator=None
     ) -> InlineKeyboardMarkup:
@@ -147,7 +147,7 @@ class KeyboardGenerator:
         keyboard.append([InlineKeyboardButton(outgoing_text, callback_data="requests_outgoing")])
 
         keyboard.append([InlineKeyboardButton(
-            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
             callback_data="back_friends"
         )])
 
@@ -168,7 +168,7 @@ class KeyboardGenerator:
         if not recommendations:
             keyboard = [
                 [InlineKeyboardButton(
-                    translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+                    translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
                     callback_data="back_friends"
                 )]
             ]
@@ -187,13 +187,13 @@ class KeyboardGenerator:
 
             keyboard.append([
                 InlineKeyboardButton(
-                    button_text, 
+                    button_text,
                     callback_data=f"add_friend:{rec['tg_id']}"
                 )
             ])
 
         keyboard.append([InlineKeyboardButton(
-            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends", 
+            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
             callback_data="back_friends"
         )])
 
@@ -204,23 +204,23 @@ class KeyboardGenerator:
         """Generate admin menu keyboard."""
         keyboard = [
             [InlineKeyboardButton(
-                translator.translate('admin.broadcast') if translator else "📢 Send Broadcast", 
+                translator.translate('admin.broadcast') if translator else "📢 Send Broadcast",
                 callback_data="admin_broadcast"
             )],
             [InlineKeyboardButton(
-                translator.translate('admin.user_statistics') if translator else "📊 User Statistics", 
+                translator.translate('admin.user_statistics') if translator else "📊 User Statistics",
                 callback_data="admin_stats"
             )],
             [InlineKeyboardButton(
-                translator.translate('admin.health_check') if translator else "🏥 Health Check", 
+                translator.translate('admin.health_check') if translator else "🏥 Health Check",
                 callback_data="admin_health"
             )],
             [InlineKeyboardButton(
-                translator.translate('admin.test_broadcast') if translator else "🧪 Test Broadcast", 
+                translator.translate('admin.test_broadcast') if translator else "🧪 Test Broadcast",
                 callback_data="admin_test_broadcast"
             )],
             [InlineKeyboardButton(
-                translator.translate('menu.back_main') if translator else "🔙 Back to Main Menu", 
+                translator.translate('menu.back_main') if translator else "🔙 Back to Main Menu",
                 callback_data="back_main"
             )]
         ]
@@ -310,7 +310,7 @@ class KeyboardGenerator:
             # Page indicator
             pagination_row.append(
                 InlineKeyboardButton(
-                    f"{current_page + 1}/{total_pages}", 
+                    f"{current_page + 1}/{total_pages}",
                     callback_data="page_info"
                 )
             )
@@ -408,15 +408,15 @@ class KeyboardGenerator:
 
         keyboard = [
             [InlineKeyboardButton(
-                "🇷🇺 Русский" + (" ✓" if current_language == 'ru' else ""), 
+                "🇷🇺 Русский" + (" ✓" if current_language == 'ru' else ""),
                 callback_data="language_ru"
             )],
             [InlineKeyboardButton(
-                "🇺🇸 English" + (" ✓" if current_language == 'en' else ""), 
+                "🇺🇸 English" + (" ✓" if current_language == 'en' else ""),
                 callback_data="language_en"
             )],
             [InlineKeyboardButton(
-                "🇪🇸 Español" + (" ✓" if current_language == 'es' else ""), 
+                "🇪🇸 Español" + (" ✓" if current_language == 'es' else ""),
                 callback_data="language_es"
             )],
             [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
@@ -425,8 +425,8 @@ class KeyboardGenerator:
 
     @staticmethod
     def questions_menu(
-        questions_summary: Dict, 
-        notifications_enabled: bool = True, 
+        questions_summary: Dict,
+        notifications_enabled: bool = True,
         translator=None
     ) -> InlineKeyboardMarkup:
         """
@@ -465,7 +465,7 @@ class KeyboardGenerator:
         if custom_questions:
             keyboard.append([])  # Separator
             keyboard.append([InlineKeyboardButton(
-                translator.translate("questions.custom_section"), 
+                translator.translate("questions.custom_section"),
                 callback_data="questions_noop"
             )])
 
@@ -567,7 +567,7 @@ class KeyboardGenerator:
 
             for cat_key, cat_name in categories.items():
                 keyboard.append([InlineKeyboardButton(
-                    cat_name, 
+                    cat_name,
                     callback_data=f"questions_templates_cat:{cat_key}"
                 )])
 

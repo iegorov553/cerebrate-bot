@@ -17,9 +17,9 @@ logger = get_logger(__name__)
 
 
 async def send_response_by_status(
-    message, 
-    status: str, 
-    translator, 
+    message,
+    status: str,
+    translator,
     question_text: str = None,
     user_response_text: str = None,
     is_voice: bool = False
@@ -29,7 +29,7 @@ async def send_response_by_status(
 
     Args:
         message: Telegram message object
-        status: Processing status 
+        status: Processing status
         translator: User translator instance
         question_text: Text of the question being answered
         user_response_text: User's response text
@@ -150,8 +150,8 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             success = await user_ops.log_activity(user.id, message.text, question_id=question_id)
 
             if success:
-                logger.info("Activity logged successfully", 
-                           user_id=user.id, 
+                logger.info("Activity logged successfully",
+                           user_id=user.id,
                            question_id=question_id,
                            message_length=len(message.text))
 
@@ -166,7 +166,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                 # Send status-specific response with question and answer info
                 await send_response_by_status(
                     message=message,
-                    status=status, 
+                    status=status,
                     translator=translator,
                     question_text=question_text,
                     user_response_text=message.text,  # Всегда дублируем ответ

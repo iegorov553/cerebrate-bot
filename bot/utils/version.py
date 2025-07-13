@@ -4,7 +4,7 @@ Version management for Doyobi Diary bot.
 
 import os
 from pathlib import Path
-from typing import Optional
+
 
 def get_bot_version() -> str:
     """
@@ -23,6 +23,7 @@ def get_bot_version() -> str:
 
     # Fallback to environment variable
     return os.getenv("BOT_VERSION", "unknown")
+
 
 def get_version_info() -> dict:
     """
@@ -43,6 +44,7 @@ def get_version_info() -> dict:
         "commit": commit_hash,
         "environment": os.getenv("ENVIRONMENT", "production")
     }
+
 
 def format_version_string() -> str:
     """

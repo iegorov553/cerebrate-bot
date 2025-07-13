@@ -28,25 +28,25 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 def mock_supabase():
     """Mock Supabase client for testing."""
     mock_client = MagicMock()
-    
+
     # Mock table operations
     mock_table = MagicMock()
     mock_client.table.return_value = mock_table
-    
+
     # Mock query builder
     mock_query = MagicMock()
     mock_table.select.return_value = mock_query
     mock_table.insert.return_value = mock_query
     mock_table.update.return_value = mock_query
     mock_table.delete.return_value = mock_query
-    
+
     # Chain methods
     mock_query.eq.return_value = mock_query
     mock_query.gte.return_value = mock_query
     mock_query.order.return_value = mock_query
     mock_query.in_.return_value = mock_query
     mock_query.or_.return_value = mock_query
-    
+
     return mock_client
 
 @pytest.fixture
@@ -85,7 +85,7 @@ def mock_telegram_update():
     update.effective_user.username = "testuser"
     update.effective_user.first_name = "Test"
     update.effective_user.last_name = "User"
-    
+
     # Mock callback query
     callback_query = MagicMock()
     callback_query.data = "test_callback"
@@ -93,9 +93,9 @@ def mock_telegram_update():
     callback_query.answer.return_value.set_result(None)
     callback_query.edit_message_text = Mock(return_value=asyncio.Future())
     callback_query.edit_message_text.return_value.set_result(None)
-    
+
     update.callback_query = callback_query
-    
+
     return update
 
 @pytest.fixture

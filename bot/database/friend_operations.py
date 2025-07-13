@@ -31,7 +31,7 @@ class FriendOperations:
             ).execute()
 
             if (existing1.data or existing2.data):
-                logger.debug("Friend request already exists", 
+                logger.debug("Friend request already exists",
                            requester=requester_id, addressee=addressee_id)
                 return False  # Already exists
 
@@ -42,12 +42,12 @@ class FriendOperations:
                 "status": "pending"
             }).execute()
 
-            logger.info("Friend request created", 
+            logger.info("Friend request created",
                        requester=requester_id, addressee=addressee_id)
             return True
 
         except Exception as exc:
-            logger.error("Error creating friend request", 
+            logger.error("Error creating friend request",
                         requester=requester_id, addressee=addressee_id, error=str(exc))
             return False
 
@@ -76,8 +76,10 @@ class FriendOperations:
             except Exception as e:
                 logger.warning(f"Optimized query failed, using fallback: {e}")
                 # Fallback to simple queries
-                incoming_result = self.db.table("friendships").select("*").eq("addressee_id", user_id).eq("status", "pending").execute()
-                outgoing_result = self.db.table("friendships").select("*").eq("requester_id", user_id).eq("status", "pending").execute()
+                incoming_result = (self.db.table("friendships").select("*")
+                                   .eq("addressee_id", user_id).eq("status", "pending").execute())
+                outgoing_result = (self.db.table("friendships").select("*")
+                                   .eq("requester_id", user_id).eq("status", "pending").execute())
 
             # Format incoming requests
             incoming = []
@@ -109,7 +111,7 @@ class FriendOperations:
                     }
                 })
 
-            logger.debug("Friend requests fetched (optimized)", 
+            logger.debug("Friend requests fetched (optimized)",
                         user_id=user_id, incoming=len(incoming), outgoing=len(outgoing))
 
             return {
@@ -118,7 +120,7 @@ class FriendOperations:
             }
 
         except Exception as exc:
-            logger.error("Error getting friend requests (optimized)", 
+            logger.error("Error getting friend requests (optimized)",
                         user_id=user_id, error=str(exc))
 
             # Fallback to non-optimized version
@@ -173,7 +175,7 @@ class FriendOperations:
                 }
                 outgoing.append(req)
 
-            logger.debug("Friend requests fetched (fallback)", 
+            logger.debug("Friend requests fetched (fallback)",
                         user_id=user_id, incoming=len(incoming), outgoing=len(outgoing))
 
             return {
@@ -194,16 +196,16 @@ class FriendOperations:
             }).eq("requester_id", requester_id).eq("addressee_id", addressee_id).eq("status", "pending").execute()
 
             if result.data:
-                logger.info("Friend request updated", 
+                logger.info("Friend request updated",
                            requester=requester_id, addressee=addressee_id, status=status)
                 return True
             else:
-                logger.warning("No pending friend request found", 
+                logger.warning("No pending friend request found",
                               requester=requester_id, addressee=addressee_id)
                 return False
 
         except Exception as exc:
-            logger.error("Error updating friend request", 
+            logger.error("Error updating friend request",
                         requester=requester_id, addressee=addressee_id, status=status, error=str(exc))
             return False
 
@@ -308,7 +310,7 @@ class FriendOperations:
                 return await self.get_friends_of_friends_fallback(user_id, limit)
 
             except Exception as sql_error:
-                logger.warning("Optimized SQL function failed, using fallback", 
+                logger.warning("Optimized SQL function failed, using fallback",
                              user_id=user_id, error=str(sql_error))
                 return await self.get_friends_of_friends_fallback(user_id, limit)
 
@@ -366,7 +368,10 @@ class FriendOperations:
                     pending_user_ids.add(req['requester_id'])
 
             exclude_ids = current_friend_ids | pending_user_ids | {user_id}
-            logger.info(f"Excluding {len(exclude_ids)} users: friends={len(current_friend_ids)}, pending={len(pending_user_ids)}, self=1")
+            logger.info(
+                f"Excluding {len(exclude_ids)} users: "
+                f"friends={len(current_friend_ids)}, pending={len(pending_user_ids)}, self=1"
+            )
 
             # Get all friendships of current friends (batch query)
             # Get friendships where either requester or addressee is in current_friend_ids
@@ -440,11 +445,11 @@ class FriendOperations:
 
             # Sort and limit
             result.sort(key=lambda x: (
-                -x['mutual_count'], 
+                -x['mutual_count'],
                 (x['user_info']['tg_username'] or x['user_info']['tg_first_name'] or 'zzz_unknown').lower()
             ))
 
-            logger.info("Friends discovery completed (fallback)", 
+            logger.info("Friends discovery completed (fallback)",
                        user_id=user_id, recommendations=len(result[:limit]))
             return result[:limit]
 
@@ -453,19 +458,30 @@ class FriendOperations:
             return []
 
     @track_errors_async("send_friend_request_by_id")
-    async def send_friend_request_by_id(self, requester_id: int, target_user_id: int) -> tuple[bool, Optional[str]]:
+    async def send_friend_request_by_id(
+        self, requester_id: int, target_user_id: int
+    ) -> tuple[bool, Optional[str]]:
         """Send friend request by user ID with enhanced validation and feedback."""
         try:
             # Check if target user exists in database
-            target_user_result = self.db.table("users").select("tg_id, tg_username, tg_first_name").eq("tg_id", target_user_id).execute()
+            target_user_result = (
+                self.db.table("users")
+                .select("tg_id, tg_username, tg_first_name")
+                .eq("tg_id", target_user_id)
+                .execute()
+            )
 
             if not target_user_result.data:
                 logger.warning("Target user not found", requester=requester_id, target=target_user_id)
                 return False, "Пользователь не найден в системе"
 
             # Check if friendship already exists in either direction
-            existing_friendship_1 = self.db.table("friendships").select("status").eq("requester_id", requester_id).eq("addressee_id", target_user_id).execute()
-            existing_friendship_2 = self.db.table("friendships").select("status").eq("requester_id", target_user_id).eq("addressee_id", requester_id).execute()
+            existing_friendship_1 = (self.db.table("friendships").select("status")
+                                     .eq("requester_id", requester_id)
+                                     .eq("addressee_id", target_user_id).execute())
+            existing_friendship_2 = (self.db.table("friendships").select("status")
+                                     .eq("requester_id", target_user_id)
+                                     .eq("addressee_id", requester_id).execute())
 
             # Combine results
             existing_friendship_data = (existing_friendship_1.data or []) + (existing_friendship_2.data or [])
@@ -478,7 +494,7 @@ class FriendOperations:
                     return False, "Запрос в друзья уже отправлен"
                 elif existing_status == "declined":
                     # Allow new request after decline
-                    logger.info("Retrying friend request after previous decline", 
+                    logger.info("Retrying friend request after previous decline",
                                requester=requester_id, target=target_user_id)
 
             # Create new friend request
@@ -492,16 +508,16 @@ class FriendOperations:
                 target_user = target_user_result.data[0]
                 target_name = target_user.get('tg_first_name') or target_user.get('tg_username') or f"ID{target_user_id}"
 
-                logger.info("Friend request sent successfully", 
+                logger.info("Friend request sent successfully",
                            requester=requester_id, target=target_user_id, target_name=target_name)
 
                 return True, f"Запрос в друзья отправлен пользователю {target_name}"
             else:
-                logger.error("Failed to create friend request", 
+                logger.error("Failed to create friend request",
                             requester=requester_id, target=target_user_id)
                 return False, "Не удалось отправить запрос в друзья"
 
         except Exception as exc:
-            logger.error("Error sending friend request by ID", 
+            logger.error("Error sending friend request by ID",
                         requester=requester_id, target=target_user_id, error=str(exc))
             return False, "Произошла ошибка при отправке запроса"

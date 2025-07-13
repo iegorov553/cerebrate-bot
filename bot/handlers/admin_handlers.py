@@ -24,7 +24,6 @@ def require_admin(func):
         if not user:
             return
 
-        config: Config = context.bot_data['config']
         admin_ops: AdminOperations = context.bot_data['admin_ops']
         if not admin_ops.is_admin(user.id):
             raise AdminRequired("This command requires admin privileges")
@@ -43,9 +42,6 @@ async def broadcast_info_command(update: Update, context: ContextTypes.DEFAULT_T
     """Show user statistics for admin."""
     user = update.effective_user
     set_user_context(user.id, user.username, user.first_name)
-
-    # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
 
     # Get user statistics
     admin_ops: AdminOperations = context.bot_data['admin_ops']

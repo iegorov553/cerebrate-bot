@@ -42,10 +42,10 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 or data.startswith('friends_')
                 or data.startswith('add_friend:'))
 
-    async def handle_callback(self, 
-                            query: CallbackQuery, 
-                            data: str, 
-                            translator: Translator, 
+    async def handle_callback(self,
+                            query: CallbackQuery,
+                            data: str,
+                            translator: Translator,
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle friends callback queries."""
 
@@ -61,8 +61,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         else:
             self.logger.warning("Unhandled friends callback", callback_data=data)
 
-    async def _handle_friends_menu(self, 
-                                 query: CallbackQuery, 
+    async def _handle_friends_menu(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle friends menu display."""
         user = query.from_user
@@ -79,17 +79,17 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
         self.logger.debug("Friends menu displayed", user_id=user.id)
 
-    async def _handle_friends_action(self, 
-                                   query: CallbackQuery, 
-                                   data: str, 
+    async def _handle_friends_action(self,
+                                   query: CallbackQuery,
+                                   data: str,
                                    translator: Translator,
                                    context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle friends action callbacks."""
         user = query.from_user
         action = data.replace("friends_", "")
 
-        self.logger.debug("Processing friends action", 
-                         user_id=user.id, 
+        self.logger.debug("Processing friends action",
+                         user_id=user.id,
                          action=action)
 
         if action == "add":
@@ -108,12 +108,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             await self._handle_back_to_main(query, translator)
 
         else:
-            self.logger.warning("Unknown friends action", 
-                              user_id=user.id, 
+            self.logger.warning("Unknown friends action",
+                              user_id=user.id,
                               action=action)
 
-    async def _handle_add_instruction(self, 
-                                    query: CallbackQuery, 
+    async def _handle_add_instruction(self,
+                                    query: CallbackQuery,
                                     translator: Translator) -> None:
         """Show add friend instruction."""
         await query.edit_message_text(
@@ -122,11 +122,11 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Add friend instruction shown", 
+        self.logger.debug("Add friend instruction shown",
                          user_id=query.from_user.id)
 
-    async def _handle_friends_list(self, 
-                                 query: CallbackQuery, 
+    async def _handle_friends_list(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle friends list display."""
         user = query.from_user
@@ -171,13 +171,13 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.debug("Friends list shown", 
-                                user_id=user.id, 
+                self.logger.debug("Friends list shown",
+                                user_id=user.id,
                                 friends_count=len(friends))
 
         except Exception as e:
-            self.logger.error("Error getting friends list", 
-                            user_id=user.id, 
+            self.logger.error("Error getting friends list",
+                            user_id=user.id,
                             error=str(e))
 
             # Show error and fallback to menu
@@ -187,8 +187,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_requests_help(self, 
-                                  query: CallbackQuery, 
+    async def _handle_requests_help(self,
+                                  query: CallbackQuery,
                                   translator: Translator) -> None:
         """Show friend requests help."""
         await query.edit_message_text(
@@ -197,11 +197,11 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Friend requests help shown", 
+        self.logger.debug("Friend requests help shown",
                          user_id=query.from_user.id)
 
-    async def _handle_friends_discovery(self, 
-                                      query: CallbackQuery, 
+    async def _handle_friends_discovery(self,
+                                      query: CallbackQuery,
                                       translator: Translator) -> None:
         """Handle friends discovery (friends of friends)."""
         user = query.from_user
@@ -212,7 +212,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             friend_ops = FriendOperations(self.db_client)
 
             raw_recommendations = await friend_ops.get_friends_of_friends_optimized(
-                user.id, 
+                user.id,
                 limit=10
             )
 
@@ -281,13 +281,13 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 parse_mode='HTML'
             )
 
-            self.logger.info("Friend discovery shown", 
-                           user_id=user.id, 
+            self.logger.info("Friend discovery shown",
+                           user_id=user.id,
                            recommendations_count=len(recommendations))
 
         except Exception as e:
-            self.logger.error("Error in friends discovery", 
-                            user_id=user.id, 
+            self.logger.error("Error in friends discovery",
+                            user_id=user.id,
                             error=str(e))
 
             # Show error and fallback to menu
@@ -297,9 +297,9 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_add_friend_callback(self, 
-                                        query: CallbackQuery, 
-                                        data: str, 
+    async def _handle_add_friend_callback(self,
+                                        query: CallbackQuery,
+                                        data: str,
                                         translator: Translator,
                                         context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle add friend button callbacks from discovery recommendations."""
@@ -320,7 +320,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             translator.translate('friends.rate_limited'),
                             show_alert=True
                         )
-                        self.logger.warning("Friend request rate limited", 
+                        self.logger.warning("Friend request rate limited",
                                           user_id=user.id,
                                           target_user_id=target_user_id)
                         return
@@ -330,7 +330,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             friend_ops = FriendOperations(self.db_client)
 
             success, message = await friend_ops.send_friend_request_by_id(
-                user.id, 
+                user.id,
                 target_user_id
             )
 
@@ -344,8 +344,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 # Update recommendations list (excluding the added user)
                 await self._refresh_discovery_list(query, translator, friend_ops, user.id)
 
-                self.logger.info("Friend request sent", 
-                               user_id=user.id, 
+                self.logger.info("Friend request sent",
+                               user_id=user.id,
                                target_user_id=target_user_id)
 
             else:
@@ -355,14 +355,14 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     show_alert=True
                 )
 
-                self.logger.warning("Friend request failed", 
-                                  user_id=user.id, 
+                self.logger.warning("Friend request failed",
+                                  user_id=user.id,
                                   target_user_id=target_user_id,
                                   message=message)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid add friend callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid add friend callback data",
+                            user_id=user.id,
                             callback_data=data,
                             error=str(e))
 
@@ -372,8 +372,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             )
 
         except Exception as e:
-            self.logger.error("Error in add friend callback", 
-                            user_id=user.id, 
+            self.logger.error("Error in add friend callback",
+                            user_id=user.id,
                             error=str(e))
 
             await query.answer(
@@ -381,8 +381,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 show_alert=True
             )
 
-    async def _refresh_discovery_list(self, 
-                                    query: CallbackQuery, 
+    async def _refresh_discovery_list(self,
+                                    query: CallbackQuery,
                                     translator: Translator,
                                     friend_ops,
                                     user_id: int) -> None:
@@ -390,7 +390,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         try:
             # Get updated recommendations
             raw_recommendations = await friend_ops.get_friends_of_friends_optimized(
-                user_id, 
+                user_id,
                 limit=10
             )
 
@@ -451,12 +451,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             )
 
         except Exception as e:
-            self.logger.error("Error refreshing discovery list", 
-                            user_id=user_id, 
+            self.logger.error("Error refreshing discovery list",
+                            user_id=user_id,
                             error=str(e))
 
-    async def _handle_back_to_main(self, 
-                                 query: CallbackQuery, 
+    async def _handle_back_to_main(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle back to main menu."""
         user = query.from_user

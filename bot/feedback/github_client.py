@@ -139,7 +139,7 @@ class GitHubFeedbackClient:
 - Timestamp: {timestamp}
 - Bot Version: {bot_version}
 
-**Category:** Bug Report  
+**Category:** Bug Report
 **Source:** Telegram Bot Feedback
 
 ---
@@ -178,7 +178,7 @@ class GitHubFeedbackClient:
 - Timestamp: {timestamp}
 - Bot Version: {bot_version}
 
-**Category:** Feature Request  
+**Category:** Feature Request
 **Source:** Telegram Bot Feedback
 
 ---
@@ -217,7 +217,7 @@ class GitHubFeedbackClient:
 - Timestamp: {timestamp}
 - Bot Version: {bot_version}
 
-**Category:** General Feedback  
+**Category:** General Feedback
 **Source:** Telegram Bot Feedback
 
 ---

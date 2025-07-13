@@ -67,7 +67,7 @@ class AdminOperations:
 
             return {
                 "total": total_users,
-                "active": active_users, 
+                "active": active_users,
                 "new_week": new_users,
                 "active_percentage": round(active_percentage, 2)
             }

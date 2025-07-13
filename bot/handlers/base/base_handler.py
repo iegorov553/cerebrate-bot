@@ -30,9 +30,9 @@ class BaseCallbackHandler(ABC):
     translator setup, dependency injection, and error handling.
     """
 
-    def __init__(self, 
-                 db_client: DatabaseClient, 
-                 config: Config, 
+    def __init__(self,
+                 db_client: DatabaseClient,
+                 config: Config,
                  user_cache: TTLCache):
         """Initialize base handler with dependencies."""
         self.db_client = db_client
@@ -40,8 +40,8 @@ class BaseCallbackHandler(ABC):
         self.user_cache = user_cache
         self.logger = get_logger(self.__class__.__name__)
 
-    async def get_user_language(self, 
-                              user_id: int, 
+    async def get_user_language(self,
+                              user_id: int,
                               force_refresh: bool = False) -> str:
         """
         Get user language from database with fallback.
@@ -57,29 +57,29 @@ class BaseCallbackHandler(ABC):
             from bot.database.user_operations import UserOperations
             user_ops = UserOperations(self.db_client, self.user_cache)
             user_data = await user_ops.get_user_settings(
-                user_id, 
+                user_id,
                 force_refresh=force_refresh
             )
 
             if user_data and 'language' in user_data:
                 language = user_data['language']
-                self.logger.debug("Retrieved user language", 
-                                user_id=user_id, 
+                self.logger.debug("Retrieved user language",
+                                user_id=user_id,
                                 language=language,
                                 from_cache=not force_refresh)
                 return language
 
         except Exception as e:
-            self.logger.warning("Failed to get user language", 
-                              user_id=user_id, 
+            self.logger.warning("Failed to get user language",
+                              user_id=user_id,
                               error=str(e))
 
         # Fallback to default
         self.logger.debug("Using default language fallback", user_id=user_id)
         return 'ru'
 
-    async def get_user_translator(self, 
-                                user_id: int, 
+    async def get_user_translator(self,
+                                user_id: int,
                                 force_refresh: bool = False) -> Translator:
         """
         Get translator configured for user's language.
@@ -97,16 +97,16 @@ class BaseCallbackHandler(ABC):
         translator = Translator()
         translator.set_language(user_language)
 
-        self.logger.debug("Created user translator", 
-                         user_id=user_id, 
+        self.logger.debug("Created user translator",
+                         user_id=user_id,
                          language=user_language)
         return translator
 
     def setup_user_context(self, user: User) -> None:
         """Set up monitoring context for the user."""
         set_user_context(user.id, user.username, user.first_name)
-        self.logger.debug("User context set up", 
-                         user_id=user.id, 
+        self.logger.debug("User context set up",
+                         user_id=user.id,
                          username=user.username)
 
     async def ensure_user_exists(self, user: User) -> Dict[str, Any]:
@@ -134,15 +134,15 @@ class BaseCallbackHandler(ABC):
             return user_data
 
         except Exception as e:
-            self.logger.error("Failed to ensure user exists", 
-                            user_id=user.id, 
+            self.logger.error("Failed to ensure user exists",
+                            user_id=user.id,
                             error=str(e))
             raise
 
     @track_errors_async("callback_handler_execute")
-    async def execute(self, 
-                     query: CallbackQuery, 
-                     data: str, 
+    async def execute(self,
+                     query: CallbackQuery,
+                     data: str,
                      context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Main execution method for callback handling.
@@ -172,9 +172,9 @@ class BaseCallbackHandler(ABC):
             await self.handle_callback(query, data, translator, context)
 
         except Exception as e:
-            self.logger.error("Error in callback handler", 
-                            user_id=user.id, 
-                            callback_data=data, 
+            self.logger.error("Error in callback handler",
+                            user_id=user.id,
+                            callback_data=data,
                             error=str(e))
 
             # Try to send error message to user
@@ -185,7 +185,7 @@ class BaseCallbackHandler(ABC):
                     parse_mode='HTML'
                 )
             except Exception as edit_error:
-                self.logger.error("Failed to send error message", 
+                self.logger.error("Failed to send error message",
                                 error=str(edit_error))
 
             raise
@@ -200,14 +200,14 @@ class BaseCallbackHandler(ABC):
         Returns:
             True if cache should be bypassed
         """
-        return (data.startswith("language_") 
+        return (data.startswith("language_")
                 or data == "menu_language")
 
     @abstractmethod
-    async def handle_callback(self, 
-                            query: CallbackQuery, 
-                            data: str, 
-                            translator: Translator, 
+    async def handle_callback(self,
+                            query: CallbackQuery,
+                            data: str,
+                            translator: Translator,
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Handle the specific callback query.

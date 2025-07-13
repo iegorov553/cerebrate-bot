@@ -236,9 +236,9 @@ class QuestionOperations:
 
     @track_errors_async("save_notification")
     async def save_notification(
-        self, 
-        user_id: int, 
-        question_id: int, 
+        self,
+        user_id: int,
+        question_id: int,
         telegram_message_id: int
     ) -> bool:
         """
@@ -277,8 +277,8 @@ class QuestionOperations:
 
     @track_errors_async("get_notification_by_message_id")
     async def get_notification_by_message_id(
-        self, 
-        user_id: int, 
+        self,
+        user_id: int,
         telegram_message_id: int
     ) -> Optional[Dict]:
         """

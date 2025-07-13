@@ -58,7 +58,7 @@ class RateLimiter:
                 retry_after = int((oldest_request + timedelta(seconds=self.window_seconds) - now).total_seconds())
                 retry_after = max(1, retry_after)  # At least 1 second
 
-                logger.warning("Rate limit exceeded", 
+                logger.warning("Rate limit exceeded",
                              key=key, count=len(user_requests), retry_after=retry_after)
                 return False, retry_after
 
@@ -204,7 +204,7 @@ def rate_limit(action: str = "general", error_message: str = None):
             is_allowed, retry_after = await rate_limiter.check_limit(user_id, action)
 
             if not is_allowed:
-                logger.warning("Rate limit exceeded", 
+                logger.warning("Rate limit exceeded",
                              user_id=user_id, action=action, retry_after=retry_after, function=func.__name__)
 
                 # Raise custom exception or return error

@@ -135,7 +135,7 @@ class QuestionTemplates:
         """
         return {
             "work_study": "💼 Работа и учёба",
-            "personal": "🌟 Личное развитие", 
+            "personal": "🌟 Личное развитие",
             "time_based": "⏰ По времени суток",
             "health": "💪 Здоровье"
         }
@@ -177,7 +177,7 @@ class QuestionTemplates:
 
         for category_templates in templates.values():
             for template in category_templates:
-                if (query_lower in template["name"].lower() 
+                if (query_lower in template["name"].lower()
                     or query_lower in template["text"].lower()
                         or query_lower in template["description"].lower()):
                     results.append(template)
@@ -194,7 +194,7 @@ class QuestionTemplates:
         """
         popular_names = [
             "Рабочие задачи",
-            "Настроение", 
+            "Настроение",
             "Утренний чекин",
             "Вечерний отчёт",
             "Обучение"

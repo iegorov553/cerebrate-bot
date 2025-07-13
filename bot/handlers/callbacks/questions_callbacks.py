@@ -44,10 +44,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         return (data in questions_callbacks
                 or data.startswith('questions_'))
 
-    async def handle_callback(self, 
-                            query: CallbackQuery, 
-                            data: str, 
-                            translator: Translator, 
+    async def handle_callback(self,
+                            query: CallbackQuery,
+                            data: str,
+                            translator: Translator,
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle questions callback queries."""
 
@@ -64,8 +64,8 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         else:
             self.logger.warning("Unhandled questions callback", callback_data=data)
 
-    async def _handle_questions_menu(self, 
-                                   query: CallbackQuery, 
+    async def _handle_questions_menu(self,
+                                   query: CallbackQuery,
                                    translator: Translator) -> None:
         """Handle questions menu display."""
         user = query.from_user
@@ -97,13 +97,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.debug("Questions menu displayed", 
+            self.logger.debug("Questions menu displayed",
                             user_id=user.id,
                             questions_count=len(questions_summary.get('questions', [])))
 
         except Exception as e:
-            self.logger.error("Error displaying questions menu", 
-                            user_id=user.id, 
+            self.logger.error("Error displaying questions menu",
+                            user_id=user.id,
                             error=str(e))
 
             # Show error message
@@ -112,15 +112,15 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_questions_action(self, 
-                                     query: CallbackQuery, 
-                                     data: str, 
+    async def _handle_questions_action(self,
+                                     query: CallbackQuery,
+                                     data: str,
                                      translator: Translator) -> None:
         """Handle specific questions actions."""
         user = query.from_user
 
-        self.logger.debug("Processing questions action", 
-                         user_id=user.id, 
+        self.logger.debug("Processing questions action",
+                         user_id=user.id,
                          action=data)
 
         try:
@@ -168,15 +168,15 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 await self._handle_show_all_settings(query, question_manager, translator)
 
             else:
-                self.logger.warning("Unknown questions action", 
-                                  user_id=user.id, 
+                self.logger.warning("Unknown questions action",
+                                  user_id=user.id,
                                   action=data)
                 # Fallback to questions menu
                 await self._handle_questions_menu(query, translator)
 
         except Exception as e:
-            self.logger.error("Error in questions action", 
-                            user_id=user.id, 
+            self.logger.error("Error in questions action",
+                            user_id=user.id,
                             action=data,
                             error=str(e))
 
@@ -186,8 +186,8 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_create_question(self, 
-                                    query: CallbackQuery, 
+    async def _handle_create_question(self,
+                                    query: CallbackQuery,
                                     translator: Translator) -> None:
         """Handle question creation instruction."""
         await query.edit_message_text(
@@ -195,12 +195,12 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Create question instruction shown", 
+        self.logger.debug("Create question instruction shown",
                          user_id=query.from_user.id)
 
-    async def _handle_list_questions(self, 
-                                   query: CallbackQuery, 
-                                   question_manager, 
+    async def _handle_list_questions(self,
+                                   query: CallbackQuery,
+                                   question_manager,
                                    translator: Translator) -> None:
         """Handle questions list display."""
         user = query.from_user
@@ -235,12 +235,12 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Questions list displayed", 
+        self.logger.debug("Questions list displayed",
                          user_id=user.id,
                          questions_count=len(questions))
 
-    async def _handle_templates_menu(self, 
-                                   query: CallbackQuery, 
+    async def _handle_templates_menu(self,
+                                   query: CallbackQuery,
                                    translator: Translator) -> None:
         """Handle templates menu display."""
         # This would show template categories
@@ -249,13 +249,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Templates menu displayed", 
+        self.logger.debug("Templates menu displayed",
                          user_id=query.from_user.id)
 
-    async def _handle_edit_question(self, 
-                                  query: CallbackQuery, 
-                                  data: str, 
-                                  question_manager, 
+    async def _handle_edit_question(self,
+                                  query: CallbackQuery,
+                                  data: str,
+                                  question_manager,
                                   translator: Translator) -> None:
         """Handle question editing interface."""
         user = query.from_user
@@ -278,9 +278,9 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             # Create edit text
             edit_text = f"{translator.translate('questions.edit_title')}\n\n"
             edit_text += translator.translate('questions.current_text', text=question['question_text']) + "\n"
-            edit_text += translator.translate('questions.current_schedule', 
-                start=question['window_start'], 
-                end=question['window_end'], 
+            edit_text += translator.translate('questions.current_schedule',
+                start=question['window_start'],
+                end=question['window_end'],
                 interval=question['interval_minutes']) + "\n"
 
             status = translator.translate('questions.enable') if question['active'] else translator.translate('questions.disable')
@@ -293,13 +293,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.debug("Question edit interface shown", 
+            self.logger.debug("Question edit interface shown",
                             user_id=user.id,
                             question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question edit callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid question edit callback data",
+                            user_id=user.id,
                             data=data,
                             error=str(e))
 
@@ -308,10 +308,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_delete_question_confirm(self, 
-                                            query: CallbackQuery, 
-                                            data: str, 
-                                            question_manager, 
+    async def _handle_delete_question_confirm(self,
+                                            query: CallbackQuery,
+                                            data: str,
+                                            question_manager,
                                             translator: Translator) -> None:
         """Handle question deletion confirmation."""
         user = query.from_user
@@ -342,13 +342,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.debug("Question delete confirmation shown", 
+            self.logger.debug("Question delete confirmation shown",
                             user_id=user.id,
                             question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question delete callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid question delete callback data",
+                            user_id=user.id,
                             data=data,
                             error=str(e))
 
@@ -357,10 +357,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_delete_question_execute(self, 
-                                            query: CallbackQuery, 
-                                            data: str, 
-                                            question_manager, 
+    async def _handle_delete_question_execute(self,
+                                            query: CallbackQuery,
+                                            data: str,
+                                            question_manager,
                                             translator: Translator) -> None:
         """Execute question deletion."""
         user = query.from_user
@@ -378,7 +378,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.info("Question deleted", 
+                self.logger.info("Question deleted",
                                user_id=user.id,
                                question_id=question_id)
             else:
@@ -387,13 +387,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.error("Failed to delete question", 
+                self.logger.error("Failed to delete question",
                                 user_id=user.id,
                                 question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question delete execute callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid question delete execute callback data",
+                            user_id=user.id,
                             data=data,
                             error=str(e))
 
@@ -402,10 +402,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_toggle_question(self, 
-                                    query: CallbackQuery, 
-                                    data: str, 
-                                    question_manager, 
+    async def _handle_toggle_question(self,
+                                    query: CallbackQuery,
+                                    data: str,
+                                    question_manager,
                                     translator: Translator) -> None:
         """Handle question status toggle (active/inactive)."""
         user = query.from_user
@@ -423,7 +423,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.info("Question status toggled", 
+                self.logger.info("Question status toggled",
                                user_id=user.id,
                                question_id=question_id)
             else:
@@ -432,13 +432,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.error("Failed to toggle question status", 
+                self.logger.error("Failed to toggle question status",
                                 user_id=user.id,
                                 question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question toggle callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid question toggle callback data",
+                            user_id=user.id,
                             data=data,
                             error=str(e))
 
@@ -447,10 +447,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_test_question(self, 
-                                  query: CallbackQuery, 
-                                  data: str, 
-                                  question_manager, 
+    async def _handle_test_question(self,
+                                  query: CallbackQuery,
+                                  data: str,
+                                  question_manager,
                                   translator: Translator) -> None:
         """Handle question testing."""
         user = query.from_user
@@ -468,7 +468,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.info("Test question sent", 
+                self.logger.info("Test question sent",
                                user_id=user.id,
                                question_id=question_id)
             else:
@@ -477,13 +477,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                     parse_mode='Markdown'
                 )
 
-                self.logger.error("Failed to send test question", 
+                self.logger.error("Failed to send test question",
                                 user_id=user.id,
                                 question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question test callback data", 
-                            user_id=user.id, 
+            self.logger.error("Invalid question test callback data",
+                            user_id=user.id,
                             data=data,
                             error=str(e))
 
@@ -492,9 +492,9 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_templates_category(self, 
-                                       query: CallbackQuery, 
-                                       data: str, 
+    async def _handle_templates_category(self,
+                                       query: CallbackQuery,
+                                       data: str,
                                        translator: Translator) -> None:
         """Handle template category selection."""
         # This would show templates in specific category
@@ -503,14 +503,14 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Template category accessed", 
+        self.logger.debug("Template category accessed",
                          user_id=query.from_user.id,
                          category=data)
 
-    async def _handle_use_template(self, 
-                                 query: CallbackQuery, 
-                                 data: str, 
-                                 question_manager, 
+    async def _handle_use_template(self,
+                                 query: CallbackQuery,
+                                 data: str,
+                                 question_manager,
                                  translator: Translator) -> None:
         """Handle template usage."""
         # This would show template details and options
@@ -519,14 +519,14 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Template use interface shown", 
+        self.logger.debug("Template use interface shown",
                          user_id=query.from_user.id,
                          template=data)
 
-    async def _handle_create_from_template(self, 
-                                         query: CallbackQuery, 
-                                         data: str, 
-                                         question_manager, 
+    async def _handle_create_from_template(self,
+                                         query: CallbackQuery,
+                                         data: str,
+                                         question_manager,
                                          translator: Translator) -> None:
         """Handle question creation from template."""
         # This would create a question from the selected template
@@ -535,13 +535,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             parse_mode='Markdown'
         )
 
-        self.logger.debug("Question creation from template initiated", 
+        self.logger.debug("Question creation from template initiated",
                          user_id=query.from_user.id,
                          template=data)
 
-    async def _handle_show_all_settings(self, 
-                                      query: CallbackQuery, 
-                                      question_manager, 
+    async def _handle_show_all_settings(self,
+                                      query: CallbackQuery,
+                                      question_manager,
                                       translator: Translator) -> None:
         """Handle showing all user question settings."""
         user = query.from_user
@@ -592,7 +592,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
             # Back button
             keyboard = KeyboardGenerator.single_button_keyboard(
-                translator.translate('questions.back'), 
+                translator.translate('questions.back'),
                 'menu_questions'
             )
 
@@ -602,13 +602,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.debug("All settings shown", 
+            self.logger.debug("All settings shown",
                             user_id=user.id,
                             questions_count=len(custom_questions) + (1 if default_q else 0))
 
         except Exception as e:
-            self.logger.error("Error showing all settings", 
-                            user_id=user.id, 
+            self.logger.error("Error showing all settings",
+                            user_id=user.id,
                             error=str(e))
 
             await query.edit_message_text(
@@ -616,8 +616,8 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _handle_back_to_main(self, 
-                                 query: CallbackQuery, 
+    async def _handle_back_to_main(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle back to main menu."""
         user = query.from_user

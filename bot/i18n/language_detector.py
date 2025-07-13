@@ -15,7 +15,7 @@ class LanguageDetector:
 
     SUPPORTED_LANGUAGES = {
         'ru': 'ru',  # Russian
-        'en': 'en',  # English  
+        'en': 'en',  # English
         'es': 'es',  # Spanish (Spain)
         'es-ES': 'es',
         'es-MX': 'es',  # Mexican Spanish

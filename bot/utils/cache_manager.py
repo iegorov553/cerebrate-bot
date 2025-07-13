@@ -39,7 +39,7 @@ class CacheManager:
         self._cache_timeout[key] = datetime.now() + timedelta(seconds=timeout_seconds)
         logger.debug("Cache set", key=key, timeout=timeout_seconds)
 
-    @track_errors("cache_invalidate") 
+    @track_errors("cache_invalidate")
     def invalidate(self, key: str) -> None:
         """Принудительно удалить значение из кеша."""
         if key in self._cache:

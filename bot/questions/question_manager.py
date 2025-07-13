@@ -110,8 +110,8 @@ class QuestionManager:
 
     @track_errors_async("determine_question_for_message")
     async def determine_question_for_message(
-        self, 
-        user_id: int, 
+        self,
+        user_id: int,
         reply_to_message_id: Optional[int] = None
     ) -> Tuple[Optional[int], str]:
         """
@@ -168,8 +168,8 @@ class QuestionManager:
 
     @track_errors_async("create_custom_question")
     async def create_custom_question(
-        self, 
-        user_id: int, 
+        self,
+        user_id: int,
         question_data: Dict
     ) -> Optional[Dict]:
         """
@@ -214,8 +214,8 @@ class QuestionManager:
 
     @track_errors_async("update_question_settings")
     async def update_question_settings(
-        self, 
-        question_id: int, 
+        self,
+        question_id: int,
         settings: Dict
     ) -> bool:
         """
@@ -244,8 +244,8 @@ class QuestionManager:
 
     @track_errors_async("update_question_text_with_versioning")
     async def update_question_text_with_versioning(
-        self, 
-        question_id: int, 
+        self,
+        question_id: int,
         new_text: str
     ) -> Optional[int]:
         """
@@ -305,9 +305,9 @@ class QuestionManager:
 
     @track_errors_async("save_notification_for_reply")
     async def save_notification_for_reply(
-        self, 
-        user_id: int, 
-        question_id: int, 
+        self,
+        user_id: int,
+        question_id: int,
         telegram_message_id: int
     ) -> bool:
         """
@@ -404,7 +404,7 @@ class QuestionManager:
             return False
 
         if 'question_name' in settings and (
-            len(settings['question_name'].strip()) == 0 
+            len(settings['question_name'].strip()) == 0
             or len(settings['question_name']) > 100
         ):
             logger.warning("Invalid question name length")

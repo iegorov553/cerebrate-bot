@@ -17,7 +17,7 @@ class UserOperations:
         self.cache = cache
 
     @track_errors_async("user_registration")
-    async def ensure_user_exists(self, tg_id: int, username: str = None, 
+    async def ensure_user_exists(self, tg_id: int, username: str = None,
                                  first_name: str = None, last_name: str = None,
                                  language: str = 'ru') -> Dict[str, Any]:
         """Ensure user exists in database, create if not."""

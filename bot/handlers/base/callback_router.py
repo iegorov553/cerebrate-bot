@@ -30,9 +30,9 @@ class CallbackRouter:
     fallback mechanisms.
     """
 
-    def __init__(self, 
-                 db_client: DatabaseClient, 
-                 config: Config, 
+    def __init__(self,
+                 db_client: DatabaseClient,
+                 config: Config,
                  user_cache: TTLCache):
         """Initialize router with dependencies."""
         self.db_client = db_client
@@ -49,7 +49,7 @@ class CallbackRouter:
             handler: Handler instance to register
         """
         self.handlers.append(handler)
-        self.logger.debug("Registered callback handler", 
+        self.logger.debug("Registered callback handler",
                          handler_class=handler.__class__.__name__)
 
     def find_handler(self, data: str) -> Optional[BaseCallbackHandler]:
@@ -64,8 +64,8 @@ class CallbackRouter:
         """
         for handler in self.handlers:
             if handler.can_handle(data):
-                self.logger.debug("Found handler for callback", 
-                                callback_data=data, 
+                self.logger.debug("Found handler for callback",
+                                callback_data=data,
                                 handler_class=handler.__class__.__name__)
                 return handler
 
@@ -74,8 +74,8 @@ class CallbackRouter:
 
     @rate_limit("callback")
     @track_errors_async("route_callback_query")
-    async def route_callback(self, 
-                           update: Update, 
+    async def route_callback(self,
+                           update: Update,
                            context: ContextTypes.DEFAULT_TYPE) -> None:
         """
         Route callback query to appropriate handler.
@@ -100,8 +100,8 @@ class CallbackRouter:
             self.logger.warning("Empty callback data", user_id=user.id)
             return
 
-        self.logger.debug("Routing callback query", 
-                         user_id=user.id, 
+        self.logger.debug("Routing callback query",
+                         user_id=user.id,
                          callback_data=data)
 
         # Find appropriate handler
@@ -110,14 +110,14 @@ class CallbackRouter:
         if handler:
             try:
                 await handler.execute(query, data, context)
-                self.logger.debug("Callback handled successfully", 
-                                user_id=user.id, 
+                self.logger.debug("Callback handled successfully",
+                                user_id=user.id,
                                 callback_data=data,
                                 handler_class=handler.__class__.__name__)
 
             except Exception as e:
-                self.logger.error("Handler execution failed", 
-                                user_id=user.id, 
+                self.logger.error("Handler execution failed",
+                                user_id=user.id,
                                 callback_data=data,
                                 handler_class=handler.__class__.__name__,
                                 error=str(e))
@@ -126,8 +126,8 @@ class CallbackRouter:
             # Fallback for unhandled callbacks
             await self._handle_unknown_callback(query, data)
 
-    async def _handle_unknown_callback(self, 
-                                     query, 
+    async def _handle_unknown_callback(self,
+                                     query,
                                      data: str) -> None:
         """
         Handle unknown callback data.
@@ -138,8 +138,8 @@ class CallbackRouter:
         """
         user_id = query.from_user.id if query.from_user else None
 
-        self.logger.warning("Unknown callback data", 
-                          user_id=user_id, 
+        self.logger.warning("Unknown callback data",
+                          user_id=user_id,
                           callback_data=data)
 
         try:
@@ -162,8 +162,8 @@ class CallbackRouter:
             )
 
         except Exception as e:
-            self.logger.error("Failed to handle unknown callback", 
-                            user_id=user_id, 
+            self.logger.error("Failed to handle unknown callback",
+                            user_id=user_id,
                             error=str(e))
 
     def get_handler_stats(self) -> dict:

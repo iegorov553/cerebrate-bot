@@ -294,7 +294,7 @@ class BroadcastManager:
         # Get user count for preview
         user_count = await self.user_operations.get_total_user_count()
 
-        preview = f"📢 **Broadcast Preview**\n\n"
+        preview = "📢 **Broadcast Preview**\n\n"
         preview += f"**Recipients:** {user_count} users\n"
         preview += f"**Message:**\n{message}\n\n"
         preview += f"**Estimated time:** {self._estimate_broadcast_time(user_count)} minutes"
@@ -375,7 +375,7 @@ def format_progress_message(progress: BroadcastProgress) -> str:
     Returns:
         Formatted progress message
     """
-    message = f"📢 **Broadcast Progress**\n\n"
+    message = "📢 **Broadcast Progress**\n\n"
     message += f"Progress: {progress.completion_percentage:.1f}%\n"
     message += f"Sent: {progress.sent_count}/{progress.total_users}\n"
     message += f"Failed: {progress.failed_count}\n"
@@ -399,7 +399,7 @@ def format_broadcast_result(result: BroadcastResult) -> str:
     Returns:
         Formatted result message
     """
-    message = f"✅ **Broadcast Completed**\n\n"
+    message = "✅ **Broadcast Completed**\n\n"
     message += f"Total Users: {result.total_users}\n"
     message += f"Successfully Sent: {result.sent_count}\n"
     message += f"Failed: {result.failed_count}\n"

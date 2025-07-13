@@ -44,7 +44,7 @@ def validate_time_window(time_range: str) -> Tuple[bool, str, Optional[time], Op
         return False, "Время окончания должно быть позже времени начала!", None, None
 
     # Минимум 1 час
-    start_minutes = start_hour * 60 + start_min  
+    start_minutes = start_hour * 60 + start_min
     end_minutes = end_hour * 60 + end_min
 
     if end_minutes - start_minutes < 60:

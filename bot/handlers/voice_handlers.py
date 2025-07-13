@@ -17,8 +17,8 @@ from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.services.whisper_client import (
-    WhisperClient, 
-    AudioTooLargeError, 
+    WhisperClient,
+    AudioTooLargeError,
     AudioTooLongError,
     TranscriptionError
 )
@@ -169,8 +169,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         # Download voice file
         try:
             temp_file_path, file_extension = await download_voice_file(
-                message.voice, 
-                context.bot, 
+                message.voice,
+                context.bot,
                 temp_dir
             )
         except Exception as e:
@@ -185,12 +185,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         user_ops = UserOperations(db_client, user_cache)
         user_settings = await user_ops.get_user_settings(user.id)
 
-        # Let Whisper auto-detect language for better compatibility
+        # Use user's preferred language for better transcription accuracy
         transcription_language = None
-        # if user_settings and user_settings.get('language'):
-        #     # Map bot language codes to Whisper language codes
-        #     lang_map = {'ru': 'ru', 'en': 'en', 'es': 'es'}
-        #     transcription_language = lang_map.get(user_settings['language'])
+        if user_settings and user_settings.get('language'):
+            # Map bot language codes to Whisper language codes
+            lang_map = {'ru': 'ru', 'en': 'en', 'es': 'es'}
+            transcription_language = lang_map.get(user_settings['language'])
 
         # Transcribe audio
         try:
@@ -264,8 +264,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             if question_id:
                 # Log the transcribed text as activity
                 success = await user_ops.log_activity(
-                    user.id, 
-                    transcribed_text, 
+                    user.id,
+                    transcribed_text,
                     question_id=question_id
                 )
 

@@ -290,7 +290,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
 
 
 @rate_limit("friend_request")
-@track_errors_async("accept_friend_command")  
+@track_errors_async("accept_friend_command")
 async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Accept friend request."""
     user = update.effective_user
@@ -465,7 +465,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         # Update time window for default question
         success = await question_manager.question_ops.update_question_schedule(
-            default_question['id'], 
+            default_question['id'],
             window_start=start_time.strftime('%H:%M:%S'),
             window_end=end_time.strftime('%H:%M:%S')
         )
@@ -556,7 +556,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
         # Update frequency for default question
         success = await question_manager.question_ops.update_question_schedule(
-            default_question['id'], 
+            default_question['id'],
             interval_minutes=interval_min
         )
 
@@ -605,7 +605,6 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     set_user_context(user.id, user.username, user.first_name)
 
     # Get dependencies from context
-    config: Config = context.bot_data['config']
     db_client: DatabaseClient = context.bot_data['db_client']
 
     # Импортируем HealthService
@@ -623,7 +622,7 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         # Формируем сообщение
         status_emoji = {
             "healthy": "✅",
-            "degraded": "⚠️", 
+            "degraded": "⚠️",
             "unhealthy": "❌"
         }
 
@@ -631,9 +630,10 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         def escape_markdown_safe(text):
             if not text:
                 return ""
-            return str(text).replace('_', '\\_').replace('*', '\\*').replace('`', '\\`').replace('[', '\\[').replace(']', '\\]')
+            return (str(text).replace('_', '\\_').replace('*', '\\*')
+                    .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
 
-        message = f"🏥 **System Health Check**\n\n"
+        message = "🏥 **System Health Check**\n\n"
         message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {health_status.status}\n"
 
         # Безопасное время

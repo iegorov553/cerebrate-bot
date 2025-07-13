@@ -14,9 +14,9 @@ from monitoring import get_logger
 logger = get_logger(__name__)
 
 
-async def get_user_language(user_id: int, 
-                          db_client: DatabaseClient, 
-                          user_cache: TTLCache, 
+async def get_user_language(user_id: int,
+                          db_client: DatabaseClient,
+                          user_cache: TTLCache,
                           force_refresh: bool = False) -> str:
     """
     Get user language from database with fallback.
@@ -34,21 +34,21 @@ async def get_user_language(user_id: int,
         from bot.database.user_operations import UserOperations
         user_ops = UserOperations(db_client, user_cache)
         user_data = await user_ops.get_user_settings(
-            user_id, 
+            user_id,
             force_refresh=force_refresh
         )
 
         if user_data and 'language' in user_data:
             language = user_data['language']
-            logger.debug("Retrieved user language", 
-                        user_id=user_id, 
+            logger.debug("Retrieved user language",
+                        user_id=user_id,
                         language=language,
                         from_cache=not force_refresh)
             return language
 
     except Exception as e:
-        logger.warning("Failed to get user language", 
-                      user_id=user_id, 
+        logger.warning("Failed to get user language",
+                      user_id=user_id,
                       error=str(e))
 
     # Fallback to default
@@ -56,9 +56,9 @@ async def get_user_language(user_id: int,
     return 'ru'
 
 
-async def get_user_translator(user_id: int, 
-                            db_client: DatabaseClient, 
-                            user_cache: TTLCache, 
+async def get_user_translator(user_id: int,
+                            db_client: DatabaseClient,
+                            user_cache: TTLCache,
                             force_refresh: bool = False) -> Translator:
     """
     Get translator configured for user's language.
@@ -78,7 +78,7 @@ async def get_user_translator(user_id: int,
     translator = Translator()
     translator.set_language(user_language)
 
-    logger.debug("Created user translator", 
-                 user_id=user_id, 
+    logger.debug("Created user translator",
+                 user_id=user_id,
                  language=user_language)
     return translator

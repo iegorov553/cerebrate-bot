@@ -38,10 +38,10 @@ class AdminCallbackHandler(BaseCallbackHandler):
         return (data in admin_callbacks
                 or data.startswith('admin_'))
 
-    async def handle_callback(self, 
-                            query: CallbackQuery, 
-                            data: str, 
-                            translator: Translator, 
+    async def handle_callback(self,
+                            query: CallbackQuery,
+                            data: str,
+                            translator: Translator,
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle admin callback queries."""
 
@@ -54,8 +54,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
         else:
             self.logger.warning("Unhandled admin callback", callback_data=data)
 
-    async def _handle_admin_panel(self, 
-                                query: CallbackQuery, 
+    async def _handle_admin_panel(self,
+                                query: CallbackQuery,
                                 translator: Translator) -> None:
         """Handle admin panel access and display."""
         user = query.from_user
@@ -86,9 +86,9 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         self.logger.info("Admin panel accessed", user_id=user.id)
 
-    async def _handle_admin_action(self, 
-                                 query: CallbackQuery, 
-                                 data: str, 
+    async def _handle_admin_action(self,
+                                 query: CallbackQuery,
+                                 data: str,
                                  translator: Translator,
                                  context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle specific admin actions."""
@@ -100,8 +100,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         action = data.replace("admin_", "")
 
-        self.logger.debug("Processing admin action", 
-                         user_id=user.id, 
+        self.logger.debug("Processing admin action",
+                         user_id=user.id,
                          action=action)
 
         if action == "broadcast":
@@ -117,15 +117,15 @@ class AdminCallbackHandler(BaseCallbackHandler):
             await self._handle_back_to_main(query, translator)
 
         else:
-            self.logger.warning("Unknown admin action", 
-                              user_id=user.id, 
+            self.logger.warning("Unknown admin action",
+                              user_id=user.id,
                               action=action)
             # Fallback to main menu
             await self._handle_back_to_main(query, translator)
 
-    async def _check_admin_access(self, 
-                                user_id: int, 
-                                query: CallbackQuery, 
+    async def _check_admin_access(self,
+                                user_id: int,
+                                query: CallbackQuery,
                                 translator: Translator) -> bool:
         """Check if user has admin access."""
         try:
@@ -147,8 +147,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
             return True
 
         except Exception as e:
-            self.logger.error("Error checking admin access", 
-                            user_id=user_id, 
+            self.logger.error("Error checking admin access",
+                            user_id=user_id,
                             error=str(e))
 
             # Show error and deny access
@@ -159,8 +159,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
             )
             return False
 
-    async def _handle_broadcast_start(self, 
-                                    query: CallbackQuery, 
+    async def _handle_broadcast_start(self,
+                                    query: CallbackQuery,
                                     translator: Translator) -> None:
         """Handle broadcast initiation."""
         # This will be handled by ConversationHandler entry point
@@ -172,8 +172,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         self.logger.info("Broadcast session starting", user_id=query.from_user.id)
 
-    async def _handle_stats(self, 
-                          query: CallbackQuery, 
+    async def _handle_stats(self,
+                          query: CallbackQuery,
                           translator: Translator) -> None:
         """Handle statistics display."""
         await query.edit_message_text(
@@ -184,8 +184,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         self.logger.debug("Stats help displayed", user_id=query.from_user.id)
 
-    async def _handle_health_check(self, 
-                                 query: CallbackQuery, 
+    async def _handle_health_check(self,
+                                 query: CallbackQuery,
                                  translator: Translator,
                                  context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle system health check."""
@@ -224,13 +224,13 @@ class AdminCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.info("Health check completed", 
+            self.logger.info("Health check completed",
                            user_id=user.id,
                            system_status=health_status.status)
 
         except Exception as e:
-            self.logger.error("Error in health check", 
-                            user_id=user.id, 
+            self.logger.error("Error in health check",
+                            user_id=user.id,
                             error=str(e))
 
             # Show error message
@@ -240,14 +240,14 @@ class AdminCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-    async def _format_health_message(self, 
-                                   health_status, 
+    async def _format_health_message(self,
+                                   health_status,
                                    translator: Translator) -> str:
         """Format health check message for display."""
         # Status emojis
         status_emoji = {
             "healthy": "✅",
-            "degraded": "⚠️", 
+            "degraded": "⚠️",
             "unhealthy": "❌"
         }
 
@@ -292,7 +292,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
             if component.details:
                 # Show only important details with escaping
-                important_details = {k: v for k, v in component.details.items() 
+                important_details = {k: v for k, v in component.details.items()
                                    if k in ['connection', 'query_success', 'api_accessible', 'scheduler_running']}
                 if important_details:
                     safe_details = []
@@ -312,8 +312,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         return message
 
-    async def _handle_back_to_main(self, 
-                                 query: CallbackQuery, 
+    async def _handle_back_to_main(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle back to main menu."""
         user = query.from_user

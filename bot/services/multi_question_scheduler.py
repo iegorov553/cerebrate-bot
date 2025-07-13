@@ -241,16 +241,16 @@ class MultiQuestionScheduler:
             # Update our local tracking
             self.last_notifications[question_id] = datetime.now(timezone.utc)
 
-            logger.info(f"Question notification sent", 
-                       user_id=user_id, 
+            logger.info("Question notification sent",
+                       user_id=user_id,
                        question_id=question_id,
                        message_id=message.message_id)
 
             return True
 
         except Exception as e:
-            logger.error(f"Error sending question notification: {e}", 
-                        user_id=user_id, 
+            logger.error(f"Error sending question notification: {e}",
+                        user_id=user_id,
                         question_id=question.get('id'))
             return False
 
@@ -268,7 +268,7 @@ class MultiQuestionScheduler:
             if user_result.data:
                 user_name = user_result.data.get('tg_first_name', 'друг')
 
-            # Current time for {time} variable  
+            # Current time for {time} variable
             current_time = datetime.now(timezone.utc).strftime('%H:%M')
 
             # Apply template variables
@@ -349,8 +349,8 @@ class MultiQuestionScheduler:
 
 # Factory function for creating the scheduler
 def create_multi_question_scheduler(
-    application: Application, 
-    db_client: DatabaseClient, 
+    application: Application,
+    db_client: DatabaseClient,
     config: Config
 ) -> MultiQuestionScheduler:
     """Create and configure the multi-question scheduler."""

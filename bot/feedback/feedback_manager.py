@@ -197,7 +197,7 @@ class FeedbackManager:
             )
         else:
             logger.error(
-                f"Failed to submit feedback to GitHub",
+                "Failed to submit feedback to GitHub",
                 extra={
                     "user_id": user_id,
                     "username": username,

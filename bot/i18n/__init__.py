@@ -10,7 +10,7 @@ from .translator import Translator, _, get_translator
 
 __all__ = [
     'Translator',
-    'get_translator', 
+    'get_translator',
     '_',
     'LanguageDetector',
     'detect_user_language'

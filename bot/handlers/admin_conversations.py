@@ -36,7 +36,6 @@ def require_admin(func):
         if not user:
             return ConversationHandler.END
 
-        config: Config = context.bot_data['config']
         admin_ops: AdminOperations = context.bot_data['admin_ops']
         if not admin_ops.is_admin(user.id):
             await update.message.reply_text(
@@ -67,7 +66,7 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     return WAITING_BROADCAST_TEXT
 
 
-@track_errors_async("start_broadcast_from_callback")  
+@track_errors_async("start_broadcast_from_callback")
 @require_admin
 async def start_broadcast_from_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Start broadcast conversation - entry point from callback button."""
@@ -91,7 +90,6 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
 @track_errors_async("handle_broadcast_text")
 async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle broadcast text input and show confirmation."""
-    user = update.effective_user
     message_text = update.message.text
 
     # Store broadcast text in user_data
@@ -121,7 +119,7 @@ async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TY
     return WAITING_BROADCAST_CONFIRMATION
 
 
-@track_errors_async("handle_broadcast_confirmation") 
+@track_errors_async("handle_broadcast_confirmation")
 async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle broadcast confirmation via callback buttons."""
     query = update.callback_query
@@ -141,7 +139,6 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
         # Get dependencies
         db_client: DatabaseClient = context.bot_data['db_client']
-        config: Config = context.bot_data['config']
 
         # Create broadcast manager and send
         from bot.database.user_operations import UserOperations
@@ -229,7 +226,7 @@ def create_broadcast_conversation() -> ConversationHandler:
         states={
             WAITING_BROADCAST_TEXT: [
                 MessageHandler(
-                    filters.TEXT & ~filters.COMMAND, 
+                    filters.TEXT & ~filters.COMMAND,
                     handle_broadcast_text
                 )
             ],

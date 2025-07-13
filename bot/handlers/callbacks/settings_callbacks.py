@@ -41,10 +41,10 @@ class SettingsCallbackHandler(BaseCallbackHandler):
         return (data in settings_callbacks
                 or data.startswith('settings_'))
 
-    async def handle_callback(self, 
-                            query: CallbackQuery, 
-                            data: str, 
-                            translator: Translator, 
+    async def handle_callback(self,
+                            query: CallbackQuery,
+                            data: str,
+                            translator: Translator,
                             context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle settings callback queries."""
 
@@ -57,8 +57,8 @@ class SettingsCallbackHandler(BaseCallbackHandler):
         else:
             self.logger.warning("Unhandled settings callback", callback_data=data)
 
-    async def _handle_settings_menu(self, 
-                                  query: CallbackQuery, 
+    async def _handle_settings_menu(self,
+                                  query: CallbackQuery,
                                   translator: Translator) -> None:
         """Handle settings menu display."""
         user = query.from_user
@@ -86,15 +86,17 @@ class SettingsCallbackHandler(BaseCallbackHandler):
 
             # Create localized settings display
             enabled_status = (
-                translator.translate('settings.notifications_enabled') 
-                if user_data['enabled'] 
+                translator.translate('settings.notifications_enabled')
+                if user_data['enabled']
                 else translator.translate('settings.notifications_disabled')
             )
 
             settings_text = f"{translator.translate('settings.current_title')}\n\n"
             settings_text += f"{translator.translate('settings.notifications', status=enabled_status)}\n"
-            settings_text += f"{translator.translate('settings.time_window')}: {user_data['window_start']} - {user_data['window_end']}\n"
-            settings_text += f"{translator.translate('settings.frequency')}: {translator.translate('settings.every_minutes', minutes=user_data['interval_min'])}"
+            settings_text += (f"{translator.translate('settings.time_window')}: "
+                              f"{user_data['window_start']} - {user_data['window_end']}\n")
+            settings_text += (f"{translator.translate('settings.frequency')}: "
+                              f"{translator.translate('settings.every_minutes', minutes=user_data['interval_min'])}")
 
             await query.edit_message_text(
                 settings_text,
@@ -102,27 +104,27 @@ class SettingsCallbackHandler(BaseCallbackHandler):
                 parse_mode='Markdown'
             )
 
-            self.logger.debug("Settings menu displayed", 
+            self.logger.debug("Settings menu displayed",
                             user_id=user.id,
                             enabled=user_data['enabled'],
                             interval=user_data['interval_min'])
 
         except Exception as e:
-            self.logger.error("Error displaying settings menu", 
-                            user_id=user.id, 
+            self.logger.error("Error displaying settings menu",
+                            user_id=user.id,
                             error=str(e))
             raise
 
-    async def _handle_settings_action(self, 
-                                    query: CallbackQuery, 
-                                    data: str, 
+    async def _handle_settings_action(self,
+                                    query: CallbackQuery,
+                                    data: str,
                                     translator: Translator) -> None:
         """Handle settings action callbacks."""
         user = query.from_user
         action = data.replace("settings_", "")
 
-        self.logger.debug("Processing settings action", 
-                         user_id=user.id, 
+        self.logger.debug("Processing settings action",
+                         user_id=user.id,
                          action=action)
 
         if action == "toggle_notifications":
@@ -141,12 +143,12 @@ class SettingsCallbackHandler(BaseCallbackHandler):
             await self._handle_settings_menu(query, translator)
 
         else:
-            self.logger.warning("Unknown settings action", 
-                              user_id=user.id, 
+            self.logger.warning("Unknown settings action",
+                              user_id=user.id,
                               action=action)
 
-    async def _handle_toggle_notifications(self, 
-                                         query: CallbackQuery, 
+    async def _handle_toggle_notifications(self,
+                                         query: CallbackQuery,
                                          translator: Translator) -> None:
         """Handle notification toggle."""
         user = query.from_user
@@ -165,7 +167,7 @@ class SettingsCallbackHandler(BaseCallbackHandler):
                     translator.translate('settings.error_get'),
                     reply_markup=KeyboardGenerator.main_menu(is_admin, translator)
                 )
-                self.logger.error("Failed to get user settings for toggle", 
+                self.logger.error("Failed to get user settings for toggle",
                                 user_id=user.id)
                 return
 
@@ -174,7 +176,7 @@ class SettingsCallbackHandler(BaseCallbackHandler):
             new_enabled = not current_enabled
 
             success = await user_ops.update_user_settings(
-                user.id, 
+                user.id,
                 {'enabled': new_enabled}
             )
 
@@ -190,7 +192,7 @@ class SettingsCallbackHandler(BaseCallbackHandler):
                     reply_markup=create_settings_menu(translator)
                 )
 
-                self.logger.info("Notifications toggled", 
+                self.logger.info("Notifications toggled",
                                user_id=user.id,
                                old_enabled=current_enabled,
                                new_enabled=new_enabled)
@@ -201,12 +203,12 @@ class SettingsCallbackHandler(BaseCallbackHandler):
                     reply_markup=create_settings_menu(translator)
                 )
 
-                self.logger.error("Failed to toggle notifications", 
+                self.logger.error("Failed to toggle notifications",
                                 user_id=user.id)
 
         except Exception as e:
-            self.logger.error("Error toggling notifications", 
-                            user_id=user.id, 
+            self.logger.error("Error toggling notifications",
+                            user_id=user.id,
                             error=str(e))
 
             # Show generic error
@@ -215,8 +217,8 @@ class SettingsCallbackHandler(BaseCallbackHandler):
                 reply_markup=create_settings_menu(translator)
             )
 
-    async def _handle_back_to_main(self, 
-                                 query: CallbackQuery, 
+    async def _handle_back_to_main(self,
+                                 query: CallbackQuery,
                                  translator: Translator) -> None:
         """Handle back to main menu."""
         user = query.from_user
@@ -240,8 +242,8 @@ class SettingsCallbackHandler(BaseCallbackHandler):
 
         self.logger.debug("Returned to main menu from settings", user_id=user.id)
 
-    async def _handle_time_window_help(self, 
-                                     query: CallbackQuery, 
+    async def _handle_time_window_help(self,
+                                     query: CallbackQuery,
                                      translator: Translator) -> None:
         """Handle time window configuration help."""
         await query.edit_message_text(
@@ -252,8 +254,8 @@ class SettingsCallbackHandler(BaseCallbackHandler):
 
         self.logger.debug("Time window help displayed", user_id=query.from_user.id)
 
-    async def _handle_frequency_help(self, 
-                                   query: CallbackQuery, 
+    async def _handle_frequency_help(self,
+                                   query: CallbackQuery,
                                    translator: Translator) -> None:
         """Handle frequency configuration help."""
         await query.edit_message_text(

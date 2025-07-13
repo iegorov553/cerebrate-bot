@@ -102,8 +102,8 @@ class WhisperClient:
         file_size = os.path.getsize(file_path)
         if file_size > self.max_file_size_bytes:
             raise AudioTooLargeError(
-                f"Audio file size {file_size / (1024*1024):.1f}MB exceeds limit "
-                f"{self.max_file_size_bytes / (1024*1024)}MB"
+                f"Audio file size {file_size / (1024 * 1024):.1f}MB exceeds limit "
+                f"{self.max_file_size_bytes / (1024 * 1024)}MB"
             )
 
         # Check duration if provided
@@ -170,7 +170,7 @@ class WhisperClient:
                     transcription: Transcription = await self.client.audio.transcriptions.create(
                         **transcription_params
                     )
-                    logger.info(f"OpenAI API call successful")
+                    logger.info("OpenAI API call successful")
 
                 # Extract text from response
                 if hasattr(transcription, 'text'):

@@ -8,6 +8,6 @@ from .user_operations import UserOperations
 
 __all__ = [
     "DatabaseClient",
-    "UserOperations", 
+    "UserOperations",
     "FriendOperations"
 ]

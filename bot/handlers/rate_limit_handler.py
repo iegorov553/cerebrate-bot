@@ -36,7 +36,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         action_names = {
             "general": "общих команд",
             "friend_request": "запросов в друзья",
-            "settings": "изменений настроек", 
+            "settings": "изменений настроек",
             "discovery": "поиска друзей",
             "admin": "админских команд",
             "callback": "нажатий кнопок"

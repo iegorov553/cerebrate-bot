@@ -71,7 +71,7 @@ async def handle_feedback_message(update: Update, context: ContextTypes.DEFAULT_
         await update.message.reply_text(
             translator.translate('feedback.error'),
             reply_markup=create_main_menu(
-                config.is_admin_configured() and user.id == config.admin_user_id, 
+                config.is_admin_configured() and user.id == config.admin_user_id,
                 translator
             ),
             parse_mode='Markdown'
@@ -79,15 +79,14 @@ async def handle_feedback_message(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def handle_feedback_description(
-    update: Update, 
-    context: ContextTypes.DEFAULT_TYPE, 
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
     feedback_manager: FeedbackManager,
     translator,
     description: str
 ) -> None:
     """Handle feedback description submission."""
     user = update.effective_user
-    config: Config = context.bot_data['config']
 
     # Store description in session
     session = await feedback_manager.get_feedback_session(user.id)
@@ -121,11 +120,11 @@ async def handle_feedback_description(
     keyboard = InlineKeyboardMarkup([
         [
             InlineKeyboardButton(
-                translator.translate("feedback.confirm_send"), 
+                translator.translate("feedback.confirm_send"),
                 callback_data=f"feedback_confirm_{user.id}"
             ),
             InlineKeyboardButton(
-                translator.translate("feedback.confirm_cancel"), 
+                translator.translate("feedback.confirm_cancel"),
                 callback_data=f"feedback_cancel_{user.id}"
             )
         ]
@@ -190,7 +189,7 @@ async def handle_feedback_confirmation(update: Update, context: ContextTypes.DEF
         await query.edit_message_text(
             success_text,
             reply_markup=create_main_menu(
-                config.is_admin_configured() and user.id == config.admin_user_id, 
+                config.is_admin_configured() and user.id == config.admin_user_id,
                 translator
             ),
             parse_mode='Markdown'
@@ -203,7 +202,7 @@ async def handle_feedback_confirmation(update: Update, context: ContextTypes.DEF
         await query.edit_message_text(
             translator.translate('feedback.cancelled'),
             reply_markup=create_main_menu(
-                config.is_admin_configured() and user.id == config.admin_user_id, 
+                config.is_admin_configured() and user.id == config.admin_user_id,
                 translator
             ),
             parse_mode='Markdown'

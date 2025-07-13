@@ -3,7 +3,7 @@ Health Check Service для мониторинга состояния бота.
 
 Этот модуль обеспечивает:
 - Проверку подключения к базе данных
-- Проверку доступности Telegram API  
+- Проверку доступности Telegram API
 - Проверку состояния основных сервисов
 - HTTP endpoint для внешнего мониторинга
 """
@@ -29,10 +29,10 @@ class HealthStatus:
     details: Optional[Dict[str, Any]] = None
 
 
-@dataclass  
+@dataclass
 class SystemHealth:
     """Общий статус здоровья системы."""
-    status: str  # "healthy", "degraded", "unhealthy"  
+    status: str  # "healthy", "degraded", "unhealthy"
     timestamp: str
     version: str
     uptime_seconds: float
@@ -90,14 +90,14 @@ class HealthService:
                     status="healthy",
                     latency_ms=latency_ms,
                     details={
-                        "connection": "active", 
+                        "connection": "active",
                         "query_success": True,
                         "client_initialized": True
                     }
                 )
             else:
                 return HealthStatus(
-                    status="degraded", 
+                    status="degraded",
                     latency_ms=latency_ms,
                     error="Query returned None",
                     details={"connection": "active", "query_success": False}
@@ -147,7 +147,7 @@ class HealthService:
             logger.error(f"Telegram API health check failed: {e}")
 
             return HealthStatus(
-                status="unhealthy", 
+                status="unhealthy",
                 latency_ms=latency_ms,
                 error=str(e),
                 details={"api_accessible": False}
@@ -241,7 +241,7 @@ class HealthService:
         if all(status == "healthy" for status in statuses):
             return "healthy"
         elif any(status == "unhealthy" for status in statuses):
-            return "unhealthy"  
+            return "unhealthy"
         else:
             return "degraded"
 
