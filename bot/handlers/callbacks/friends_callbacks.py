@@ -260,14 +260,14 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     safe_username = escape_markdown(username)
                     safe_name = escape_markdown(name)
                     
-                    display_name = f"@{safe_username}" if username != translator.translate("common.unknown") else safe_name
+                    display_name = f"@{safe_username}" if username != translator.translate('common.unknown') else safe_name
                     text += f"• {display_name}\n"
                     
                     # Add accept/decline buttons for each request
                     if requester_id:
                         from telegram import InlineKeyboardButton
                         # Use simple names for buttons (no markdown escaping needed in button text)
-                        button_name = f"@{username}" if username != translator.translate("common.unknown") else name
+                        button_name = f"@{username}" if username != translator.translate('common.unknown') else name
                         keyboard.append([
                             InlineKeyboardButton(
                                 f"{translator.translate('friends.accept_button')} {button_name}",
@@ -303,8 +303,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     safe_username = escape_markdown(username)
                     safe_name = escape_markdown(name)
                     
-                    display_name = f"@{safe_username}" if username != translator.translate("common.unknown") else safe_name
-                    text += f"• {display_name} - {translator.translate("friends.awaiting_response")}\n"
+                    display_name = f"@{safe_username}" if username != translator.translate('common.unknown') else safe_name
+                    text += f"• {display_name} - {translator.translate('friends.awaiting_response')}\n"
             else:
                 text += translator.translate("friends.requests_outgoing_none")
             
