@@ -181,15 +181,23 @@ class SettingsCallbackHandler(BaseCallbackHandler):
             )
 
             if success:
-                # Show success message
-                if new_enabled:
-                    message = translator.translate('settings.notifications_enabled_msg')
-                else:
-                    message = translator.translate('settings.notifications_disabled_msg')
-
+                # Always return to questions menu with updated notification status
+                from bot.database.question_operations import QuestionOperations
+                from bot.keyboards.keyboard_generators import create_questions_menu
+                
+                question_ops = QuestionOperations(self.db_client, self.user_cache)
+                questions_summary = await question_ops.get_user_questions_summary(user.id)
+                
+                # Create updated keyboard with new notification status
+                keyboard = create_questions_menu(questions_summary, new_enabled, translator)
+                
+                # Keep the same menu text
+                menu_text = f"{translator.translate('questions.title')}\n\n"
+                menu_text += translator.translate('questions.description')
+                
                 await query.edit_message_text(
-                    message,
-                    reply_markup=create_settings_menu(translator)
+                    menu_text,
+                    reply_markup=keyboard
                 )
 
                 self.logger.info("Notifications toggled",
