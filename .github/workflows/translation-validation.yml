@@ -207,23 +207,23 @@ jobs:
         bandit -r bot/ -f json -o bandit-report.json || true
         if [ -f bandit-report.json ]; then
           python -c "
-          import json
-          with open('bandit-report.json', 'r') as f:
-              report = json.load(f)
-          
-          high_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'HIGH']
-          medium_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'MEDIUM']
-          
-          if high_severity:
-              print(f'❌ Found {len(high_severity)} HIGH severity security issues!')
-              for issue in high_severity:
-                  print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
-              exit(1)
-          elif medium_severity:
-              print(f'⚠️ Found {len(medium_severity)} MEDIUM severity security issues')
-              for issue in medium_severity:
-                  print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
-          else:
-              print('✅ No high-severity security issues found')
+import json
+with open('bandit-report.json', 'r') as f:
+    report = json.load(f)
+
+high_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'HIGH']
+medium_severity = [issue for issue in report.get('results', []) if issue.get('issue_severity') == 'MEDIUM']
+
+if high_severity:
+    print(f'❌ Found {len(high_severity)} HIGH severity security issues!')
+    for issue in high_severity:
+        print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
+    exit(1)
+elif medium_severity:
+    print(f'⚠️ Found {len(medium_severity)} MEDIUM severity security issues')
+    for issue in medium_severity:
+        print(f\"  - {issue['filename']}:{issue['line_number']} - {issue['issue_text']}\")
+else:
+    print('✅ No high-severity security issues found')
           "
         fi

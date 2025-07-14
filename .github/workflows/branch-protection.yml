@@ -181,18 +181,18 @@ jobs:
         
         if [ -f bandit-report.json ]; then
           python -c "
-          import json
-          with open('bandit-report.json', 'r') as f:
-              report = json.load(f)
-          
-          high_issues = [i for i in report.get('results', []) if i.get('issue_severity') == 'HIGH']
-          if high_issues:
-              print('❌ HIGH severity security issues found!')
-              for issue in high_issues:
-                  print(f'  - {issue[\"filename\"]}:{issue[\"line_number\"]} - {issue[\"issue_text\"]}')
-              exit(1)
-          else:
-              print('✅ No high-severity security issues found')
+import json
+with open('bandit-report.json', 'r') as f:
+    report = json.load(f)
+
+high_issues = [i for i in report.get('results', []) if i.get('issue_severity') == 'HIGH']
+if high_issues:
+    print('❌ HIGH severity security issues found!')
+    for issue in high_issues:
+        print(f'  - {issue[\"filename\"]}:{issue[\"line_number\"]} - {issue[\"issue_text\"]}')
+    exit(1)
+else:
+    print('✅ No high-severity security issues found')
           "
         fi
     
