@@ -11,6 +11,7 @@ from bot.i18n.translator import Translator
 from monitoring import get_logger, set_user_context
 
 logger = get_logger(__name__)
+translator = Translator()
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:

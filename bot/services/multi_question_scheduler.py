@@ -14,11 +14,13 @@ from telegram.ext import Application
 from bot.config import Config
 from bot.database.client import DatabaseClient
 from bot.database.user_operations import UserOperations
+from bot.i18n.translator import Translator
 from bot.questions import QuestionManager
 from bot.utils.cache_manager import CacheManager
 from monitoring import get_logger, track_errors_async
 
 logger = get_logger(__name__)
+translator = Translator()
 
 
 class MultiQuestionScheduler:

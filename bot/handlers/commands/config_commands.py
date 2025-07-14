@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from bot.cache.ttl_cache import TTLCache
 from bot.database.client import DatabaseClient
+from bot.i18n import get_translator
 from bot.utils.rate_limiter import rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
@@ -20,6 +21,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     set_user_context(user.id, user.username, user.first_name)
+    translator = get_translator()
 
     if not context.args:
         await update.message.reply_text(
@@ -101,6 +103,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     set_user_context(user.id, user.username, user.first_name)
+    translator = get_translator()
 
     if not context.args:
         await update.message.reply_text(

@@ -6,6 +6,10 @@ This module provides predefined question templates organized by categories.
 
 from typing import Dict, List
 
+from bot.i18n.translator import Translator
+
+translator = Translator()
+
 
 class QuestionTemplates:
     """Predefined question templates for users."""

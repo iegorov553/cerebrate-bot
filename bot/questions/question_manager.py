@@ -9,9 +9,11 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 
 from bot.database.question_operations import QuestionOperations
+from bot.i18n.translator import Translator
 from monitoring import get_logger, track_errors_async
 
 logger = get_logger(__name__)
+translator = Translator()
 
 
 def safe_parse_datetime(datetime_str: str) -> Optional[datetime]:
