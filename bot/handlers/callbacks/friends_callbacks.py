@@ -816,36 +816,15 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             # Get friend IDs
             friend_ids = [friend['tg_id'] for friend in friends]
             
-            # Query last 20 activities from friends
-            # SQL query to get activities with user info
-            query = """
-                SELECT 
-                    tj.job_text,
-                    tj.jobs_timestamp,
-                    u.tg_username,
-                    u.tg_first_name
-                FROM tg_jobs tj
-                JOIN users u ON tj.tg_id = u.tg_id
-                WHERE tj.tg_id = ANY(%s)
-                ORDER BY tj.jobs_timestamp DESC
-                LIMIT 20
-            """
-            
-            # Execute query directly (Supabase allows raw SQL)
-            result = self.db_client.rpc('exec_sql', {
-                'query': query,
-                'params': [friend_ids]
-            }).execute()
-            
-            if not result.data:
-                # Fallback: try with table queries
-                activities = []
-                for friend_id in friend_ids[:5]:  # Limit to avoid too many queries
+            # Use table queries instead of raw SQL for better compatibility
+            activities = []
+            for friend_id in friend_ids[:10]:  # Get activities from up to 10 friends
+                try:
                     friend_activities = self.db_client.table('tg_jobs')\
                         .select('job_text, jobs_timestamp')\
                         .eq('tg_id', friend_id)\
                         .order('jobs_timestamp', desc=True)\
-                        .limit(4)\
+                        .limit(3)\
                         .execute()
                     
                     if friend_activities.data:
@@ -857,22 +836,13 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                                 'username': friend_info.get('tg_username', 'Unknown'),
                                 'name': friend_info.get('tg_first_name', '')
                             })
-                
-                # Sort by timestamp
-                activities.sort(key=lambda x: x['timestamp'], reverse=True)
-                return activities[:20]
+                except Exception as query_error:
+                    self.logger.warning(f"Failed to get activities for friend {friend_id}", error=str(query_error))
+                    continue
             
-            # Process SQL results
-            activities = []
-            for row in result.data:
-                activities.append({
-                    'activity': row['job_text'],
-                    'timestamp': row['jobs_timestamp'],
-                    'username': row['tg_username'],
-                    'name': row['tg_first_name']
-                })
-            
-            return activities
+            # Sort by timestamp and return top 20
+            activities.sort(key=lambda x: x['timestamp'], reverse=True)
+            return activities[:20]
             
         except Exception as e:
             self.logger.error("Error querying friend activities", error=str(e))
