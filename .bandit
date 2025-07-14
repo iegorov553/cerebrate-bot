@@ -5,7 +5,7 @@
 exclude_dirs = tests,test_env,venv
 
 # Skip specific tests that are acceptable in our context
-skips = B110,B101
+skips = B101
 
-# B110: try_except_pass - acceptable for graceful error handling in bot
 # B101: assert_used - acceptable in test code and development
+# B110: try_except_pass - REMOVED - should be replaced with proper logging
