@@ -267,18 +267,11 @@ class AdminCallbackHandler(BaseCallbackHandler):
             # Create return keyboard
             keyboard = KeyboardGenerator.admin_menu(translator)
 
-            try:
-                await query.edit_message_text(
-                    message,
-                    reply_markup=keyboard,
-                    parse_mode='MarkdownV2'
-                )
-            except Exception as parse_error:
-                # Fallback to plain text if markdown parsing fails
-                await query.edit_message_text(
-                    message,
-                    reply_markup=keyboard
-                )
+            # Use plain text for better readability
+            await query.edit_message_text(
+                message,
+                reply_markup=keyboard
+            )
 
             self.logger.info("Health check completed",
                            user_id=user.id,
@@ -290,18 +283,10 @@ class AdminCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             # Show error message
-            try:
-                await query.edit_message_text(
-                    translator.translate('admin.health_error', error=str(e)[:100]),
-                    reply_markup=KeyboardGenerator.admin_menu(translator),
-                    parse_mode='MarkdownV2'
-                )
-            except Exception:
-                # Fallback to plain text
-                await query.edit_message_text(
-                    translator.translate('admin.health_error', error=str(e)[:100]),
-                    reply_markup=KeyboardGenerator.admin_menu(translator)
-                )
+            await query.edit_message_text(
+                translator.translate('admin.health_error', error=str(e)[:100]),
+                reply_markup=KeyboardGenerator.admin_menu(translator)
+            )
 
     async def _format_health_message(self,
                                    health_status,
@@ -314,68 +299,57 @@ class AdminCallbackHandler(BaseCallbackHandler):
             "unhealthy": "❌"
         }
 
-        # Function for safe markdown escaping
-        def escape_markdown(text):
-            """Escape special characters for Markdown."""
-            if not text:
-                return ""
-            special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-            escaped_text = str(text)
-            for char in special_chars:
-                escaped_text = escaped_text.replace(char, f'\\{char}')
-            return escaped_text
+        # Main health information with better formatting
+        message = f"🏥 {translator.translate('admin.health_check_title')}\n"
+        message += "═" * 35 + "\n\n"
+        
+        # Overall status with clear formatting
+        status_icon = status_emoji.get(health_status.status, '❓')
+        message += f"{status_icon} СТАТУС: {health_status.status.upper()}\n\n"
 
-        # Main health information
-        message = f"{translator.translate('admin.health_check_title')}\n\n"
-        message += f"{status_emoji.get(health_status.status, '❓')} {translator.translate('admin.health_status', status=health_status.status.upper())}\n"
-
-        # Safe timestamp without escaping (date/time only)
+        # Basic info section
         timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
-        message += f"{translator.translate('admin.health_timestamp', timestamp=timestamp_safe)}\n"
-        message += f"{translator.translate('admin.health_version', version=health_status.version)}\n"
-        message += f"{translator.translate('admin.health_uptime', uptime=f'{health_status.uptime_seconds:.1f}')}\n\n"
+        message += f"📅 Время: {timestamp_safe}\n"
+        message += f"🔖 Версия: {health_status.version}\n"
+        message += f"⏱ Время работы: {health_status.uptime_seconds:.1f} сек\n\n"
 
-        # System components
-        message += f"{translator.translate('admin.health_components')}\n"
+        # Components section with clear separation
+        message += "🔧 КОМПОНЕНТЫ:\n"
+        message += "─" * 20 + "\n"
+        
         for name, component in health_status.components.items():
             emoji = status_emoji.get(component.status, '❓')
-            component_name = translator.translate(f'admin.component_{name}', default=f'🔧 {name.title()}')
+            component_name = translator.translate(f'admin.component_{name}', default=f'{name.title()}')
             
-            # Escape markdown for safe formatting
-            safe_component_name = escape_markdown(component_name)
-            safe_status = escape_markdown(component.status.upper())
-
-            message += f"{emoji} **{safe_component_name}:** {safe_status}"
-
+            # Component header with status
+            message += f"\n{emoji} {component_name}:"
+            
             if component.latency_ms:
                 message += f" ({component.latency_ms:.0f}ms)"
+            
+            message += f"\n   └ Статус: {component.status.upper()}\n"
 
-            message += "\n"
-
+            # Show error if exists
             if component.error:
-                # Safely escape error message
-                safe_error = escape_markdown(component.error)
-                message += f"   {translator.translate('admin.error', error=safe_error)}\n"
+                message += f"   └ ❌ Ошибка: {component.error}\n"
 
+            # Show important details
             if component.details:
-                # Show only important details with escaping
                 important_details = {k: v for k, v in component.details.items()
                                    if k in ['connection', 'query_success', 'api_accessible', 'scheduler_running']}
                 if important_details:
-                    safe_details = []
+                    message += "   └ Детали: "
+                    details_list = []
                     for k, v in important_details.items():
-                        safe_value = escape_markdown(str(v))
-                        safe_details.append(f"{k}: {safe_value}")
-                    if safe_details:
-                        message += f"   {translator.translate('admin.details', details=', '.join(safe_details))}\n"
+                        details_list.append(f"{k}={v}")
+                    message += ", ".join(details_list) + "\n"
 
         # System metrics if available
         if hasattr(health_status, 'metrics') and health_status.metrics:
-            message += f"\n{translator.translate('admin.system_metrics')}\n"
+            message += "\n📊 СИСТЕМНЫЕ МЕТРИКИ:\n"
+            message += "─" * 20 + "\n"
             for metric, value in health_status.metrics.items():
-                safe_metric = escape_markdown(str(metric))
-                safe_value = escape_markdown(str(value))
-                message += f"• {safe_metric}: `{safe_value}`\n"
+                message += f"• {metric}: {value}\n"
 
         return message
 
