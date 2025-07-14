@@ -368,6 +368,8 @@
     "delete_confirm": "✅ Sí, eliminar",
     "delete_cancel": "❌ Cancelar",
     "popular_templates": "⭐ Plantillas populares",
+    "templates_title": "🎯 **Plantillas de preguntas listas**",
+    "templates_description": "Elige una categoría para crear rápidamente una pregunta:",
     "edit_title": "✏️ **Editando pregunta**",
     "current_text": "📝 **Texto:** {text}",
     "current_schedule": "⏰ **Horario:** {start} - {end}, cada {interval} min",

@@ -258,14 +258,40 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                                    query: CallbackQuery,
                                    translator: Translator) -> None:
         """Handle templates menu display."""
-        # This would show template categories
-        await query.edit_message_text(
-            translator.translate('questions.templates_help'),
-            parse_mode='Markdown'
-        )
+        try:
+            # Create templates menu keyboard with categories
+            from bot.keyboards.keyboard_generators import create_question_templates_menu
+            keyboard = create_question_templates_menu(None, translator)
+            
+            # Create templates menu text
+            menu_text = f"{translator.translate('questions.templates_title')}\n\n"
+            menu_text += translator.translate('questions.templates_description')
+            
+            await query.edit_message_text(
+                menu_text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
 
-        self.logger.debug("Templates menu displayed",
-                         user_id=query.from_user.id)
+            self.logger.debug("Templates menu displayed",
+                             user_id=query.from_user.id)
+                             
+        except Exception as e:
+            self.logger.error("Error displaying templates menu",
+                            user_id=query.from_user.id,
+                            error=str(e))
+            
+            # Fallback with back button
+            from bot.keyboards.keyboard_generators import KeyboardGenerator
+            error_keyboard = KeyboardGenerator.single_button_keyboard(
+                translator.translate('questions.back'), 
+                'menu_questions'
+            )
+            await query.edit_message_text(
+                f"❌ {translator.translate('errors.general')}\n\n{translator.translate('questions.try_again')}",
+                reply_markup=error_keyboard,
+                parse_mode='Markdown'
+            )
 
     async def _handle_edit_question(self,
                                   query: CallbackQuery,

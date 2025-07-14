@@ -19,7 +19,6 @@ from bot.handlers.admin_handlers import setup_admin_handlers
 from bot.handlers.base.callback_router import CallbackRouter
 from bot.handlers.callbacks import (
     NavigationCallbackHandler,
-    SettingsCallbackHandler,
     FeedbackCallbackHandler,
     FriendsCallbackHandler,
     AdminCallbackHandler,
@@ -104,7 +103,6 @@ async def create_application() -> Application:
     # Setup modular callback handlers
     callback_router = CallbackRouter(db_client, config, user_cache)
     callback_router.register_handler(NavigationCallbackHandler(db_client, config, user_cache))
-    callback_router.register_handler(SettingsCallbackHandler(db_client, config, user_cache))
     callback_router.register_handler(FeedbackCallbackHandler(db_client, config, user_cache))
     callback_router.register_handler(FriendsCallbackHandler(db_client, config, user_cache))
     callback_router.register_handler(AdminCallbackHandler(db_client, config, user_cache))

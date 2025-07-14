@@ -55,20 +55,6 @@ class KeyboardGenerator:
 
         return InlineKeyboardMarkup(keyboard)
 
-    @staticmethod
-    def settings_menu(translator=None) -> InlineKeyboardMarkup:
-        """Generate settings menu keyboard."""
-        if translator is None:
-            from bot.i18n.translator import Translator
-            translator = Translator()
-
-        keyboard = [
-            [InlineKeyboardButton(translator.translate("settings.toggle_notifications"), callback_data="settings_toggle_notifications")],
-            [InlineKeyboardButton(translator.translate("settings.set_time_window"), callback_data="settings_time_window")],
-            [InlineKeyboardButton(translator.translate("settings.set_frequency"), callback_data="settings_frequency")],
-            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
-        ]
-        return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def friends_menu(
@@ -643,9 +629,6 @@ def get_main_menu_keyboard(is_admin: bool = False, translator=None) -> InlineKey
     return KeyboardGenerator.main_menu(is_admin, translator)
 
 
-def get_settings_keyboard(translator=None) -> InlineKeyboardMarkup:
-    """Get settings menu keyboard."""
-    return KeyboardGenerator.settings_menu(translator)
 
 
 def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0, translator=None) -> InlineKeyboardMarkup:
@@ -660,7 +643,6 @@ def get_admin_keyboard(translator=None) -> InlineKeyboardMarkup:
 
 # Aliases for new modular architecture
 create_main_menu = get_main_menu_keyboard
-create_settings_menu = get_settings_keyboard
 create_friends_menu = get_friends_keyboard
 create_admin_menu = get_admin_keyboard
 create_language_menu = KeyboardGenerator.language_menu

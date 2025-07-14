@@ -368,6 +368,8 @@
     "delete_confirm": "✅ Yes, delete",
     "delete_cancel": "❌ Cancel",
     "popular_templates": "⭐ Popular templates",
+    "templates_title": "🎯 **Ready-made question templates**",
+    "templates_description": "Choose a category to quickly create a question:",
     "edit_title": "✏️ **Editing question**",
     "current_text": "📝 **Text:** {text}",
     "current_schedule": "⏰ **Schedule:** {start} - {end}, every {interval} min",
