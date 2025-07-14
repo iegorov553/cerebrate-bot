@@ -100,7 +100,8 @@ jobs:
 
     - name: Run bandit security linter
       run: |
-        bandit -r . -x tests/,test_env/,venv/
+        echo "Running Bandit security scan..."
+        bandit -r . -x tests/,test_env/,venv/ -f txt
 
     - name: Check dependencies for known security vulnerabilities
       run: |
