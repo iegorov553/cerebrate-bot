@@ -55,7 +55,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         return
 
     # Create main menu
-    keyboard = create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id)
+    keyboard = create_main_menu(config.is_admin_configured() and user.id == config.admin_user_id, translator)
 
     welcome_text = (f"{translator.translate('welcome.greeting', name=user.first_name)}\n\n"
                    f"{translator.translate('welcome.description')}")
@@ -104,7 +104,7 @@ async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     translator.set_language(user_language)
 
     # Create settings keyboard
-    keyboard = create_settings_menu()
+    keyboard = create_settings_menu(translator)
 
     # Format settings message
     enabled_status = translator.translate("common.enabled") if user_data['enabled'] else translator.translate("common.disabled")

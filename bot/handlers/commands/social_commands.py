@@ -85,7 +85,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         try:
             await context.bot.send_message(
                 chat_id=target_id,
-                text=f"👤 Пользователь @{user.username or user.first_name} хочет добавить вас в друзья!\n\n"
+                text=f"{translator.translate('friends.add_friend_notification', username=user.username or user.first_name)}\n\n"
                      f"{translator.translate('friends.add_friend_help')}"
             )
         except Exception as e:
@@ -113,7 +113,7 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     translator.set_language(user_language)
 
     # Create friends menu
-    keyboard = create_friends_menu()
+    keyboard = create_friends_menu(0, 0, translator)
 
     await update.message.reply_text(
         f"{translator.translate('friends.title')}\n\n"
@@ -191,7 +191,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     if not context.args:
         await update.message.reply_text(
-            f"👥 **Принять в друзья**\n\n"
+            f"👥 **{translator.translate('friends.accept_title')}**\n\n"
             f"{translator.translate('friends.accept_usage')}",
             parse_mode='Markdown'
         )
@@ -235,7 +235,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
             logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
     else:
         await update.message.reply_text(
-            f"❌ Заявки в друзья от @{target_username} не найдено или она уже обработана."
+            translator.translate('friends.request_not_found', username=target_username)
         )
 
 
@@ -249,10 +249,15 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
 
     set_user_context(user.id, user.username, user.first_name)
 
+    # Get user language and translator
+    user_language = detect_user_language(user)
+    translator = get_translator()
+    translator.set_language(user_language)
+
     if not context.args:
         await update.message.reply_text(
-            "👥 **Отклонить заявку**\n\n"
-            "Использование: `/decline @username`",
+            f"👥 **{translator.translate('friends.decline_title')}**\n\n"
+            f"{translator.translate('friends.decline_usage')}",
             parse_mode='Markdown'
         )
         return
@@ -273,7 +278,7 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
         await update.message.reply_text(
-            f"❌ Пользователь @{target_username} не найден."
+            translator.translate('friends.user_not_found', username=target_username)
         )
         return
 
@@ -281,20 +286,20 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
     success = await friend_ops.decline_friend_request(requester['tg_id'], user.id)
     if success:
         await update.message.reply_text(
-            f"❌ Заявка в друзья от @{target_username} отклонена."
+            translator.translate('friends.request_declined', username=target_username)
         )
 
         # Notify requester if possible
         try:
             await context.bot.send_message(
                 chat_id=requester['tg_id'],
-                text=f"❌ @{user.username or user.first_name} отклонил вашу заявку в друзья."
+                text=translator.translate('friends.request_notification_declined', username=user.username or user.first_name)
             )
         except Exception as e:
             logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
     else:
         await update.message.reply_text(
-            f"❌ Заявки в друзья от @{target_username} не найдено или она уже обработана."
+            translator.translate('friends.request_not_found', username=target_username)
         )
 
 

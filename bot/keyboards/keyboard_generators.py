@@ -216,10 +216,6 @@ class KeyboardGenerator:
                 callback_data="admin_health"
             )],
             [InlineKeyboardButton(
-                translator.translate('admin.friend_activities') if translator else "👥 Friend Activities",
-                callback_data="admin_friend_activities"
-            )],
-            [InlineKeyboardButton(
                 translator.translate('menu.back_main') if translator else "🔙 Back to Main Menu",
                 callback_data="back_main"
             )]
