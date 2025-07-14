@@ -103,5 +103,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
                 chat_id=update.effective_chat.id,
                 text=f"🚫 Слишком много запросов. Попробуйте через {error.retry_after} сек."
             )
-        except Exception:
-            pass  # Give up if even simple message fails
+        except Exception as e:
+            # Log the error but don't raise - we've done our best to notify the user
+            logger.warning("Failed to send fallback rate limit message", 
+                          chat_id=update.effective_chat.id, error=str(e))

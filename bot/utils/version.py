@@ -18,8 +18,10 @@ def get_bot_version() -> str:
         version_file = Path(__file__).parent.parent.parent / "VERSION"
         if version_file.exists():
             return version_file.read_text().strip()
-    except Exception:
-        pass
+    except Exception as e:
+        # Log the error for debugging but continue with fallback
+        import logging
+        logging.getLogger(__name__).debug(f"Could not read VERSION file: {e}")
 
     # Fallback to environment variable
     return os.getenv("BOT_VERSION", "unknown")
