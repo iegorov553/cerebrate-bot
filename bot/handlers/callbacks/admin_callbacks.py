@@ -267,11 +267,18 @@ class AdminCallbackHandler(BaseCallbackHandler):
             # Create return keyboard
             keyboard = KeyboardGenerator.admin_menu(translator)
 
-            await query.edit_message_text(
-                message,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
+            try:
+                await query.edit_message_text(
+                    message,
+                    reply_markup=keyboard,
+                    parse_mode='MarkdownV2'
+                )
+            except Exception as parse_error:
+                # Fallback to plain text if markdown parsing fails
+                await query.edit_message_text(
+                    message,
+                    reply_markup=keyboard
+                )
 
             self.logger.info("Health check completed",
                            user_id=user.id,
@@ -283,11 +290,18 @@ class AdminCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             # Show error message
-            await query.edit_message_text(
-                translator.translate('admin.health_error', error=str(e)[:100]),
-                reply_markup=KeyboardGenerator.admin_menu(translator),
-                parse_mode='Markdown'
-            )
+            try:
+                await query.edit_message_text(
+                    translator.translate('admin.health_error', error=str(e)[:100]),
+                    reply_markup=KeyboardGenerator.admin_menu(translator),
+                    parse_mode='MarkdownV2'
+                )
+            except Exception:
+                # Fallback to plain text
+                await query.edit_message_text(
+                    translator.translate('admin.health_error', error=str(e)[:100]),
+                    reply_markup=KeyboardGenerator.admin_menu(translator)
+                )
 
     async def _format_health_message(self,
                                    health_status,

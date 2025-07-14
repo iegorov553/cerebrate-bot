@@ -189,6 +189,12 @@ def rate_limit(action: str = "general", error_message: str = None):
                 # Check if first arg is Update object
                 if hasattr(args[0], 'effective_user') and args[0].effective_user:
                     user_id = args[0].effective_user.id
+                # Check if it's a callback query
+                elif hasattr(args[0], 'callback_query') and args[0].callback_query and args[0].callback_query.from_user:
+                    user_id = args[0].callback_query.from_user.id
+                # Check if it's a message
+                elif hasattr(args[0], 'message') and args[0].message and args[0].message.from_user:
+                    user_id = args[0].message.from_user.id
                 elif isinstance(args[0], int):
                     user_id = args[0]
 
@@ -197,7 +203,8 @@ def rate_limit(action: str = "general", error_message: str = None):
                 user_id = kwargs.get('user_id') or kwargs.get('tg_id')
 
             if user_id is None:
-                logger.warning("Rate limiting skipped - no user_id found", function=func.__name__)
+                logger.warning("Rate limiting skipped - no user_id found", function=func.__name__, 
+                             args_types=[type(arg).__name__ for arg in args[:2]] if args else [])
                 return await func(*args, **kwargs)
 
             # Check rate limit
