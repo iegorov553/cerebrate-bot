@@ -2,7 +2,6 @@
 Test to find all f-string syntax errors in the codebase.
 """
 
-import os
 import re
 import pytest
 from pathlib import Path
@@ -23,7 +22,7 @@ class TestFStringSyntax:
         
         # Pattern to find f-strings with double quotes inside translator.translate calls
         # This pattern looks for f"...{translator.translate("...")}" which causes syntax errors
-        pattern = r'f["\'].*?\{[^}]*translator\.translate\(["\'][^"\']*["\'][^}]*\}'
+        # pattern = r'f["\'].*?\{[^}]*translator\.translate\(["\'][^"\']*["\'][^}]*\}'  # unused
         
         for file_path in directory.rglob('*.py'):
             try:
@@ -36,7 +35,7 @@ class TestFStringSyntax:
                         relative_path = str(file_path.relative_to(Path.cwd()))
                         errors.append((relative_path, line_num, line.strip()))
                         
-            except Exception as e:
+            except Exception:
                 # Skip files that can't be read
                 continue
                 

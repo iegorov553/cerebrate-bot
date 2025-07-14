@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 
 # Mock monitoring before importing modules
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 

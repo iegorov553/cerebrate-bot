@@ -3,7 +3,7 @@ Pytest configuration and fixtures for the Doyobi Diary tests.
 """
 import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from typing import Generator
 from unittest.mock import MagicMock, Mock
 
 import pytest

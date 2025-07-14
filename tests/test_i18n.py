@@ -1,7 +1,6 @@
 """
 Tests for internationalization (i18n) system.
 """
-import pytest
 from telegram import User
 
 from bot.i18n import LanguageDetector, Translator, detect_user_language, get_translator

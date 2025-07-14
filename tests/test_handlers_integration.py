@@ -113,7 +113,7 @@ class TestHandlerIntegration:
     @pytest.mark.asyncio
     async def test_callback_handler_flow(self):
         """Test full callback handler flow with real callback_data."""
-        from telegram import CallbackQuery, InlineKeyboardButton, Update, User
+        from telegram import CallbackQuery, Update, User
         from telegram.ext import ContextTypes
 
         from bot.cache.ttl_cache import TTLCache

@@ -332,10 +332,6 @@ class TestTranslationCompleteness:
 
     def test_all_used_translation_keys_exist(self):
         """Test that all translation keys used in code actually exist in translation files."""
-        import os
-        import re
-        from pathlib import Path
-        
         # Find all translation keys used in code
         used_keys = self._extract_translation_keys_from_code()
         
@@ -357,7 +353,7 @@ class TestTranslationCompleteness:
                     issues.append(f"{language.upper()}: Missing key '{key}'")
         
         if issues:
-            error_msg = f"\n\nTranslation keys used in code but missing from dictionaries:\n\n"
+            error_msg = "\n\nTranslation keys used in code but missing from dictionaries:\n\n"
             error_msg += "\n".join(issues)
             error_msg += f"\n\nTotal missing keys: {len(issues)}"
             error_msg += f"\nTotal used keys found: {len(used_keys)}"
@@ -392,7 +388,6 @@ class TestTranslationCompleteness:
 
     def _extract_translation_keys_from_code(self) -> Set[str]:
         """Extract all translation keys used in Python code."""
-        import os
         import re
         from pathlib import Path
         

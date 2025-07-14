@@ -54,7 +54,7 @@ def main():
     
     # Load reference language (Russian)
     reference = load_translations('ru')
-    print(f"📖 Loaded reference (RU) with structure")
+    print("📖 Loaded reference (RU) with structure")
     
     # Sync other languages
     for language in ['en', 'es']:

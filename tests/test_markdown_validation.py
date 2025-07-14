@@ -3,7 +3,7 @@
 import re
 import json
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
+from typing import List, Dict, Any
 
 import pytest
 

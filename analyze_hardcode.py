@@ -352,7 +352,7 @@ class HardcodeAnalyzer:
     
     def print_summary(self, violations: Dict):
         """Выводит краткую сводку."""
-        print(f"📊 Анализ хардкода завершен!")
+        print("📊 Анализ хардкода завершен!")
         print(f"📁 Файлов с проблемами: {violations['files_with_violations']}")
         print(f"🔍 Всего нарушений: {violations['total_violations']}")
         print(f"📝 Уникальных строк: {len(violations['unique_strings'])}")
@@ -380,14 +380,14 @@ def main():
     analyzer.print_summary(violations)
     analyzer.save_results(violations)
     
-    print(f"\n📄 Результаты сохранены в hardcode_analysis.json")
+    print("\n📄 Результаты сохранены в hardcode_analysis.json")
     
     # Генерируем mapping
     mapping = analyzer.generate_mapping(violations)
     with open('hardcode_mapping.json', 'w', encoding='utf-8') as f:
         json.dump(mapping, f, ensure_ascii=False, indent=2)
     
-    print(f"📄 Mapping сохранен в hardcode_mapping.json")
+    print("📄 Mapping сохранен в hardcode_mapping.json")
 
 if __name__ == "__main__":
     main()
