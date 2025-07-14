@@ -56,14 +56,10 @@ async def broadcast_info_command(update: Update, context: ContextTypes.DEFAULT_T
     # Use percentage from stats (already calculated)
     active_percentage = stats.get('active_percentage', 0)
 
-    stats_text = f"{translator.translate("admin.stats_title")}" \
-        f"{translator.translate('admin.total_users', total=stats['total'])}
-" \
-        f"{translator.translate('admin.active_users', active=stats['active'], percentage=active_percentage)}
-" \
-        f"{translator.translate('admin.new_users_week', count=stats['new_week'])}
-
-" \
+    stats_text = f"{translator.translate('admin.stats_title')}" \
+        f"{translator.translate('admin.total_users', total=stats['total'])}\n" \
+        f"{translator.translate('admin.active_users', active=stats['active'], percentage=active_percentage)}\n" \
+        f"{translator.translate('admin.new_users_week', count=stats['new_week'])}\n" \
         f"{translator.translate('admin.activity_level', level=translator.translate('common.high' if active_percentage > 50 else 'common.medium' if active_percentage > 25 else 'common.low'))}"
 
     await update.message.reply_text(stats_text, parse_mode='Markdown')

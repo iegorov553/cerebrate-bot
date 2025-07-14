@@ -72,8 +72,8 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             minutes = error.retry_after // 60
             time_msg = f"{minutes} минут"
 
-        message = f"{translator.translate("errors.rate_limit_title")}" \
-            f"{translator.translate("errors.rate_limit_message")}" \
+        message = f"{translator.translate('errors.rate_limit_title')}" \
+            f"{translator.translate('errors.rate_limit_message')}" \
             f"Попробуйте снова через {time_msg}.\n\n" \
             f"Действие: {error.action}"
 

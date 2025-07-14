@@ -56,9 +56,9 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     set_user_context(user.id, user.username, user.first_name)
 
     await update.message.reply_text(
-        translator.translate("broadcast.create_title")
-        translator.translate("broadcast.enter_message")
-        translator.translate("broadcast.markdown_support")
+        translator.translate("broadcast.create_title") +
+        translator.translate("broadcast.enter_message") +
+        translator.translate("broadcast.markdown_support") +
         translator.translate("broadcast.cancel_info"),
         parse_mode='Markdown'
     )
@@ -77,9 +77,9 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
     set_user_context(user.id, user.username, user.first_name)
 
     await query.edit_message_text(
-        translator.translate("broadcast.create_title")
-        translator.translate("broadcast.enter_message")
-        translator.translate("broadcast.markdown_support")
+        translator.translate("broadcast.create_title") +
+        translator.translate("broadcast.enter_message") +
+        translator.translate("broadcast.markdown_support") +
         translator.translate("broadcast.cancel_info"),
         parse_mode='Markdown'
     )
