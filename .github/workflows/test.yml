@@ -105,4 +105,4 @@ jobs:
 
     - name: Check dependencies for known security vulnerabilities
       run: |
-        safety check --json
+        safety check
