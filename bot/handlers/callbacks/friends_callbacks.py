@@ -772,19 +772,20 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 except Exception:
                     time_str = translator.translate('common.time_unknown')
                 
-                # Truncate long activities
+                # Truncate long activities and clean for display
                 if len(activity_text) > 50:
                     activity_text = activity_text[:47] + "..."
                 
-                activities_text += f"`{time_str}` **{display_name}:** {activity_text}\n"
+                # Use simple formatting without markdown
+                activities_text += f"⏰ {time_str} | {display_name}: {activity_text}\n"
             
             # Add footer
-            activities_text += f"\n{translator.translate('admin.friends_activity_shown', count=len(activities))}"
+            activities_text += f"\n📊 {translator.translate('admin.friends_activity_shown', count=len(activities))}"
             
+            # Use plain text to avoid markdown parsing errors
             await query.edit_message_text(
                 activities_text,
-                reply_markup=create_friends_menu(0, 0, translator),
-                parse_mode='Markdown'
+                reply_markup=create_friends_menu(0, 0, translator)
             )
             
             self.logger.info("Friend activities displayed", 
@@ -796,10 +797,11 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             user_id=user.id,
                             error=str(e))
             
+            # Use plain text to avoid markdown parsing errors
+            error_message = f"{translator.translate('errors.friends_activity_load_error')}: {str(e)[:100]}"
             await query.edit_message_text(
-                f"{translator.translate('errors.friends_activity_load_error')}: {str(e)[:100]}",
-                reply_markup=create_friends_menu(0, 0, translator),
-                parse_mode='Markdown'
+                error_message,
+                reply_markup=create_friends_menu(0, 0, translator)
             )
 
     async def _get_friend_activities(self, user_id: int) -> list:
