@@ -93,14 +93,14 @@ class TestTranslationCompleteness:
             if missing_keys:
                 issues.append(f"\n{language.upper()} is missing {len(missing_keys)} translation keys:")
                 for key in sorted(missing_keys):
-                    issues.append(f"  - {key}")
+                    issues.append(f"- {key}")
             
             # Find extra keys (might indicate typos or inconsistencies)
             extra_keys = self._find_extra_keys(reference_keys, target_keys)
             if extra_keys:
                 issues.append(f"\n{language.upper()} has {len(extra_keys)} extra keys not in reference:")
                 for key in sorted(extra_keys):
-                    issues.append(f"  + {key}")
+                    issues.append(f"+ {key}")
         
         if issues:
             error_msg = "\n\nTranslation completeness issues found:\n"
@@ -120,7 +120,7 @@ class TestTranslationCompleteness:
             if empty_keys:
                 issues.append(f"\n{language.upper()} has {len(empty_keys)} empty translations:")
                 for key in sorted(empty_keys):
-                    issues.append(f"  - {key}")
+                    issues.append(f"- {key}")
         
         if issues:
             error_msg = "\n\nEmpty translation values found:\n"
@@ -163,7 +163,7 @@ class TestTranslationCompleteness:
             if inconsistent_keys:
                 issues.append(f"\n{language.upper()} has {len(inconsistent_keys)} keys with naming issues:")
                 for key in sorted(inconsistent_keys):
-                    issues.append(f"  - {key}")
+                    issues.append(f"- {key}")
         
         if issues:
             error_msg = "\n\nTranslation key naming issues found:\n"
@@ -385,7 +385,7 @@ class TestTranslationCompleteness:
         for prefix in sorted(grouped_keys.keys()):
             print(f"\n{prefix.upper()}:")
             for key in grouped_keys[prefix]:
-                print(f"  - {key}")
+                print(f"- {key}")
         
         # This test always passes - it's just for debugging
         assert True

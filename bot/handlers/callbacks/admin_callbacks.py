@@ -113,7 +113,6 @@ class AdminCallbackHandler(BaseCallbackHandler):
         elif action == "health":
             await self._handle_health_check(query, translator, context)
 
-
         elif action == "back":
             await self._handle_back_to_main(query, translator)
 
@@ -390,4 +389,3 @@ class AdminCallbackHandler(BaseCallbackHandler):
         )
 
         self.logger.debug("Returned to main menu from admin", user_id=user.id)
-

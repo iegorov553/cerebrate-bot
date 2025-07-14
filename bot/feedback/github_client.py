@@ -127,23 +127,20 @@ class GitHubFeedbackClient:
         if username:
             title = f"🐛 Bug Report from @{username}"
 
-        body = f"""## 🐛 User Bug Report
-
-**Description from user:**
-{user_description}
-
-**User Information:**
-- User ID: {user_id}
-- Username: @{username if username else 'N/A'}
-- Language: {user_language}
-- Timestamp: {timestamp}
-- Bot Version: {bot_version}
-
-**Category:** Bug Report
-**Source:** Telegram Bot Feedback
-
----
-*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"""
+        body = (
+            f"## 🐛 User Bug Report\n\n"
+            f"**Description from user:**\n{user_description}\n\n"
+            f"**User Information:**\n"
+            f"- User ID: {user_id}\n"
+            f"- Username: @{username if username else 'N/A'}\n"
+            f"- Language: {user_language}\n"
+            f"- Timestamp: {timestamp}\n"
+            f"- Bot Version: {bot_version}\n\n"
+            f"**Category:** Bug Report\n"
+            f"**Source:** Telegram Bot Feedback\n\n"
+            f"---\n"
+            f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
+        )
 
         return {
             "title": title,
@@ -166,23 +163,20 @@ class GitHubFeedbackClient:
         if username:
             title = f"💡 Feature Request from @{username}"
 
-        body = f"""## 💡 User Feature Request
-
-**Suggestion from user:**
-{user_description}
-
-**User Information:**
-- User ID: {user_id}
-- Username: @{username if username else 'N/A'}
-- Language: {user_language}
-- Timestamp: {timestamp}
-- Bot Version: {bot_version}
-
-**Category:** Feature Request
-**Source:** Telegram Bot Feedback
-
----
-*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"""
+        body = (
+            f"## 💡 User Feature Request\n\n"
+            f"**Suggestion from user:**\n{user_description}\n\n"
+            f"**User Information:**\n"
+            f"- User ID: {user_id}\n"
+            f"- Username: @{username if username else 'N/A'}\n"
+            f"- Language: {user_language}\n"
+            f"- Timestamp: {timestamp}\n"
+            f"- Bot Version: {bot_version}\n\n"
+            f"**Category:** Feature Request\n"
+            f"**Source:** Telegram Bot Feedback\n\n"
+            f"---\n"
+            f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
+        )
 
         return {
             "title": title,
@@ -205,23 +199,20 @@ class GitHubFeedbackClient:
         if username:
             title = f"📝 General Feedback from @{username}"
 
-        body = f"""## 📝 User Feedback
-
-**Feedback from user:**
-{user_description}
-
-**User Information:**
-- User ID: {user_id}
-- Username: @{username if username else 'N/A'}
-- Language: {user_language}
-- Timestamp: {timestamp}
-- Bot Version: {bot_version}
-
-**Category:** General Feedback
-**Source:** Telegram Bot Feedback
-
----
-*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"""
+        body = (
+            f"## 📝 User Feedback\n\n"
+            f"**Feedback from user:**\n{user_description}\n\n"
+            f"**User Information:**\n"
+            f"- User ID: {user_id}\n"
+            f"- Username: @{username if username else 'N/A'}\n"
+            f"- Language: {user_language}\n"
+            f"- Timestamp: {timestamp}\n"
+            f"- Bot Version: {bot_version}\n\n"
+            f"**Category:** General Feedback\n"
+            f"**Source:** Telegram Bot Feedback\n\n"
+            f"---\n"
+            f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
+        )
 
         return {
             "title": title,

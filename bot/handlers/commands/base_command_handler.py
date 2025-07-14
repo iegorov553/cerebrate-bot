@@ -1,7 +1,5 @@
 """Base class for command handlers."""
 
-from typing import Optional
-
 from telegram import User
 
 from bot.cache.ttl_cache import TTLCache
