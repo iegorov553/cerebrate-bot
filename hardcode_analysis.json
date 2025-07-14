@@ -1,0 +1,932 @@
+{
+  "total_violations": 115,
+  "files_with_violations": 12,
+  "violations_by_file": {
+    "bot/handlers/admin_conversations.py": [
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 108,
+        "text": "📢 **Предпросмотр рассылки:**\\n\\n",
+        "full_line": "f\"📢 **Предпросмотр рассылки:**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 108,
+        "text": "📢 **Предпросмотр рассылки:**\\n\\n",
+        "full_line": "f\"📢 **Предпросмотр рассылки:**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 110,
+        "text": "Отправить это сообщение всем пользователям?",
+        "full_line": "f\"Отправить это сообщение всем пользователям?\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 110,
+        "text": "Отправить это сообщение всем пользователям?",
+        "full_line": "f\"Отправить это сообщение всем пользователям?\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 155,
+        "text": "📤 **Отправка рассылки...**\\n\\nПожалуйста, подождите...",
+        "full_line": "\"📤 **Отправка рассылки...**\\n\\nПожалуйста, подождите...\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 166,
+        "text": "✅ **Рассылка завершена!**\\n\\n",
+        "full_line": "f\"✅ **Рассылка завершена!**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 166,
+        "text": "✅ **Рассылка завершена!**\\n\\n",
+        "full_line": "f\"✅ **Рассылка завершена!**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 167,
+        "text": "📊 **Результаты:**\\n",
+        "full_line": "f\"📊 **Результаты:**\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 167,
+        "text": "📊 **Результаты:**\\n",
+        "full_line": "f\"📊 **Результаты:**\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 185,
+        "text": "❌ **Рассылка отменена**\\n\\nНичего не было отправлено.",
+        "full_line": "\"❌ **Рассылка отменена**\\n\\nНичего не было отправлено.\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_conversations.py",
+        "line": 199,
+        "text": "❌ **Создание рассылки отменено**\\n\\nВсе данные очищены.",
+        "full_line": "\"❌ **Создание рассылки отменено**\\n\\nВсе данные очищены.\"",
+        "severity": "high"
+      }
+    ],
+    "bot/handlers/rate_limit_handler.py": [
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 37,
+        "text": "общих команд",
+        "full_line": "\"general\": \"общих команд\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 38,
+        "text": "запросов в друзья",
+        "full_line": "\"friend_request\": \"запросов в друзья\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 39,
+        "text": "изменений настроек",
+        "full_line": "\"settings\": \"изменений настроек\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 40,
+        "text": "поиска друзей",
+        "full_line": "\"discovery\": \"поиска друзей\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 41,
+        "text": "админских команд",
+        "full_line": "\"admin\": \"админских команд\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 42,
+        "text": "нажатий кнопок",
+        "full_line": "\"callback\": \"нажатий кнопок\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 52,
+        "text": "_Лимиты защищают бот от перегрузки._",
+        "full_line": "f\"_Лимиты защищают бот от перегрузки._\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/rate_limit_handler.py",
+        "line": 52,
+        "text": "_Лимиты защищают бот от перегрузки._",
+        "full_line": "f\"_Лимиты защищают бот от перегрузки._\"",
+        "severity": "high"
+      }
+    ],
+    "bot/handlers/admin_handlers.py": [
+      {
+        "file": "bot/handlers/admin_handlers.py",
+        "line": 52,
+        "text": "❌ Не удалось получить статистику пользователей.",
+        "full_line": "\"❌ Не удалось получить статистику пользователей.\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_handlers.py",
+        "line": 59,
+        "text": "📊 **Статистика пользователей**\\n\\n",
+        "full_line": "stats_text = f\"📊 **Статистика пользователей**\\n\\n\" \\",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/admin_handlers.py",
+        "line": 59,
+        "text": "📊 **Статистика пользователей**\\n\\n",
+        "full_line": "stats_text = f\"📊 **Статистика пользователей**\\n\\n\" \\",
+        "severity": "high"
+      }
+    ],
+    "bot/handlers/error_handler.py": [
+      {
+        "file": "bot/handlers/error_handler.py",
+        "line": 75,
+        "text": "🚫 **Превышен лимит запросов**\\n\\n",
+        "full_line": "message = f\"🚫 **Превышен лимит запросов**\\n\\n\" \\",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/error_handler.py",
+        "line": 75,
+        "text": "🚫 **Превышен лимит запросов**\\n\\n",
+        "full_line": "message = f\"🚫 **Превышен лимит запросов**\\n\\n\" \\",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/error_handler.py",
+        "line": 76,
+        "text": "Вы отправляете команды слишком часто.\\n",
+        "full_line": "f\"Вы отправляете команды слишком часто.\\n\" \\",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/error_handler.py",
+        "line": 76,
+        "text": "Вы отправляете команды слишком часто.\\n",
+        "full_line": "f\"Вы отправляете команды слишком часто.\\n\" \\",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/error_handler.py",
+        "line": 103,
+        "text": "🔒 **Доступ запрещен**\\n\\nЭта команда доступна только администраторам.",
+        "full_line": "message = \"🔒 **Доступ запрещен**\\n\\nЭта команда доступна только администраторам.\"",
+        "severity": "high"
+      }
+    ],
+    "bot/handlers/commands/config_commands.py": [
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 26,
+        "text": "⏰ **Установить временное окно**\\n\\n",
+        "full_line": "\"⏰ **Установить временное окно**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 27,
+        "text": "Использование: `/window HH:MM-HH:MM`\\n\\n",
+        "full_line": "\"Использование: `/window HH:MM-HH:MM`\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 28,
+        "text": "Примеры:\\n",
+        "full_line": "\"Примеры:\\n\"",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 29,
+        "text": "• `/window 09:00-18:00` - с 9 утра до 6 вечера\\n",
+        "full_line": "\"• `/window 09:00-18:00` - с 9 утра до 6 вечера\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 30,
+        "text": "• `/window 22:00-06:00` - с 10 вечера до 6 утра",
+        "full_line": "\"• `/window 22:00-06:00` - с 10 вечера до 6 утра\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 43,
+        "text": "Формат: `HH:MM-HH:MM`\\n",
+        "full_line": "\"Формат: `HH:MM-HH:MM`\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 44,
+        "text": "Пример: `/window 09:00-22:00`",
+        "full_line": "\"Пример: `/window 09:00-22:00`\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 78,
+        "text": "✅ **Временное окно обновлено!**\\n\\n",
+        "full_line": "f\"✅ **Временное окно обновлено!**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 78,
+        "text": "✅ **Временное окно обновлено!**\\n\\n",
+        "full_line": "f\"✅ **Временное окно обновлено!**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 80,
+        "text": "Теперь уведомления будут приходить только в это время.",
+        "full_line": "f\"Теперь уведомления будут приходить только в это время.\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 80,
+        "text": "Теперь уведомления будут приходить только в это время.",
+        "full_line": "f\"Теперь уведомления будут приходить только в это время.\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 107,
+        "text": "📊 **Установить частоту уведомлений**\\n\\n",
+        "full_line": "\"📊 **Установить частоту уведомлений**\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 109,
+        "text": "Где N - интервал в минутах между уведомлениями.\\n\\n",
+        "full_line": "\"Где N - интервал в минутах между уведомлениями.\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 110,
+        "text": "Примеры:\\n",
+        "full_line": "\"Примеры:\\n\"",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 111,
+        "text": "• `/freq 60` - каждый час\\n",
+        "full_line": "\"• `/freq 60` - каждый час\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 112,
+        "text": "• `/freq 120` - каждые 2 часа\\n",
+        "full_line": "\"• `/freq 120` - каждые 2 часа\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 113,
+        "text": "• `/freq 30` - каждые 30 минут",
+        "full_line": "\"• `/freq 30` - каждые 30 минут\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 122,
+        "text": "❌ Минимальный интервал: 5 минут\\n\\n",
+        "full_line": "\"❌ Минимальный интервал: 5 минут\\n\\n\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 123,
+        "text": "Пример: `/freq 30`",
+        "full_line": "\"Пример: `/freq 30`\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/handlers/commands/config_commands.py",
+        "line": 128,
+        "text": "❌ Максимальный интервал: 1440 минут (24 часа)\\n\\n",
+        "full_line": "\"❌ Максимальный интервал: 1440 минут (24 часа)\\n\\n\"",
+        "severity": "high"
+      }
+    ],
+    "bot/handlers/callbacks/questions_callbacks.py": [
+      {
+        "file": "bot/handlers/callbacks/questions_callbacks.py",
+        "line": 588,
+        "text": "Вопрос",
+        "full_line": "name = question.get('question_name', 'Вопрос')",
+        "severity": "medium"
+      }
+    ],
+    "bot/handlers/callbacks/friends_callbacks.py": [
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 168,
+        "text": "Без имени",
+        "full_line": "name = friend.get('tg_first_name', 'Без имени')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 246,
+        "text": "Неизвестно",
+        "full_line": "username = requester.get('tg_username', 'Неизвестно')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 290,
+        "text": "Неизвестно",
+        "full_line": "username = addressee.get('tg_username', 'Неизвестно')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 378,
+        "text": "Без имени",
+        "full_line": "'first_name': user_info.get('tg_first_name', 'Без имени'),",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 379,
+        "text": "неизвестен",
+        "full_line": "'username': user_info.get('tg_username', 'неизвестен'),",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 393,
+        "text": "неизвестен",
+        "full_line": "username = rec.get('username', 'неизвестен')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 394,
+        "text": "Без имени",
+        "full_line": "first_name = rec.get('first_name', 'Без имени')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 545,
+        "text": "Без имени",
+        "full_line": "'first_name': user_info.get('tg_first_name', 'Без имени'),",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 546,
+        "text": "неизвестен",
+        "full_line": "'username': user_info.get('tg_username', 'неизвестен'),",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 557,
+        "text": "неизвестен",
+        "full_line": "username = rec.get('username', 'неизвестен')",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/handlers/callbacks/friends_callbacks.py",
+        "line": 558,
+        "text": "Без имени",
+        "full_line": "first_name = rec.get('first_name', 'Без имени')",
+        "severity": "medium"
+      }
+    ],
+    "bot/services/multi_question_scheduler.py": [
+      {
+        "file": "bot/services/multi_question_scheduler.py",
+        "line": 225,
+        "text": "Что делаешь?",
+        "full_line": "question_text = question.get('question_text', 'Что делаешь?')",
+        "severity": "high"
+      },
+      {
+        "file": "bot/services/multi_question_scheduler.py",
+        "line": 269,
+        "text": "друг",
+        "full_line": "user_name = user_result.data.get('tg_first_name', 'друг')",
+        "severity": "medium"
+      }
+    ],
+    "bot/questions/question_templates.py": [
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 24,
+        "text": "Рабочие задачи",
+        "full_line": "\"name\": \"Рабочие задачи\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 25,
+        "text": "💼 Над чем работаешь сейчас?",
+        "full_line": "\"text\": \"💼 Над чем работаешь сейчас?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 29,
+        "text": "Для отслеживания рабочих проектов",
+        "full_line": "\"description\": \"Для отслеживания рабочих проектов\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 32,
+        "text": "Обучение",
+        "full_line": "\"name\": \"Обучение\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 33,
+        "text": "📚 Что изучаешь?",
+        "full_line": "\"text\": \"📚 Что изучаешь?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 37,
+        "text": "Для отслеживания процесса обучения",
+        "full_line": "\"description\": \"Для отслеживания процесса обучения\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 40,
+        "text": "Цели дня",
+        "full_line": "\"name\": \"Цели дня\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 41,
+        "text": "🎯 Какие задачи решаешь?",
+        "full_line": "\"text\": \"🎯 Какие задачи решаешь?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 45,
+        "text": "Контроль выполнения ежедневных целей",
+        "full_line": "\"description\": \"Контроль выполнения ежедневных целей\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 50,
+        "text": "Настроение",
+        "full_line": "\"name\": \"Настроение\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 51,
+        "text": "😊 Как настроение?",
+        "full_line": "\"text\": \"😊 Как настроение?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 55,
+        "text": "Отслеживание эмоционального состояния",
+        "full_line": "\"description\": \"Отслеживание эмоционального состояния\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 58,
+        "text": "Спорт",
+        "full_line": "\"name\": \"Спорт\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 59,
+        "text": "💪 Как дела со спортом?",
+        "full_line": "\"text\": \"💪 Как дела со спортом?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 63,
+        "text": "Контроль физической активности",
+        "full_line": "\"description\": \"Контроль физической активности\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 66,
+        "text": "Достижения",
+        "full_line": "\"name\": \"Достижения\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 67,
+        "text": "🌟 Что хорошего произошло?",
+        "full_line": "\"text\": \"🌟 Что хорошего произошло?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 71,
+        "text": "Фиксация позитивных моментов",
+        "full_line": "\"description\": \"Фиксация позитивных моментов\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 76,
+        "text": "Утренний чекин",
+        "full_line": "\"name\": \"Утренний чекин\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 77,
+        "text": "🌅 Доброе утро! Как планы на день?",
+        "full_line": "\"text\": \"🌅 Доброе утро! Как планы на день?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 81,
+        "text": "Ежедневная утренняя проверка",
+        "full_line": "\"description\": \"Ежедневная утренняя проверка\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 84,
+        "text": "Обеденный перерыв",
+        "full_line": "\"name\": \"Обеденный перерыв\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 85,
+        "text": "🍽️ Как обед? Что дальше планируешь?",
+        "full_line": "\"text\": \"🍽️ Как обед? Что дальше планируешь?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 89,
+        "text": "Проверка в середине дня",
+        "full_line": "\"description\": \"Проверка в середине дня\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 92,
+        "text": "Вечерний отчёт",
+        "full_line": "\"name\": \"Вечерний отчёт\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 93,
+        "text": "🌆 Как прошёл день? Что удалось сделать?",
+        "full_line": "\"text\": \"🌆 Как прошёл день? Что удалось сделать?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 97,
+        "text": "Ежедневное подведение итогов",
+        "full_line": "\"description\": \"Ежедневное подведение итогов\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 102,
+        "text": "Здоровье",
+        "full_line": "\"name\": \"Здоровье\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 103,
+        "text": "🏥 Как самочувствие?",
+        "full_line": "\"text\": \"🏥 Как самочувствие?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 107,
+        "text": "Контроль состояния здоровья",
+        "full_line": "\"description\": \"Контроль состояния здоровья\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 110,
+        "text": "Питание",
+        "full_line": "\"name\": \"Питание\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 111,
+        "text": "🥗 Что ел полезного?",
+        "full_line": "\"text\": \"🥗 Что ел полезного?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 115,
+        "text": "Отслеживание правильного питания",
+        "full_line": "\"description\": \"Отслеживание правильного питания\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 118,
+        "text": "Сон",
+        "full_line": "\"name\": \"Сон\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 119,
+        "text": "😴 Как спалось? Как самочувствие?",
+        "full_line": "\"text\": \"😴 Как спалось? Как самочувствие?\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 123,
+        "text": "Контроль качества сна",
+        "full_line": "\"description\": \"Контроль качества сна\"",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 137,
+        "text": "💼 Работа и учёба",
+        "full_line": "\"work_study\": \"💼 Работа и учёба\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 138,
+        "text": "🌟 Личное развитие",
+        "full_line": "\"personal\": \"🌟 Личное развитие\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 139,
+        "text": "⏰ По времени суток",
+        "full_line": "\"time_based\": \"⏰ По времени суток\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 140,
+        "text": "💪 Здоровье",
+        "full_line": "\"health\": \"💪 Здоровье\"",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 196,
+        "text": "Рабочие задачи",
+        "full_line": "\"Рабочие задачи\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 197,
+        "text": "Настроение",
+        "full_line": "\"Настроение\",",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 198,
+        "text": "Утренний чекин",
+        "full_line": "\"Утренний чекин\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 199,
+        "text": "Вечерний отчёт",
+        "full_line": "\"Вечерний отчёт\",",
+        "severity": "high"
+      },
+      {
+        "file": "bot/questions/question_templates.py",
+        "line": 200,
+        "text": "Обучение",
+        "full_line": "\"Обучение\"",
+        "severity": "medium"
+      }
+    ],
+    "bot/questions/question_manager.py": [
+      {
+        "file": "bot/questions/question_manager.py",
+        "line": 90,
+        "text": "Основной",
+        "full_line": "'question_name': 'Основной',",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/questions/question_manager.py",
+        "line": 91,
+        "text": "⏰ Время отчёта! Что делаешь?",
+        "full_line": "'question_text': '⏰ Время отчёта! Что делаешь?',",
+        "severity": "high"
+      }
+    ],
+    "bot/i18n/language_detector.py": [
+      {
+        "file": "bot/i18n/language_detector.py",
+        "line": 81,
+        "text": "привет",
+        "full_line": "russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/i18n/language_detector.py",
+        "line": 81,
+        "text": "настройки",
+        "full_line": "russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/i18n/language_detector.py",
+        "line": 81,
+        "text": "друзья",
+        "full_line": "russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/i18n/language_detector.py",
+        "line": 81,
+        "text": "помощь",
+        "full_line": "russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/i18n/language_detector.py",
+        "line": 81,
+        "text": "статистика",
+        "full_line": "russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']",
+        "severity": "medium"
+      }
+    ],
+    "bot/i18n/translator.py": [
+      {
+        "file": "bot/i18n/translator.py",
+        "line": 133,
+        "text": "Русский",
+        "full_line": "'ru': {'name': 'Русский', 'native': 'Русский', 'flag': '🇷🇺'},",
+        "severity": "medium"
+      },
+      {
+        "file": "bot/i18n/translator.py",
+        "line": 133,
+        "text": "Русский",
+        "full_line": "'ru': {'name': 'Русский', 'native': 'Русский', 'flag': '🇷🇺'},",
+        "severity": "medium"
+      }
+    ]
+  },
+  "unique_strings": [
+    "❌ Максимальный интервал: 1440 минут (24 часа)\\n\\n",
+    "🌆 Как прошёл день? Что удалось сделать?",
+    "Рабочие задачи",
+    "_Лимиты защищают бот от перегрузки._",
+    "Пример: `/window 09:00-22:00`",
+    "📊 **Результаты:**\\n",
+    "Основной",
+    "Отслеживание эмоционального состояния",
+    "Утренний чекин",
+    "Неизвестно",
+    "Контроль выполнения ежедневных целей",
+    "📤 **Отправка рассылки...**\\n\\nПожалуйста, подождите...",
+    "Достижения",
+    "Теперь уведомления будут приходить только в это время.",
+    "Здоровье",
+    "настройки",
+    "неизвестен",
+    "Ежедневная утренняя проверка",
+    "Вы отправляете команды слишком часто.\\n",
+    "Сон",
+    "⏰ По времени суток",
+    "админских команд",
+    "запросов в друзья",
+    "Для отслеживания рабочих проектов",
+    "статистика",
+    "🔒 **Доступ запрещен**\\n\\nЭта команда доступна только администраторам.",
+    "🥗 Что ел полезного?",
+    "• `/window 09:00-18:00` - с 9 утра до 6 вечера\\n",
+    "поиска друзей",
+    "• `/freq 120` - каждые 2 часа\\n",
+    "Отслеживание правильного питания",
+    "⏰ Время отчёта! Что делаешь?",
+    "общих команд",
+    "• `/freq 30` - каждые 30 минут",
+    "Настроение",
+    "✅ **Временное окно обновлено!**\\n\\n",
+    "друзья",
+    "💼 Над чем работаешь сейчас?",
+    "❌ Не удалось получить статистику пользователей.",
+    "💪 Как дела со спортом?",
+    "😊 Как настроение?",
+    "📊 **Статистика пользователей**\\n\\n",
+    "друг",
+    "Где N - интервал в минутах между уведомлениями.\\n\\n",
+    "Формат: `HH:MM-HH:MM`\\n",
+    "❌ Минимальный интервал: 5 минут\\n\\n",
+    "Что делаешь?",
+    "❌ **Создание рассылки отменено**\\n\\nВсе данные очищены.",
+    "📚 Что изучаешь?",
+    "Для отслеживания процесса обучения",
+    "Пример: `/freq 30`",
+    "Цели дня",
+    "Ежедневное подведение итогов",
+    "Примеры:\\n",
+    "⏰ **Установить временное окно**\\n\\n",
+    "🚫 **Превышен лимит запросов**\\n\\n",
+    "🌟 Личное развитие",
+    "Русский",
+    "Вечерний отчёт",
+    "🏥 Как самочувствие?",
+    "🎯 Какие задачи решаешь?",
+    "изменений настроек",
+    "🌟 Что хорошего произошло?",
+    "Контроль состояния здоровья",
+    "помощь",
+    "Вопрос",
+    "📊 **Установить частоту уведомлений**\\n\\n",
+    "Без имени",
+    "Проверка в середине дня",
+    "😴 Как спалось? Как самочувствие?",
+    "привет",
+    "• `/freq 60` - каждый час\\n",
+    "Спорт",
+    "📢 **Предпросмотр рассылки:**\\n\\n",
+    "💼 Работа и учёба",
+    "Обучение",
+    "Контроль качества сна",
+    "✅ **Рассылка завершена!**\\n\\n",
+    "• `/window 22:00-06:00` - с 10 вечера до 6 утра",
+    "Отправить это сообщение всем пользователям?",
+    "Фиксация позитивных моментов",
+    "🍽️ Как обед? Что дальше планируешь?",
+    "Использование: `/window HH:MM-HH:MM`\\n\\n",
+    "Контроль физической активности",
+    "Питание",
+    "нажатий кнопок",
+    "❌ **Рассылка отменена**\\n\\nНичего не было отправлено.",
+    "Обеденный перерыв",
+    "💪 Здоровье",
+    "🌅 Доброе утро! Как планы на день?"
+  ],
+  "severity_counts": {
+    "high": 81,
+    "medium": 34,
+    "low": 0
+  }
+}

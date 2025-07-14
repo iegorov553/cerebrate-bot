@@ -206,7 +206,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             # Show error and fallback to menu
             await query.edit_message_text(
-                "❌ Произошла ошибка при загрузке списка друзей. Попробуйте позже.",
+                translator.translate("errors.friends_list_load_error"),
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
@@ -224,7 +224,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             
             # Show loading indicator
             await query.edit_message_text(
-                "📥 Загружаю запросы в друзья...",
+                translator.translate("friends.loading_requests"),
                 parse_mode='Markdown'
             )
             
@@ -234,13 +234,13 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             incoming = requests_data.get('incoming', [])
             outgoing = requests_data.get('outgoing', [])
             
-            text = "📥 **Запросы в друзья**\n\n"
+            text = translator.translate("friends.requests_title")
             
             # Create keyboard with request actions
             keyboard = []
             
             if incoming:
-                text += "**Входящие запросы:**\n"
+                text += translator.translate("friends.requests_incoming_title")
                 for i, req in enumerate(incoming[:5]):  # Показываем только первые 5
                     requester = req.get('requester', {})
                     username = requester.get('tg_username', 'Неизвестно')
@@ -281,10 +281,10 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                         
                 text += "\n"
             else:
-                text += "**Входящие запросы:** нет\n\n"
+                text += translator.translate("friends.requests_incoming_none")
             
             if outgoing:
-                text += "**Исходящие запросы:**\n"
+                text += translator.translate("friends.requests_outgoing_title")
                 for req in outgoing[:5]:  # Показываем только первые 5
                     addressee = req.get('addressee', {})
                     username = addressee.get('tg_username', 'Неизвестно')
@@ -306,12 +306,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     display_name = f"@{safe_username}" if username != 'Неизвестно' else safe_name
                     text += f"• {display_name} - ожидает ответа\n"
             else:
-                text += "**Исходящие запросы:** нет"
+                text += translator.translate("friends.requests_outgoing_none")
             
             # Add back button
             from telegram import InlineKeyboardButton
             keyboard.append([InlineKeyboardButton(
-                "🔙 Назад к друзьям",
+                translator.translate("friends.back_to_friends"),
                 callback_data="menu_friends"
             )])
             
@@ -336,7 +336,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             
             # Show error and fallback to menu
             await query.edit_message_text(
-                "❌ Произошла ошибка при загрузке запросов в друзья. Попробуйте позже.",
+                translator.translate("errors.requests_load_error"),
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
@@ -433,7 +433,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             # Show error and fallback to menu
             await query.edit_message_text(
-                "❌ Произошла ошибка. Попробуйте позже.",
+                translator.translate("errors.generic_error"),
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )
@@ -508,7 +508,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             await query.answer(
-                "❌ Произошла ошибка. Попробуйте позже.",
+                translator.translate("errors.generic_error"),
                 show_alert=True
             )
 
@@ -518,7 +518,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             error=str(e))
 
             await query.answer(
-                "❌ Произошла ошибка. Попробуйте позже.",
+                translator.translate("errors.generic_error"),
                 show_alert=True
             )
 
@@ -635,7 +635,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             
             # Show processing indicator
             await query.edit_message_text(
-                "✅ Принимаю запрос в друзья...",
+                translator.translate("friends.accept_processing"),
                 parse_mode='Markdown'
             )
             
@@ -654,7 +654,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                                requester_id=requester_id)
             else:
                 await query.edit_message_text(
-                    "❌ Не удалось принять запрос в друзья. Возможно, он уже был обработан.",
+                    translator.translate("friends.accept_failed"),
                     reply_markup=create_friends_menu(0, 0, translator),
                     parse_mode='Markdown'
                 )
@@ -666,7 +666,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                             error=str(e))
             
             await query.edit_message_text(
-                "❌ Произошла ошибка при принятии запроса. Попробуйте позже.",
+                translator.translate("friends.accept_error"),
                 reply_markup=create_friends_menu(0, 0, translator),
                 parse_mode='Markdown'
             )

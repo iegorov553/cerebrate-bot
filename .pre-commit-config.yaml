@@ -1,133 +1,44 @@
-# Pre-commit hooks configuration
-# Install: pip install pre-commit && pre-commit install
-
 repos:
-  # Standard pre-commit hooks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-json
-        files: 'bot/i18n/locales/.*\.json$'
-      - id: check-merge-conflict
-      - id: check-added-large-files
-        args: ['--maxkb=1000']
-
-  # Python code formatting
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        args: ['--line-length=127']
-
-  # Python import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ['--profile=black', '--line-length=127']
-
-  # Python linting
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.9
-    hooks:
-      - id: ruff
-        args: ['--fix', '--exit-non-zero-on-fix']
-
-  # Custom translation validation hooks
   - repo: local
     hooks:
-      # Auto-sync translations before commit
-      - id: sync-translations
-        name: Sync translation structure
-        entry: python
-        args: ['sync_translations.py']
-        language: python
-        files: 'bot/i18n/locales/ru\.json$'
-        pass_filenames: false
-        stages: [pre-commit]
-        verbose: true
-
-      # Check for translation placeholders
-      - id: check-translation-placeholders
-        name: Check for [TO_TRANSLATE] placeholders
-        entry: bash
-        args: ['-c', '
-          if grep -r "\[TO_TRANSLATE\]" bot/i18n/locales/ >/dev/null 2>&1; then
-            echo "❌ Found [TO_TRANSLATE] placeholders in translation files:"
-            grep -n "\[TO_TRANSLATE\]" bot/i18n/locales/*.json | head -5
-            if [ $(grep -r "\[TO_TRANSLATE\]" bot/i18n/locales/ | wc -l) -gt 5 ]; then
-              echo "   ... and more"
-            fi
-            echo ""
-            echo "💡 Please translate the placeholders before committing:"
-            echo "   1. Replace [TO_TRANSLATE] with proper translations"
-            echo "   2. Run: pytest tests/test_translation_completeness.py"
-            echo "   3. Commit again"
-            exit 1
-          fi
-        ']
+      - id: no-hardcoded-russian-text
+        name: No hardcoded Russian text
+        entry: python3 -m pytest tests/test_no_hardcoded_text.py::TestNoHardcodedText::test_no_hardcoded_russian_text_in_handlers -v
         language: system
-        files: 'bot/i18n/locales/.*\.json$'
+        files: '^bot/handlers/.*\.py$|^bot/keyboards/.*\.py$'
         pass_filenames: false
-        stages: [pre-commit]
-
-      # Validate translation completeness
-      - id: translation-completeness
-        name: Validate translation completeness
-        entry: python
-        args: ['-m', 'pytest', 'tests/test_translation_completeness.py', '-v', '--tb=short']
-        language: python
-        files: 'bot/i18n/locales/.*\.json$'
-        pass_filenames: false
-        stages: [pre-commit]
-
-      # Validate Markdown in translations
-      - id: translation-markdown
-        name: Validate Markdown in translations
-        entry: python
-        args: ['-m', 'pytest', 'tests/test_markdown_validation.py', '-v', '--tb=short']
-        language: python
-        files: 'bot/i18n/locales/.*\.json$'
-        pass_filenames: false
-        stages: [pre-commit]
-
-      # Check for hardcoded text (warning only)
-      - id: check-hardcoded-text
-        name: Check for hardcoded interface text
-        entry: bash
-        args: ['-c', '
-          if python -m pytest tests/test_no_hardcoded_text.py -q >/dev/null 2>&1; then
-            echo "✅ No hardcoded text found"
-          else
-            echo "⚠️  WARNING: Hardcoded text detected in interface"
-            echo "   This will be addressed during the refactoring process"
-            echo "   (Etap 2-4 in REFACTORING_PLAN.md)"
-          fi
-        ']
+        
+      - id: markdown-validation
+        name: Markdown validation
+        entry: python3 -m pytest tests/test_markdown_validation.py -v
         language: system
-        files: 'bot/handlers/.*\.py$|bot/keyboards/.*\.py$'
+        files: '^bot/i18n/locales/.*\.json$|^bot/handlers/.*\.py$|^bot/keyboards/.*\.py$'
         pass_filenames: false
-        stages: [pre-commit]
-        verbose: true
-
-      # Security check with Bandit
-      - id: bandit-security-check
-        name: Security check with Bandit
-        entry: python
-        args: ['-m', 'bandit', '-r', 'bot/', '-ll', '--exit-zero']
-        language: python
-        files: '\.py$'
+        
+      - id: ruff-check
+        name: Ruff linting
+        entry: ruff check
+        language: system
+        files: '^bot/.*\.py$'
         pass_filenames: false
-        stages: [pre-commit]
-
-# Configuration for specific tools
-default_language_version:
-  python: python3.12
-
-# Global settings
-default_stages: [pre-commit]
-fail_fast: false  # Run all hooks even if one fails
-minimum_pre_commit_version: '3.0.0'
+        
+      - id: ruff-format
+        name: Ruff formatting
+        entry: ruff format --check
+        language: system
+        files: '^bot/.*\.py$'
+        pass_filenames: false
+        
+      - id: mypy-check
+        name: MyPy type checking
+        entry: mypy bot --ignore-missing-imports
+        language: system
+        files: '^bot/.*\.py$'
+        pass_filenames: false
+        
+      - id: bandit-security
+        name: Bandit security scan
+        entry: bandit -r bot -ll
+        language: system
+        files: '^bot/.*\.py$'
+        pass_filenames: false

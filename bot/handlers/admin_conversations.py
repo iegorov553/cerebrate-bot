@@ -39,7 +39,7 @@ def require_admin(func):
         admin_ops: AdminOperations = context.bot_data['admin_ops']
         if not admin_ops.is_admin(user.id):
             await update.message.reply_text(
-                "🔒 Эта команда доступна только администраторам."
+                translator.translate("admin.access_denied")
             )
             return ConversationHandler.END
 
@@ -56,10 +56,10 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     set_user_context(user.id, user.username, user.first_name)
 
     await update.message.reply_text(
-        "📢 **Создание рассылки**\n\n"
-        "Отправьте текст сообщения для рассылки всем пользователям.\n\n"
-        "💡 Поддерживается форматирование Markdown.\n"
-        "📝 Для отмены используйте /cancel",
+        translator.translate("broadcast.create_title")
+        translator.translate("broadcast.enter_message")
+        translator.translate("broadcast.markdown_support")
+        translator.translate("broadcast.cancel_info"),
         parse_mode='Markdown'
     )
 
@@ -77,10 +77,10 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
     set_user_context(user.id, user.username, user.first_name)
 
     await query.edit_message_text(
-        "📢 **Создание рассылки**\n\n"
-        "Отправьте текст сообщения для рассылки всем пользователям.\n\n"
-        "💡 Поддерживается форматирование Markdown.\n"
-        "📝 Для отмены используйте /cancel",
+        translator.translate("broadcast.create_title")
+        translator.translate("broadcast.enter_message")
+        translator.translate("broadcast.markdown_support")
+        translator.translate("broadcast.cancel_info"),
         parse_mode='Markdown'
     )
 

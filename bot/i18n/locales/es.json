@@ -108,9 +108,6 @@
     "add_friend_notification": "👤 ¡El usuario @{username} quiere agregarte como amigo!",
     "accept_title": "Aceptar Solicitud de Amistad",
     "decline_title": "Rechazar Solicitud",
-    "request_declined": "❌ Solicitud de amistad de @{username} rechazada.",
-    "request_notification_declined": "❌ @{username} rechazó tu solicitud de amistad.",
-    "request_not_found": "❌ Solicitud de amistad de @{username} no encontrada o ya procesada.",
     "request_processing": "📥 Cargando solicitudes de amistad...",
     "requests_incoming": "**Solicitudes entrantes:**",
     "requests_outgoing": "**Solicitudes salientes:**",
@@ -126,7 +123,13 @@
     "choose_action": "Elige acción:",
     "accept_usage": "Uso: `/accept @username`",
     "accept_success": "¡Ahora son amigos! 🎉",
-    "decline_usage": "Uso: `/decline @username`"
+    "decline_usage": "Uso: `/decline @username`",
+    "loading_requests": "📥 Cargando solicitudes de amistad...",
+    "requests_title": "📥 **Solicitudes de Amistad**\n\n",
+    "requests_incoming_title": "**Solicitudes entrantes:**\n",
+    "requests_incoming_none": "**Solicitudes entrantes:** ninguna\n\n",
+    "requests_outgoing_title": "**Solicitudes salientes:**\n",
+    "requests_outgoing_none": "**Solicitudes salientes:** ninguna"
   },
   "history": {
     "title": "📊 Historial de Actividad",
@@ -152,7 +155,7 @@
       "medium": "📊 Media",
       "low": "💤 Baja"
     },
-    "access_denied": "🔒 Este comando solo está disponible para administradores.",
+    "access_denied": "🔒 Este comando está disponible solo para administradores.",
     "loading_stats": "📊 Cargando estadísticas...",
     "stats_error": "❌ No se pudieron obtener las estadísticas de usuarios.",
     "loading_activity": "👥 Cargando actividad de amigos...",
@@ -243,7 +246,11 @@
     "settings_update_error": "❌ Error actualizando configuración. Inténtalo más tarde.",
     "frequency_update_error": "❌ Error actualizando frecuencia. Inténtalo más tarde.",
     "stats_load_error": "❌ Error cargando estadísticas",
-    "friends_activity_load_error": "❌ Error cargando actividad de amigos"
+    "friends_activity_load_error": "❌ Error cargando actividad de amigos",
+    "invalid_number_format": "❌ Formato de número inválido\n\n",
+    "friends_list_load_error": "❌ Error al cargar la lista de amigos. Inténtalo más tarde.",
+    "requests_load_error": "❌ Error al cargar solicitudes de amistad. Inténtalo más tarde.",
+    "generic_error": "❌ Ocurrió un error. Inténtalo más tarde."
   },
   "common": {
     "unknown": "Desconocido",
@@ -263,7 +270,8 @@
     "low": "Baja",
     "hours": "hora",
     "hours_plural": "horas",
-    "minutes": "minutos"
+    "minutes": "minutos",
+    "one_hour": "1 hora"
   },
   "activity": {
     "logged": "✅ Actividad registrada",
@@ -381,11 +389,18 @@
     "help_variables": "💡 **Variables disponibles:**\n• `{name}` - nombre del usuario\n• `{time}` - hora actual\n\nEjemplo: \"¡Hola, {name}! ¿Qué estás haciendo a las {time}?\""
   },
   "broadcast": {
-    "enter_message": "📢 **Mensaje de Difusión**\n\nIntroduce el texto del mensaje para enviar a todos los usuarios:",
+    "enter_message": "Envía el texto del mensaje para difundir a todos los usuarios.\n\n",
     "confirm_send": "✅ Enviar difusión",
-    "create_title": "📢 **Creando Difusión**",
+    "create_title": "📢 **Creando Difusión**\n\n",
     "create_description": "Envía texto del mensaje para difundir a todos los usuarios.",
-    "markdown_support": "💡 Se admite formato Markdown.",
-    "cancel_help": "📝 Usa /cancel para cancelar"
+    "markdown_support": "💡 Se admite el formato Markdown.\n",
+    "cancel_help": "📝 Usa /cancel para cancelar",
+    "cancel_info": "📝 Usa /cancel para cancelar"
+  },
+  "config": {
+    "freq_usage": "Uso: `/freq N`\n",
+    "freq_example": "Ejemplo: `/freq 60`",
+    "freq_example_120": "Ejemplo: `/freq 120`",
+    "frequency_updated": "✅ **¡Frecuencia de notificaciones actualizada!**\n\n"
   }
 }

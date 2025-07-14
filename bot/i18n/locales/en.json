@@ -108,9 +108,6 @@
     "add_friend_notification": "👤 User @{username} wants to add you as a friend!",
     "accept_title": "Accept Friend Request",
     "decline_title": "Decline Friend Request",
-    "request_declined": "❌ Friend request from @{username} declined.",
-    "request_notification_declined": "❌ @{username} declined your friend request.",
-    "request_not_found": "❌ Friend request from @{username} not found or already processed.",
     "request_processing": "📥 Loading friend requests...",
     "requests_incoming": "**Incoming requests:**",
     "requests_outgoing": "**Outgoing requests:**",
@@ -126,7 +123,13 @@
     "choose_action": "Choose action:",
     "accept_usage": "Usage: `/accept @username`",
     "accept_success": "Now you are friends! 🎉",
-    "decline_usage": "Usage: `/decline @username`"
+    "decline_usage": "Usage: `/decline @username`",
+    "loading_requests": "📥 Loading friend requests...",
+    "requests_title": "📥 **Friend Requests**\n\n",
+    "requests_incoming_title": "**Incoming requests:**\n",
+    "requests_incoming_none": "**Incoming requests:** none\n\n",
+    "requests_outgoing_title": "**Outgoing requests:**\n",
+    "requests_outgoing_none": "**Outgoing requests:** none"
   },
   "history": {
     "title": "📊 Activity History",
@@ -152,7 +155,7 @@
       "medium": "📊 Medium",
       "low": "💤 Low"
     },
-    "access_denied": "🔒 This command is only available to administrators.",
+    "access_denied": "🔒 This command is available only to administrators.",
     "loading_stats": "📊 Loading statistics...",
     "stats_error": "❌ Failed to get user statistics.",
     "loading_activity": "👥 Loading friend activity...",
@@ -243,7 +246,11 @@
     "settings_update_error": "❌ Error updating settings. Try again later.",
     "frequency_update_error": "❌ Error updating frequency. Try again later.",
     "stats_load_error": "❌ Error loading statistics",
-    "friends_activity_load_error": "❌ Error loading friends activity"
+    "friends_activity_load_error": "❌ Error loading friends activity",
+    "invalid_number_format": "❌ Invalid number format\n\n",
+    "friends_list_load_error": "❌ Error loading friends list. Try again later.",
+    "requests_load_error": "❌ Error loading friend requests. Try again later.",
+    "generic_error": "❌ An error occurred. Try again later."
   },
   "common": {
     "unknown": "Unknown",
@@ -263,7 +270,8 @@
     "low": "Low",
     "hours": "hour",
     "hours_plural": "hours",
-    "minutes": "minutes"
+    "minutes": "minutes",
+    "one_hour": "1 hour"
   },
   "activity": {
     "logged": "✅ Activity logged",
@@ -381,11 +389,18 @@
     "help_variables": "💡 Available variables:\n• {name} - user name\n• {time} - current time\n\nExample: Hello, {name}! What are you doing at {time}?"
   },
   "broadcast": {
-    "enter_message": "📢 **Broadcast Message**\n\nEnter the message text to send to all users:",
+    "enter_message": "Send message text for broadcast to all users.\n\n",
     "confirm_send": "✅ Send broadcast",
-    "create_title": "📢 **Creating Broadcast**",
+    "create_title": "📢 **Creating Broadcast**\n\n",
     "create_description": "Send message text to broadcast to all users.",
-    "markdown_support": "💡 Markdown formatting supported.",
-    "cancel_help": "📝 Use /cancel to cancel"
+    "markdown_support": "💡 Markdown formatting is supported.\n",
+    "cancel_help": "📝 Use /cancel to cancel",
+    "cancel_info": "📝 Use /cancel to cancel"
+  },
+  "config": {
+    "freq_usage": "Usage: `/freq N`\n",
+    "freq_example": "Example: `/freq 60`",
+    "freq_example_120": "Example: `/freq 120`",
+    "frequency_updated": "✅ **Notification frequency updated!**\n\n"
   }
 }

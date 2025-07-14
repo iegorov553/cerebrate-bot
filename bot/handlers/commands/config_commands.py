@@ -105,7 +105,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if not context.args:
         await update.message.reply_text(
             "📊 **Установить частоту уведомлений**\n\n"
-            "Использование: `/freq N`\n\n"
+            "translator.translate("config.freq_usage")\n"
             "Где N - интервал в минутах между уведомлениями.\n\n"
             "Примеры:\n"
             "• `/freq 60` - каждый час\n"
@@ -126,14 +126,14 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         elif interval_min > 1440:  # 24 hours
             await update.message.reply_text(
                 "❌ Максимальный интервал: 1440 минут (24 часа)\n\n"
-                "Пример: `/freq 120`"
+                translator.translate("config.freq_example_120")
             )
             return
     except ValueError:
         await update.message.reply_text(
-            "❌ Неверный формат числа\n\n"
-            "Использование: `/freq N`\n"
-            "Пример: `/freq 60`"
+            translator.translate("errors.invalid_number_format")
+            translator.translate("config.freq_usage")
+            translator.translate("config.freq_example")
         )
         return
 
@@ -168,7 +168,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             if interval_min < 60:
                 freq_text = f"{interval_min} минут"
             elif interval_min == 60:
-                freq_text = "1 час"
+                freq_text = translator.translate("common.one_hour")
             elif interval_min < 1440:
                 hours = interval_min // 60
                 minutes = interval_min % 60
@@ -180,7 +180,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 freq_text = f"{interval_min // 60} часов"
 
             await update.message.reply_text(
-                f"✅ **Частота уведомлений обновлена!**\n\n"
+                ftranslator.translate("config.frequency_updated")
                 f"📊 Новая частота: каждые {freq_text}\n\n"
                 f"Следующее уведомление придёт через {freq_text}.",
                 parse_mode='Markdown'
