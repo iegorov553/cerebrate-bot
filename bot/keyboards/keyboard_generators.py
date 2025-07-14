@@ -467,7 +467,7 @@ class KeyboardGenerator:
 
             for question in custom_questions:
                 status = "✅" if question.get('active', True) else "❌"
-                name = question.get('question_name', 'Вопрос')[:15]  # Limit length
+                name = question.get('question_name', translator.translate("common.question"))[:15]  # Limit length
                 text = f"• {name} {status}"
                 keyboard.append([
                     InlineKeyboardButton(text, callback_data=f"questions_edit:{question['id']}"),

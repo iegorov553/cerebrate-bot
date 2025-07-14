@@ -87,7 +87,7 @@ class QuestionManager:
             # Create default question from user data or defaults
             default_data = {
                 'user_id': user_id,
-                'question_name': 'Основной',
+                'question_name': translator.translate("questions.main"),
                 'question_text': '⏰ Время отчёта! Что делаешь?',
                 'window_start': user_data.get('window_start', '09:00') if user_data else '09:00',
                 'window_end': user_data.get('window_end', '22:00') if user_data else '22:00',

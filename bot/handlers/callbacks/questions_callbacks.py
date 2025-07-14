@@ -585,7 +585,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             if custom_questions:
                 for question in custom_questions:
                     status = "✅" if question.get('active', True) else "❌"
-                    name = question.get('question_name', 'Вопрос')
+                    name = question.get('question_name', translator.translate("common.question"))
                     settings_text += f"{translator.translate('questions.custom_marker')} {name} {status}\n"
                     settings_text += f"   ⏰ {question.get('window_start', '09:00')}-{question.get('window_end', '22:00')}\n"
                     settings_text += f"   📊 {translator.translate('questions.interval_minutes', minutes=question.get('interval_minutes', 120))}\n\n"

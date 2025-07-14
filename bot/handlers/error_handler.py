@@ -52,7 +52,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         try:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="❌ Произошла ошибка. Попробуйте позже или обратитесь к администратору."
+                text=translator.translate("errors.general_with_admin")
             )
         except Exception:
             # If we can't even send an error message, just log it
@@ -72,8 +72,8 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             minutes = error.retry_after // 60
             time_msg = f"{minutes} минут"
 
-        message = f"🚫 **Превышен лимит запросов**\n\n" \
-            f"Вы отправляете команды слишком часто.\n" \
+        message = f"{translator.translate("errors.rate_limit_title")}" \
+            f"{translator.translate("errors.rate_limit_message")}" \
             f"Попробуйте снова через {time_msg}.\n\n" \
             f"Действие: {error.action}"
 
@@ -100,7 +100,7 @@ async def handle_admin_required_error(update: Update, context: ContextTypes.DEFA
         return
 
     try:
-        message = "🔒 **Доступ запрещен**\n\nЭта команда доступна только администраторам."
+        message = translator.translate("errors.admin_access_denied")
 
         await context.bot.send_message(
             chat_id=update.effective_chat.id,

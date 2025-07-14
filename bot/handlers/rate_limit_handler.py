@@ -6,9 +6,11 @@ from telegram.ext import ContextTypes
 
 from bot.utils.exceptions import RateLimitExceeded
 from bot.utils.rate_limiter import rate_limiter
+from bot.i18n.translator import get_translator
 from monitoring import get_logger
 
 logger = get_logger(__name__)
+translator = get_translator()
 
 
 async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_TYPE, error: RateLimitExceeded):
@@ -34,27 +36,27 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
 
         # Create user-friendly action names
         action_names = {
-            "general": "общих команд",
-            "friend_request": "запросов в друзья",
-            "settings": "изменений настроек",
-            "discovery": "поиска друзей",
-            "admin": "админских команд",
-            "callback": "нажатий кнопок"
+            "general": translator.translate("rate_limit.general_commands"),
+            "friend_request": translator.translate("rate_limit.friend_requests"),
+            "settings": translator.translate("rate_limit.settings_changes"),
+            "discovery": translator.translate("rate_limit.friend_discovery"),
+            "admin": translator.translate("rate_limit.admin_commands"),
+            "callback": translator.translate("rate_limit.button_clicks")
         }
 
         action_display = action_names.get(error.action, error.action)
 
         # Create message with emoji and formatting
         message = f"🚫 **Превышен лимит {action_display}**\n\n" \
-            f"📊 Использовано: {stats['current_count']}/{stats['max_requests']}\n" \
+            f"{translator.translate('rate_limit.usage_count', current=stats['current_count'], max=stats['max_requests'])}\n" \
             f"⏰ Попробуйте через: {time_msg}\n" \
-            f"🔄 Окно сброса: {stats['window_seconds']} сек.\n\n" \
-            f"_Лимиты защищают бот от перегрузки._"
+            f"{translator.translate('rate_limit.reset_window', seconds=stats['window_seconds'])}\n\n" \
+            f"{translator.translate('rate_limit.protection_note')}"
 
         # Add helpful keyboard
         keyboard = [
-            [InlineKeyboardButton("🏠 Главное меню", callback_data="menu_main")],
-            [InlineKeyboardButton("❓ Помощь", callback_data="menu_help")]
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="menu_main")],
+            [InlineKeyboardButton(translator.translate("menu.help"), callback_data="menu_help")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -68,7 +70,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
                 )
             except Exception:
                 # If edit fails, answer callback and send new message
-                await update.callback_query.answer("Превышен лимит запросов!")
+                await update.callback_query.answer(translator.translate("rate_limit.exceeded_alert"))
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=message,

@@ -23,11 +23,11 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if not context.args:
         await update.message.reply_text(
-            "⏰ **Установить временное окно**\n\n"
-            "Использование: `/window HH:MM-HH:MM`\n\n"
-            "Примеры:\n"
-            "• `/window 09:00-18:00` - с 9 утра до 6 вечера\n"
-            "• `/window 22:00-06:00` - с 10 вечера до 6 утра",
+            translator.translate("config.window_title") +
+            translator.translate("config.window_usage") +
+            translator.translate("config.examples_title") +
+            translator.translate("config.window_example1") +
+            translator.translate("config.window_example2"),
             parse_mode='Markdown'
         )
         return
@@ -39,9 +39,9 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     is_valid, error_msg, start_time, end_time = validate_time_window(time_range)
     if not is_valid:
         await update.message.reply_text(
-            f"❌ {error_msg}\n\n"
-            "Формат: `HH:MM-HH:MM`\n"
-            "Пример: `/window 09:00-22:00`",
+            f"❌ {error_msg}\n\n" +
+            translator.translate("config.window_format") +
+            translator.translate("config.window_format_example"),
             parse_mode='Markdown'
         )
         return
@@ -75,9 +75,9 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         if success:
             await update.message.reply_text(
-                f"✅ **Временное окно обновлено!**\n\n"
-                f"⏰ Новое время: {start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}\n\n"
-                f"Теперь уведомления будут приходить только в это время.",
+                f"{translator.translate('config.window_updated')}"
+                f"{translator.translate('config.window_new_time')}{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}\n\n"
+                f"{translator.translate('config.window_updated_note')}",
                 parse_mode='Markdown'
             )
             logger.info(f"Time window updated for user {user.id}: {time_range}")
@@ -104,13 +104,13 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     if not context.args:
         await update.message.reply_text(
-            "📊 **Установить частоту уведомлений**\n\n"
-            "translator.translate("config.freq_usage")\n"
-            "Где N - интервал в минутах между уведомлениями.\n\n"
-            "Примеры:\n"
-            "• `/freq 60` - каждый час\n"
-            "• `/freq 120` - каждые 2 часа\n"
-            "• `/freq 30` - каждые 30 минут",
+            translator.translate("config.frequency_title") +
+            translator.translate("config.freq_usage") +
+            translator.translate("config.frequency_description") +
+            translator.translate("config.examples_title") +
+            translator.translate("config.freq_example_60") +
+            translator.translate("config.freq_example_120_long") +
+            translator.translate("config.freq_example_30"),
             parse_mode='Markdown'
         )
         return
@@ -119,20 +119,20 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         interval_min = int(context.args[0])
         if interval_min < 5:
             await update.message.reply_text(
-                "❌ Минимальный интервал: 5 минут\n\n"
-                "Пример: `/freq 30`"
+                translator.translate("config.freq_min_error") +
+                translator.translate("config.freq_min_example")
             )
             return
         elif interval_min > 1440:  # 24 hours
             await update.message.reply_text(
-                "❌ Максимальный интервал: 1440 минут (24 часа)\n\n"
+                translator.translate("config.freq_max_error") +
                 translator.translate("config.freq_example_120")
             )
             return
     except ValueError:
         await update.message.reply_text(
-            translator.translate("errors.invalid_number_format")
-            translator.translate("config.freq_usage")
+            translator.translate("errors.invalid_number_format") +
+            translator.translate("config.freq_usage") +
             translator.translate("config.freq_example")
         )
         return
@@ -180,8 +180,8 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 freq_text = f"{interval_min // 60} часов"
 
             await update.message.reply_text(
-                ftranslator.translate("config.frequency_updated")
-                f"📊 Новая частота: каждые {freq_text}\n\n"
+                translator.translate("config.frequency_updated") +
+                f"📊 Новая частота: каждые {freq_text}\n\n" +
                 f"Следующее уведомление придёт через {freq_text}.",
                 parse_mode='Markdown'
             )

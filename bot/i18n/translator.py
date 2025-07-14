@@ -130,7 +130,7 @@ class Translator:
             Dictionary with language information
         """
         language_names = {
-            'ru': {'name': 'Русский', 'native': 'Русский', 'flag': '🇷🇺'},
+            'ru': {'name': self.translate("language.russian"), 'native': self.translate("language.russian"), 'flag': '🇷🇺'},
             'en': {'name': 'English', 'native': 'English', 'flag': '🇺🇸'},
             'es': {'name': 'Spanish', 'native': 'Español', 'flag': '🇪🇸'}
         }

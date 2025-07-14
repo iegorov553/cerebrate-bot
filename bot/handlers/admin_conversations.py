@@ -98,16 +98,16 @@ async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TY
     # Create confirmation keyboard
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("✅ Да, отправить", callback_data="broadcast_confirm_yes"),
-            InlineKeyboardButton("❌ Нет, отменить", callback_data="broadcast_confirm_no")
+            InlineKeyboardButton(translator.translate("broadcast.confirm_yes"), callback_data="broadcast_confirm_yes"),
+            InlineKeyboardButton(translator.translate("broadcast.confirm_no"), callback_data="broadcast_confirm_no")
         ]
     ])
 
     # Show preview with buttons
     preview_text = (
-        f"📢 **Предпросмотр рассылки:**\n\n"
+        f"{translator.translate("broadcast.preview_title")}"
         f"{message_text}\n\n"
-        f"Отправить это сообщение всем пользователям?"
+        f"{translator.translate("broadcast.confirm_question")}"
     )
 
     await update.message.reply_text(
@@ -152,7 +152,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
         )
 
         await query.edit_message_text(
-            "📤 **Отправка рассылки...**\n\nПожалуйста, подождите..."
+            translator.translate("broadcast.sending_message")
         )
 
         try:
@@ -163,8 +163,8 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
             # Show results
             success_text = (
-                f"✅ **Рассылка завершена!**\n\n"
-                f"📊 **Результаты:**\n"
+                f"{translator.translate("broadcast.completed_title")}"
+                f"{translator.translate("broadcast.results_title")}"
                 f"• Успешно отправлено: {result.sent_count}\n"
                 f"• Ошибок: {result.failed_count}\n"
                 f"• Всего пользователей: {result.total_users}\n"
@@ -182,7 +182,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
     elif query.data == "broadcast_confirm_no":
         await query.edit_message_text(
-            "❌ **Рассылка отменена**\n\nНичего не было отправлено."
+            translator.translate("broadcast.cancelled_message")
         )
 
     # Clear user data and end conversation
@@ -196,7 +196,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     context.user_data.clear()
 
     await update.message.reply_text(
-        "❌ **Создание рассылки отменено**\n\nВсе данные очищены."
+        translator.translate("broadcast.creation_cancelled")
     )
 
     return ConversationHandler.END
@@ -208,7 +208,7 @@ async def broadcast_timeout(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if update.effective_user:
         await context.bot.send_message(
             chat_id=update.effective_user.id,
-            text="⏰ **Время создания рассылки истекло**\n\nСессия завершена. Используйте /broadcast для начала заново."
+            text=translator.translate("broadcast.timeout_message")
         )
 
 

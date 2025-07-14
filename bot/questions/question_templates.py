@@ -21,23 +21,23 @@ class QuestionTemplates:
         return {
             "work_study": [
                 {
-                    "name": "Рабочие задачи",
-                    "text": "💼 Над чем работаешь сейчас?",
+                    "name": translator.translate("questions.work_tasks"),
+                    "text": translator.translate("questions.work_current"),
                     "window_start": "09:00",
                     "window_end": "18:00",
                     "interval_minutes": 180,  # 3 hours
-                    "description": "Для отслеживания рабочих проектов"
+                    "description": translator.translate("questions.work_description")
                 },
                 {
-                    "name": "Обучение",
-                    "text": "📚 Что изучаешь?",
+                    "name": translator.translate("questions.learning"),
+                    "text": translator.translate("questions.learning_current"),
                     "window_start": "10:00",
                     "window_end": "22:00",
                     "interval_minutes": 240,  # 4 hours
-                    "description": "Для отслеживания процесса обучения"
+                    "description": translator.translate("questions.learning_description")
                 },
                 {
-                    "name": "Цели дня",
+                    "name": translator.translate("questions.daily_goals"),
                     "text": "🎯 Какие задачи решаешь?",
                     "window_start": "09:00",
                     "window_end": "19:00",
@@ -52,10 +52,10 @@ class QuestionTemplates:
                     "window_start": "10:00",
                     "window_end": "20:00",
                     "interval_minutes": 360,  # 6 hours
-                    "description": "Отслеживание эмоционального состояния"
+                    "description": translator.translate("questions.emotions_description")
                 },
                 {
-                    "name": "Спорт",
+                    "name": translator.translate("questions.sport"),
                     "text": "💪 Как дела со спортом?",
                     "window_start": "07:00",
                     "window_end": "21:00",
@@ -73,7 +73,7 @@ class QuestionTemplates:
             ],
             "time_based": [
                 {
-                    "name": "Утренний чекин",
+                    "name": translator.translate("questions.morning_checkin"),
                     "text": "🌅 Доброе утро! Как планы на день?",
                     "window_start": "07:00",
                     "window_end": "10:00",
@@ -90,7 +90,7 @@ class QuestionTemplates:
                 },
                 {
                     "name": "Вечерний отчёт",
-                    "text": "🌆 Как прошёл день? Что удалось сделать?",
+                    "text": translator.translate("questions.main_question"),
                     "window_start": "19:00",
                     "window_end": "22:00",
                     "interval_minutes": 1440,  # 24 hours
@@ -99,7 +99,7 @@ class QuestionTemplates:
             ],
             "health": [
                 {
-                    "name": "Здоровье",
+                    "name": translator.translate("questions.health"),
                     "text": "🏥 Как самочувствие?",
                     "window_start": "09:00",
                     "window_end": "21:00",
@@ -193,11 +193,11 @@ class QuestionTemplates:
             List of popular templates
         """
         popular_names = [
-            "Рабочие задачи",
+            translator.translate("questions.work_tasks"),
             "Настроение",
-            "Утренний чекин",
+            translator.translate("questions.morning_checkin"),
             "Вечерний отчёт",
-            "Обучение"
+            translator.translate("questions.learning")
         ]
 
         popular = []

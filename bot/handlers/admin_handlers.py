@@ -49,18 +49,22 @@ async def broadcast_info_command(update: Update, context: ContextTypes.DEFAULT_T
 
     if not stats:
         await update.message.reply_text(
-            "❌ Не удалось получить статистику пользователей."
+            translator.translate("errors.stats_failed")
         )
         return
 
     # Use percentage from stats (already calculated)
     active_percentage = stats.get('active_percentage', 0)
 
-    stats_text = f"📊 **Статистика пользователей**\n\n" \
-        f"👥 Всего пользователей: {stats['total']}\n" \
-        f"✅ Активных: {stats['active']} ({active_percentage:.1f}%)\n" \
-        f"🆕 Новых за неделю: {stats['new_week']}\n\n" \
-        f"📈 Активность: {'Высокая' if active_percentage > 50 else 'Средняя' if active_percentage > 25 else 'Низкая'}"
+    stats_text = f"{translator.translate("admin.stats_title")}" \
+        f"{translator.translate('admin.total_users', total=stats['total'])}
+" \
+        f"{translator.translate('admin.active_users', active=stats['active'], percentage=active_percentage)}
+" \
+        f"{translator.translate('admin.new_users_week', count=stats['new_week'])}
+
+" \
+        f"{translator.translate('admin.activity_level', level=translator.translate('common.high' if active_percentage > 50 else 'common.medium' if active_percentage > 25 else 'common.low'))}"
 
     await update.message.reply_text(stats_text, parse_mode='Markdown')
 

@@ -222,7 +222,7 @@ class MultiQuestionScheduler:
         """Send notification for a specific question."""
         try:
             question_id = question.get('id')
-            question_text = question.get('question_text', 'Что делаешь?')
+            question_text = question.get('question_text', translator.translate("questions.default_question"))
 
             # Apply template variables
             formatted_text = await self._format_question_text(question_text, user_id)
@@ -264,9 +264,9 @@ class MultiQuestionScheduler:
                 .single()\
                 .execute()
 
-            user_name = "друг"  # Default fallback
+            user_name = translator.translate("questions.friend")  # Default fallback
             if user_result.data:
-                user_name = user_result.data.get('tg_first_name', 'друг')
+                user_name = user_result.data.get('tg_first_name', translator.translate("questions.friend"))
 
             # Current time for {time} variable
             current_time = datetime.now(timezone.utc).strftime('%H:%M')

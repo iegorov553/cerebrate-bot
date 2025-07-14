@@ -165,7 +165,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
                 for friend in friends[:10]:
                     username = friend.get('tg_username', '')
-                    name = friend.get('tg_first_name', 'Без имени')
+                    name = friend.get('tg_first_name', translator.translate("common.no_name"))
 
                     # Escape markdown special characters
                     def escape_markdown(text):
@@ -243,7 +243,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 text += translator.translate("friends.requests_incoming_title")
                 for i, req in enumerate(incoming[:5]):  # Показываем только первые 5
                     requester = req.get('requester', {})
-                    username = requester.get('tg_username', 'Неизвестно')
+                    username = requester.get('tg_username', translator.translate("common.unknown"))
                     name = requester.get('tg_first_name', '')
                     requester_id = req.get('requester_id')
                     
@@ -260,21 +260,21 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     safe_username = escape_markdown(username)
                     safe_name = escape_markdown(name)
                     
-                    display_name = f"@{safe_username}" if username != 'Неизвестно' else safe_name
+                    display_name = f"@{safe_username}" if username != translator.translate("common.unknown") else safe_name
                     text += f"• {display_name}\n"
                     
                     # Add accept/decline buttons for each request
                     if requester_id:
                         from telegram import InlineKeyboardButton
                         # Use simple names for buttons (no markdown escaping needed in button text)
-                        button_name = f"@{username}" if username != 'Неизвестно' else name
+                        button_name = f"@{username}" if username != translator.translate("common.unknown") else name
                         keyboard.append([
                             InlineKeyboardButton(
-                                f"✅ Принять {button_name}",
+                                f"{translator.translate("friends.accept_button")} {button_name}",
                                 callback_data=f"friend_accept:{requester_id}"
                             ),
                             InlineKeyboardButton(
-                                f"❌ Отклонить {button_name}",
+                                f"{translator.translate("friends.decline_button")} {button_name}",
                                 callback_data=f"friend_decline:{requester_id}"
                             )
                         ])
@@ -287,7 +287,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 text += translator.translate("friends.requests_outgoing_title")
                 for req in outgoing[:5]:  # Показываем только первые 5
                     addressee = req.get('addressee', {})
-                    username = addressee.get('tg_username', 'Неизвестно')
+                    username = addressee.get('tg_username', translator.translate("common.unknown"))
                     name = addressee.get('tg_first_name', '')
                     
                     # Escape markdown special characters
@@ -303,8 +303,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     safe_username = escape_markdown(username)
                     safe_name = escape_markdown(name)
                     
-                    display_name = f"@{safe_username}" if username != 'Неизвестно' else safe_name
-                    text += f"• {display_name} - ожидает ответа\n"
+                    display_name = f"@{safe_username}" if username != translator.translate("common.unknown") else safe_name
+                    text += f"• {display_name} - {translator.translate("friends.awaiting_response")}\n"
             else:
                 text += translator.translate("friends.requests_outgoing_none")
             
@@ -375,8 +375,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                 user_info = rec.get('user_info', {})
                 recommendations.append({
                     'tg_id': user_info.get('tg_id'),
-                    'first_name': user_info.get('tg_first_name', 'Без имени'),
-                    'username': user_info.get('tg_username', 'неизвестен'),
+                    'first_name': user_info.get('tg_first_name', translator.translate("common.no_name")),
+                    'username': user_info.get('tg_username', translator.translate("common.unknown_user")),
                     'mutual_friends_count': rec.get('mutual_count', 0),
                     'mutual_friends': rec.get('mutual_friends', [])
                 })
@@ -390,8 +390,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             # Show first 3 recommendations in text
             for i, rec in enumerate(recommendations[:3]):
-                username = rec.get('username', 'неизвестен')
-                first_name = rec.get('first_name', 'Без имени')
+                username = rec.get('username', translator.translate("common.unknown_user"))
+                first_name = rec.get('first_name', translator.translate("common.no_name"))
                 mutual_count = rec.get('mutual_friends_count', 0)
                 mutual_friends = rec.get('mutual_friends', [])
 
@@ -542,8 +542,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     user_info = rec.get('user_info', {})
                     recommendations.append({
                         'tg_id': user_info.get('tg_id'),
-                        'first_name': user_info.get('tg_first_name', 'Без имени'),
-                        'username': user_info.get('tg_username', 'неизвестен'),
+                        'first_name': user_info.get('tg_first_name', translator.translate("common.no_name")),
+                        'username': user_info.get('tg_username', translator.translate("common.unknown_user")),
                         'mutual_friends_count': rec.get('mutual_count', 0),
                         'mutual_friends': rec.get('mutual_friends', [])
                     })
@@ -554,8 +554,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
                 # Show updated recommendations
                 for i, rec in enumerate(recommendations[:3]):
-                    username = rec.get('username', 'неизвестен')
-                    first_name = rec.get('first_name', 'Без имени')
+                    username = rec.get('username', translator.translate("common.unknown_user"))
+                    first_name = rec.get('first_name', translator.translate("common.no_name"))
                     mutual_count = rec.get('mutual_friends_count', 0)
                     mutual_friends = rec.get('mutual_friends', [])
 
