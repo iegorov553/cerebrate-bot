@@ -314,7 +314,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
         message += f"⏱ Время работы: {health_status.uptime_seconds:.1f} сек\n\n"
 
         # Components section with clear separation
-        message += "🔧 КОМПОНЕНТЫ:\n"
+        message += translator.translate('admin.health_components_title') + "\n"
         message += "─" * 20 + "\n"
         
         for name, component in health_status.components.items():
@@ -327,7 +327,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
             if component.latency_ms:
                 message += f" ({component.latency_ms:.0f}ms)"
             
-            message += f"\n   └ Статус: {component.status.upper()}\n"
+            message += f"\n   {translator.translate('admin.health_component_status')} {component.status.upper()}\n"
 
             # Show error if exists
             if component.error:
@@ -338,7 +338,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
                 important_details = {k: v for k, v in component.details.items()
                                    if k in ['connection', 'query_success', 'api_accessible', 'scheduler_running']}
                 if important_details:
-                    message += "   └ Детали: "
+                    message += f"   {translator.translate('admin.health_component_details')} "
                     details_list = []
                     for k, v in important_details.items():
                         details_list.append(f"{k}={v}")
@@ -346,7 +346,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         # System metrics if available
         if hasattr(health_status, 'metrics') and health_status.metrics:
-            message += "\n📊 СИСТЕМНЫЕ МЕТРИКИ:\n"
+            message += "\n" + translator.translate('admin.health_metrics_title') + "\n"
             message += "─" * 20 + "\n"
             for metric, value in health_status.metrics.items():
                 message += f"• {metric}: {value}\n"
