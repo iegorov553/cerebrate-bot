@@ -171,8 +171,17 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 self.logger.warning("Unknown questions action",
                                   user_id=user.id,
                                   action=data)
-                # Fallback to questions menu
-                await self._handle_questions_menu(query, translator)
+                # Only show different error message to avoid "Message is not modified" 
+                from bot.keyboards.keyboard_generators import KeyboardGenerator
+                error_keyboard = KeyboardGenerator.single_button_keyboard(
+                    translator.translate('questions.back'), 
+                    'menu_questions'
+                )
+                await query.edit_message_text(
+                    f"❌ {translator.translate('errors.unknown_action')}\n\n{translator.translate('questions.try_again')}",
+                    reply_markup=error_keyboard,
+                    parse_mode='Markdown'
+                )
 
         except Exception as e:
             self.logger.error("Error in questions action",
@@ -180,9 +189,15 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                             action=data,
                             error=str(e))
 
-            # Show error and fallback to questions menu
+            # Show error with back button to avoid "Message is not modified"
+            from bot.keyboards.keyboard_generators import KeyboardGenerator
+            error_keyboard = KeyboardGenerator.single_button_keyboard(
+                translator.translate('questions.back'), 
+                'menu_questions'
+            )
             await query.edit_message_text(
-                translator.translate('errors.general'),
+                f"❌ {translator.translate('errors.general')}\n\n{translator.translate('questions.try_again')}",
+                reply_markup=error_keyboard,
                 parse_mode='Markdown'
             )
 

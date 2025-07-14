@@ -484,7 +484,7 @@ class KeyboardGenerator:
             keyboard.append([])  # Separator
             keyboard.append([InlineKeyboardButton(
                 translator.translate("questions.add_new", count=f"{active_count}/{max_count}"),
-                callback_data="questions_add"
+                callback_data="questions_create"
             )])
 
         # Additional options

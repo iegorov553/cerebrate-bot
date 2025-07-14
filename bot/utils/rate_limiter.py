@@ -186,17 +186,22 @@ def rate_limit(action: str = "general", error_message: str = None):
 
             # Look for user_id in common argument patterns
             if args:
-                # Check if first arg is Update object
-                if hasattr(args[0], 'effective_user') and args[0].effective_user:
-                    user_id = args[0].effective_user.id
-                # Check if it's a callback query
-                elif hasattr(args[0], 'callback_query') and args[0].callback_query and args[0].callback_query.from_user:
-                    user_id = args[0].callback_query.from_user.id
-                # Check if it's a message
-                elif hasattr(args[0], 'message') and args[0].message and args[0].message.from_user:
-                    user_id = args[0].message.from_user.id
-                elif isinstance(args[0], int):
-                    user_id = args[0]
+                # Check each argument for Update object or user_id
+                for arg in args:
+                    if user_id is not None:
+                        break
+                    
+                    # Check if arg is Update object
+                    if hasattr(arg, 'effective_user') and arg.effective_user:
+                        user_id = arg.effective_user.id
+                    # Check if it's a callback query
+                    elif hasattr(arg, 'callback_query') and arg.callback_query and arg.callback_query.from_user:
+                        user_id = arg.callback_query.from_user.id
+                    # Check if it's a message
+                    elif hasattr(arg, 'message') and arg.message and arg.message.from_user:
+                        user_id = arg.message.from_user.id
+                    elif isinstance(arg, int):
+                        user_id = arg
 
             # Look in kwargs
             if user_id is None:
