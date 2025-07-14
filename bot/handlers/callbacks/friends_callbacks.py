@@ -270,11 +270,11 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                         button_name = f"@{username}" if username != translator.translate("common.unknown") else name
                         keyboard.append([
                             InlineKeyboardButton(
-                                f"{translator.translate("friends.accept_button")} {button_name}",
+                                f"{translator.translate('friends.accept_button')} {button_name}",
                                 callback_data=f"friend_accept:{requester_id}"
                             ),
                             InlineKeyboardButton(
-                                f"{translator.translate("friends.decline_button")} {button_name}",
+                                f"{translator.translate('friends.decline_button')} {button_name}",
                                 callback_data=f"friend_decline:{requester_id}"
                             )
                         ])
