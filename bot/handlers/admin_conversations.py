@@ -41,7 +41,7 @@ def require_admin(func):
         admin_ops: AdminOperations = context.bot_data['admin_ops']
         if not admin_ops.is_admin(user.id):
             await update.message.reply_text(
-                translator.translate("admin.access_denied")
+                translator.translate('admin.access_denied')
             )
             return ConversationHandler.END
 
@@ -100,16 +100,16 @@ async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TY
     # Create confirmation keyboard
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton(translator.translate("broadcast.confirm_yes"), callback_data="broadcast_confirm_yes"),
-            InlineKeyboardButton(translator.translate("broadcast.confirm_no"), callback_data="broadcast_confirm_no")
+            InlineKeyboardButton(translator.translate('broadcast.confirm_yes'), callback_data="broadcast_confirm_yes"),
+            InlineKeyboardButton(translator.translate('broadcast.confirm_no'), callback_data="broadcast_confirm_no")
         ]
     ])
 
     # Show preview with buttons
     preview_text = (
-        f"{translator.translate("broadcast.preview_title")}"
+        f"{translator.translate('broadcast.preview_title')}"
         f"{message_text}\n\n"
-        f"{translator.translate("broadcast.confirm_question")}"
+        f"{translator.translate('broadcast.confirm_question')}"
     )
 
     await update.message.reply_text(
@@ -154,7 +154,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
         )
 
         await query.edit_message_text(
-            translator.translate("broadcast.sending_message")
+            translator.translate('broadcast.sending_message')
         )
 
         try:
@@ -165,8 +165,8 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
             # Show results
             success_text = (
-                f"{translator.translate("broadcast.completed_title")}"
-                f"{translator.translate("broadcast.results_title")}"
+                f"{translator.translate('broadcast.completed_title')}"
+                f"{translator.translate('broadcast.results_title')}"
                 f"• Успешно отправлено: {result.sent_count}\n"
                 f"• Ошибок: {result.failed_count}\n"
                 f"• Всего пользователей: {result.total_users}\n"
@@ -184,7 +184,7 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
     elif query.data == "broadcast_confirm_no":
         await query.edit_message_text(
-            translator.translate("broadcast.cancelled_message")
+            translator.translate('broadcast.cancelled_message')
         )
 
     # Clear user data and end conversation
@@ -198,7 +198,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     context.user_data.clear()
 
     await update.message.reply_text(
-        translator.translate("broadcast.creation_cancelled")
+        translator.translate('broadcast.creation_cancelled')
     )
 
     return ConversationHandler.END
@@ -210,7 +210,7 @@ async def broadcast_timeout(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if update.effective_user:
         await context.bot.send_message(
             chat_id=update.effective_user.id,
-            text=translator.translate("broadcast.timeout_message")
+            text=translator.translate('broadcast.timeout_message')
         )
 
 
