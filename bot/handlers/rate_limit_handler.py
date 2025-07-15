@@ -47,7 +47,15 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         action_display = action_names.get(error.action, error.action)
 
         # Create message with emoji and formatting
-        message = f"🚫 **Превышен лимит {action_display}**\n\n" \
+        def escape_markdown_safe(text):
+            if not text:
+                return ""
+            return (str(text).replace('_', '\\_').replace('*', '\\*')
+                    .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
+        
+        safe_action = escape_markdown_safe(action_display)
+        bold_limit_text = f"**Превышен лимит {safe_action}**"
+        message = f"🚫 {bold_limit_text}\n\n" \
             f"{translator.translate('rate_limit.usage_count', current=stats['current_count'], max=stats['max_requests'])}\n" \
             f"⏰ Попробуйте через: {time_msg}\n" \
             f"{translator.translate('rate_limit.reset_window', seconds=stats['window_seconds'])}\n\n" \

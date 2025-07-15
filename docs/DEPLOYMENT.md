@@ -280,6 +280,15 @@ railway variables set SUPABASE_SERVICE_ROLE_KEY="your_service_role_key"
 # Optional: Admin functionality
 railway variables set ADMIN_USER_ID="your_telegram_id"
 
+# Optional: Voice Recognition (primary provider recommended)
+railway variables set GROQ_API_KEY="your_groq_api_key"
+railway variables set OPENAI_API_KEY="your_openai_api_key"
+
+# Optional: Voice Recognition model configuration
+railway variables set GROQ_PRIMARY_MODEL="whisper-large-v3"
+railway variables set GROQ_FALLBACK_MODEL="whisper-large-v3-turbo"
+railway variables set GROQ_TIMEOUT_SECONDS="30"
+
 # Optional: Monitoring
 railway variables set SENTRY_DSN="your_sentry_dsn"
 railway variables set ENVIRONMENT="production"

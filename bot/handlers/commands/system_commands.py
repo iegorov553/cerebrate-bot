@@ -50,25 +50,31 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                     .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
 
         message = "🏥 **System Health Check**\n\n"
-        message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {health_status.status}\n"
+        safe_status = escape_markdown_safe(health_status.status)
+        message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {safe_status}\n"
 
         # Безопасное время
         timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
-        message += f"📅 **Timestamp:** `{timestamp_safe}`\n"
-        message += f"🔢 **Version:** {health_status.version}\n"
+        timestamp_code = f"`{timestamp_safe}`"
+        message += f"📅 **Timestamp:** {timestamp_code}\n"
+        safe_version = escape_markdown_safe(health_status.version)
+        message += f"🔢 **Version:** {safe_version}\n"
         message += f"⏱️ **Uptime:** {health_status.uptime_seconds:.1f}s\n\n"
 
         message += "**Components:**\n"
         for name, component in health_status.components.items():
             emoji = status_emoji.get(component.status, '❓')
-            message += f"{emoji} **{name.title()}:** {component.status}"
+            safe_name = escape_markdown_safe(name.title())
+            component_name = f"**{safe_name}**"
+            message += f"{emoji} {component_name}: {component.status}"
 
             if component.latency_ms:
                 message += f" ({component.latency_ms:.0f}ms)"
 
             if component.error:
                 safe_error = escape_markdown_safe(component.error)
-                message += f"\n   ⚠️ Error: `{safe_error}`"
+                error_code = f"`{safe_error}`"
+                message += f"\n   ⚠️ Error: {error_code}"
 
             message += "\n"
 

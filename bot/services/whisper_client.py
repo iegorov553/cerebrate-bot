@@ -11,13 +11,19 @@ WhisperClient - Интеграция с OpenAI Whisper API для расшифр
 import os
 import asyncio
 from typing import Optional, Dict, Any, Union
-from openai import AsyncOpenAI
-from openai.types.audio import Transcription
 
 from bot.cache.ttl_cache import TTLCache
 from monitoring import get_logger
 
-# Groq import (will be optional)
+# OpenAI import (optional)
+try:
+    from openai import AsyncOpenAI
+    from openai.types.audio import Transcription
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
+# Groq import (optional)
 try:
     from groq import Groq
     GROQ_AVAILABLE = True
@@ -96,7 +102,7 @@ class WhisperClient:
             admin_notification_callback: Callback function for admin notifications
         """
         # API clients
-        self.openai_client = AsyncOpenAI(api_key=openai_api_key) if openai_api_key else None
+        self.openai_client = AsyncOpenAI(api_key=openai_api_key) if openai_api_key and OPENAI_AVAILABLE else None
         self.groq_client = Groq(api_key=groq_api_key) if groq_api_key and GROQ_AVAILABLE else None
         
         # Models and timeouts

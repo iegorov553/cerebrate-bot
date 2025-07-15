@@ -74,6 +74,11 @@ bot/
 │   │   ├── admin_operations.py    # Admin utilities
 │   │   └── broadcast_manager.py   # Mass messaging system
 │   │
+│   ├── services/
+│   │   ├── health_service.py      # System health monitoring
+│   │   ├── scheduler_service.py   # Background task scheduling
+│   │   └── whisper_client.py      # Multi-provider voice recognition
+│   │
 │   └── cache/
 │       └── ttl_cache.py          # Caching business logic
 │
@@ -230,6 +235,60 @@ class BroadcastManager:
     async def get_broadcast_history(self) -> List[BroadcastRecord]:
         """Broadcast audit log"""
 ```
+
+### Service Layer (`bot/services/`)
+
+**Purpose**: Business logic services and external integrations
+
+#### Voice Recognition Service (`services/whisper_client.py`)
+```python
+class WhisperClient:
+    """Multi-provider voice recognition with intelligent fallback"""
+    
+    # Provider Priority
+    PROVIDERS = [
+        ("groq", "whisper-large-v3", 30),      # Primary: Groq v3
+        ("groq", "whisper-large-v3-turbo", 30), # Fallback: Groq Turbo
+        ("openai", "whisper-1", 60)             # Final: OpenAI
+    ]
+    
+    async def transcribe_audio(self, file_path: str, language: str = None) -> str:
+        """Transcribe with automatic fallback on rate limits"""
+        
+        # Strategy 1: Try Groq primary model
+        try:
+            return await self._transcribe_with_groq(file_path, "whisper-large-v3")
+        except GroqRateLimitError:
+            await self._notify_admin("⚠️ Groq whisper-large-v3 rate limited")
+            
+        # Strategy 2: Try Groq fallback model
+        try:
+            return await self._transcribe_with_groq(file_path, "whisper-large-v3-turbo")
+        except GroqRateLimitError:
+            await self._notify_admin("🔄 Groq exhausted, using OpenAI")
+            
+        # Strategy 3: Try OpenAI
+        try:
+            return await self._transcribe_with_openai(file_path)
+        except TranscriptionError:
+            raise ProviderExhaustedError("All providers failed")
+    
+    async def _notify_admin(self, message: str):
+        """Send provider switch notification to admin"""
+        
+    async def _transcribe_with_groq(self, file_path: str, model: str) -> str:
+        """Groq API integration with timeout"""
+        
+    async def _transcribe_with_openai(self, file_path: str) -> str:
+        """OpenAI API integration with timeout"""
+```
+
+**Key Features:**
+- **Automatic Fallback**: Seamless provider switching on rate limits
+- **Admin Notifications**: Real-time alerts on provider switches
+- **Smart Caching**: Unified caching across all providers
+- **Timeout Management**: Provider-specific timeout configurations
+- **Error Isolation**: Graceful degradation on service failures
 
 ### Infrastructure Layer (`bot/handlers/`, `bot/utils/`)
 

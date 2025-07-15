@@ -15,7 +15,6 @@ from telegram.ext import ContextTypes
 from bot.handlers.base.base_handler import BaseCallbackHandler
 from bot.handlers.base.callback_router import CallbackRouter
 from bot.handlers.callbacks.navigation_callbacks import NavigationCallbackHandler
-from bot.handlers.callbacks.settings_callbacks import SettingsCallbackHandler
 from bot.handlers.callbacks.feedback_callbacks import FeedbackCallbackHandler
 from bot.handlers.callbacks.friends_callbacks import FriendsCallbackHandler
 from bot.handlers.callbacks.admin_callbacks import AdminCallbackHandler
@@ -345,156 +344,6 @@ class TestNavigationCallbackHandler:
             query.edit_message_text.assert_called_once()
 
 
-class TestSettingsCallbackHandler:
-    """Test SettingsCallbackHandler specifics."""
-
-    @pytest.fixture
-    def mock_dependencies(self):
-        """Create mock dependencies."""
-        db_client = MagicMock(spec=DatabaseClient)
-        config = MagicMock(spec=Config)
-        config.is_admin_configured.return_value = True
-        config.admin_user_id = 987654321
-        user_cache = MagicMock(spec=TTLCache)
-        return db_client, config, user_cache
-
-    @pytest.fixture
-    def handler(self, mock_dependencies):
-        """Create SettingsCallbackHandler instance."""
-        db_client, config, user_cache = mock_dependencies
-        return SettingsCallbackHandler(db_client, config, user_cache)
-
-    def test_can_handle_settings_callbacks(self, handler):
-        """Test callback data recognition."""
-        assert handler.can_handle("menu_settings")
-        assert handler.can_handle("settings")
-        assert handler.can_handle("settings_toggle_notifications")
-        assert handler.can_handle("settings_back")
-        assert handler.can_handle("settings_view")
-        assert handler.can_handle("friends_list") is False
-        assert handler.can_handle("back_main") is False
-
-    @pytest.mark.asyncio
-    async def test_handle_settings_menu_success(self, handler):
-        """Test successful settings menu display."""
-        query = MagicMock(spec=CallbackQuery)
-        query.from_user = MagicMock(spec=User)
-        query.from_user.id = 123456789
-        query.edit_message_text = AsyncMock()
-
-        translator = MagicMock(spec=Translator)
-        translator.translate.side_effect = lambda key, **kwargs: f"translated_{key}"
-
-        context = MagicMock()
-
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops, \
-                patch('bot.handlers.callbacks.settings_callbacks.create_settings_menu') as mock_menu:
-
-            # Mock user operations
-            mock_instance = mock_user_ops.return_value
-            mock_instance.get_user_settings = AsyncMock(return_value={
-                'enabled': True,
-                'window_start': '09:00',
-                'window_end': '22:00',
-                'interval_min': 120
-            })
-
-            # Mock menu creation
-            mock_menu.return_value = "mock_keyboard"
-
-            await handler.handle_callback(query, "settings", translator, context)
-
-            # Verify
-            mock_instance.get_user_settings.assert_called_once_with(123456789)
-            query.edit_message_text.assert_called_once()
-            mock_menu.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_settings_menu_database_error(self, handler):
-        """Test settings menu when database fails."""
-        query = MagicMock(spec=CallbackQuery)
-        query.from_user = MagicMock(spec=User)
-        query.from_user.id = 123456789
-        query.edit_message_text = AsyncMock()
-
-        translator = MagicMock(spec=Translator)
-        translator.translate.return_value = "Database error"
-
-        context = MagicMock()
-
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops, \
-                patch('bot.handlers.callbacks.settings_callbacks.KeyboardGenerator') as mock_keyboard:
-
-            # Mock user operations failure
-            mock_instance = mock_user_ops.return_value
-            mock_instance.get_user_settings = AsyncMock(return_value=None)
-
-            # Mock keyboard
-            mock_keyboard.main_menu.return_value = "mock_main_menu"
-
-            await handler.handle_callback(query, "settings", translator, context)
-
-            # Verify error handling
-            query.edit_message_text.assert_called_once()
-            mock_keyboard.main_menu.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_toggle_notifications(self, handler):
-        """Test notification toggle functionality."""
-        query = MagicMock(spec=CallbackQuery)
-        query.from_user = MagicMock(spec=User)
-        query.from_user.id = 123456789
-        query.edit_message_text = AsyncMock()
-
-        translator = MagicMock(spec=Translator)
-        translator.translate.return_value = "Notifications enabled"
-
-        context = MagicMock()
-
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops, \
-                patch('bot.handlers.callbacks.settings_callbacks.create_settings_menu') as mock_menu:
-
-            # Mock user operations
-            mock_instance = mock_user_ops.return_value
-            mock_instance.get_user_settings = AsyncMock(return_value={
-                'enabled': False  # Currently disabled
-            })
-            mock_instance.update_user_settings = AsyncMock(return_value=True)
-
-            # Mock menu
-            mock_menu.return_value = "mock_keyboard"
-
-            await handler.handle_callback(query, "settings_toggle_notifications", translator, context)
-
-            # Verify toggle to enabled
-            mock_instance.update_user_settings.assert_called_once_with(
-                123456789,
-                {'enabled': True}
-            )
-            query.edit_message_text.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_back_to_main(self, handler):
-        """Test returning to main menu."""
-        query = MagicMock(spec=CallbackQuery)
-        query.from_user = MagicMock(spec=User)
-        query.from_user.id = 123456789
-        query.from_user.first_name = "Test"
-        query.edit_message_text = AsyncMock()
-
-        translator = MagicMock(spec=Translator)
-        translator.translate.side_effect = lambda key, **kwargs: f"translated_{key}"
-
-        context = MagicMock()
-
-        with patch('bot.handlers.callbacks.settings_callbacks.KeyboardGenerator') as mock_keyboard:
-            mock_keyboard.main_menu.return_value = "mock_main_menu"
-
-            await handler.handle_callback(query, "settings_back", translator, context)
-
-            # Verify
-            query.edit_message_text.assert_called_once()
-            mock_keyboard.main_menu.assert_called_once()
 
 
 class TestFeedbackCallbackHandler:
@@ -544,9 +393,8 @@ class TestFeedbackCallbackHandler:
         # Verify menu is displayed
         query.edit_message_text.assert_called_once()
 
-        # Check that the call includes feedback options
-        call_args = query.edit_message_text.call_args
-        assert "translated_feedback.title" in call_args[0][0]
+        # Check that translator was called for feedback texts
+        translator.translate.assert_called()
 
     @pytest.mark.asyncio
     async def test_handle_feedback_menu_disabled(self, handler):

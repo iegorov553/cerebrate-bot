@@ -158,7 +158,16 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
             username = req.get('tg_username', translator.translate('common.unknown'))
             name = req.get('tg_first_name', '')
             text += f"• @{username} ({name})\n"
-            text += f"  `/accept @{username}` | `/decline @{username}`\n\n"
+            def escape_markdown_safe(text):
+                if not text:
+                    return ""
+                return (str(text).replace('_', '\\_').replace('*', '\\*')
+                        .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
+            
+            safe_username = escape_markdown_safe(username)
+            accept_cmd = f"`/accept @{safe_username}`"
+            decline_cmd = f"`/decline @{safe_username}`"
+            text += f"  {accept_cmd} | {decline_cmd}\n\n"
     else:
         text += f"{translator.translate('friends.requests_none_incoming')}\n\n"
 

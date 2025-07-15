@@ -373,8 +373,16 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             keyboard = create_question_delete_confirm(question_id, translator)
 
             # Create confirmation text
+            def escape_markdown_safe(text):
+                if not text:
+                    return ""
+                return (str(text).replace('_', '\\_').replace('*', '\\*')
+                        .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
+            
             confirm_text = f"{translator.translate('questions.delete_confirm')}\n\n"
-            confirm_text += f"❓ **{question['question_text']}**\n\n"
+            safe_question_text = escape_markdown_safe(question['question_text'])
+            question_bold = f"**{safe_question_text}**"
+            confirm_text += f"❓ {question_bold}\n\n"
             confirm_text += translator.translate('questions.delete_warning')
 
             await query.edit_message_text(

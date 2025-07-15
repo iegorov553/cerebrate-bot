@@ -85,7 +85,7 @@ bot/
 │   ├── scheduler_service.py #   APScheduler integration
 │   ├── multi_question_scheduler.py # Individual schedules
 │   ├── health_service.py  #     System monitoring
-│   └── whisper_client.py  #     OpenAI voice transcription
+│   └── whisper_client.py  #     Multi-provider voice transcription (Groq + OpenAI)
 ├── cache/                 # ✅ TTL caching (80% UI speed improvement)
 │   └── ttl_cache.py       #     5-minute TTL with auto-cleanup
 ├── handlers/              # ⚠️ REFACTORING NEEDED
@@ -115,8 +115,9 @@ bot/
 #### Configuration Management (`bot/config.py`)
 - **Dataclass-based** configuration with validation
 - **Environment variable** loading with defaults  
-- **Feature flags** for optional services (Whisper, Feedback, Monitoring)
+- **Feature flags** for optional services (Groq, OpenAI, Feedback, Monitoring)
 - **Safe parsing** of admin IDs and numeric values
+- **Multi-provider support** with fallback configuration
 
 #### Database Layer (`bot/database/`)
 - **Repository pattern** with domain separation
@@ -153,8 +154,16 @@ bot/
 #### Service Layer (`bot/services/`)
 - **Multi-question scheduler** with individual user schedules
 - **Health monitoring** for system components
-- **Whisper AI integration** for voice message transcription
+- **Multi-provider voice recognition** with intelligent fallback
 - **Background task management** with error tracking
+
+#### Voice Recognition System (`bot/services/whisper_client.py`)
+- **Primary Provider**: Groq whisper-large-v3 (30s timeout)
+- **Fallback Provider**: Groq whisper-large-v3-turbo (30s timeout)
+- **Final Fallback**: OpenAI whisper-1 (60s timeout)
+- **Automatic switching** on rate limits with admin notifications
+- **Smart caching** for all providers to reduce API costs
+- **Graceful degradation** when services are unavailable
 
 #### Feedback System (`bot/feedback/`)
 - **GitHub Issues automation** for bug reports and feature requests
@@ -279,6 +288,35 @@ According to `REFACTORING_PLAN.md`, these files exceed recommended sizes:
 - Update documentation before each commit
 - File size limit: 400 lines per file, 50 lines per function
 - Rate limiting is enabled by default - test with appropriate delays
+
+## Environment Variables
+
+### Voice Recognition (Optional)
+```bash
+# Primary provider (recommended)
+export GROQ_API_KEY="gsk_your_groq_key"
+
+# Fallback provider
+export OPENAI_API_KEY="sk_your_openai_key"
+
+# Model configuration (optional)
+export GROQ_PRIMARY_MODEL="whisper-large-v3"        # Default
+export GROQ_FALLBACK_MODEL="whisper-large-v3-turbo" # Default
+export GROQ_TIMEOUT_SECONDS="30"                    # Default
+```
+
+### Other Configuration
+```bash
+# Required
+export TELEGRAM_BOT_TOKEN="your_bot_token"
+export SUPABASE_URL="your_supabase_url"
+export SUPABASE_SERVICE_ROLE_KEY="your_service_key"
+
+# Optional
+export ADMIN_USER_ID="your_telegram_id"
+export SENTRY_DSN="your_sentry_dsn"
+export GITHUB_FEEDBACK_TOKEN="your_github_token"
+```
 
 ## 📚 Documentation Links
 

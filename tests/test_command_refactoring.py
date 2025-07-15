@@ -49,8 +49,8 @@ class TestCommandRefactoring:
         """Test that user commands are properly registered."""
         setup_user_commands(mock_application)
         
-        # Should register start and settings commands
-        assert mock_application.add_handler.call_count == 2
+        # Should register only start command currently
+        assert mock_application.add_handler.call_count == 1
         
         # Extract registered command names
         calls = mock_application.add_handler.call_args_list
@@ -62,8 +62,8 @@ class TestCommandRefactoring:
             elif hasattr(handler, 'command'):
                 command_names.append(handler.command)
         
+        # Verify start command is registered
         assert 'start' in command_names or any('start' in str(call) for call in calls)
-        assert 'settings' in command_names or any('settings' in str(call) for call in calls)
     
     def test_setup_social_commands_registration(self, mock_application):
         """Test that social commands are properly registered."""
@@ -166,7 +166,7 @@ class TestCommandRefactoring:
     def test_module_imports_without_errors(self):
         """Test that all command modules import without errors."""
         # Should not raise any import errors
-        from bot.handlers.commands.user_commands import start_command, settings_command
+        from bot.handlers.commands.user_commands import start_command
         from bot.handlers.commands.social_commands import add_friend_command, friends_command
         from bot.handlers.commands.config_commands import window_command, freq_command
         from bot.handlers.commands.history_commands import history_command
@@ -174,7 +174,6 @@ class TestCommandRefactoring:
         
         # All functions should be callable
         assert callable(start_command)
-        assert callable(settings_command)
         assert callable(add_friend_command)
         assert callable(friends_command)
         assert callable(window_command)
