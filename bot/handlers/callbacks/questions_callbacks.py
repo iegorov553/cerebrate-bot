@@ -147,7 +147,14 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 await self._handle_show_all_settings(query, question_manager, translator)
 
             elif data == "questions_toggle_notifications":
-                await self._handle_toggle_notifications(query, question_manager, translator)
+                # Simple toggle without separate method
+                from bot.database.user_operations import UserOperations
+                user_ops = UserOperations(self.db_client, self.user_cache)
+                user_data = await user_ops.get_user_settings(query.from_user.id)
+                current_enabled = user_data.get("enabled", True) if user_data else True
+                await user_ops.update_user_settings(query.from_user.id, {"enabled": not current_enabled})
+                await self.user_cache.invalidate(f"user_settings_{query.from_user.id}")
+                await self._handle_questions_menu(query, translator)
 
             else:
                 self.logger.warning("Unknown questions action", user_id=user.id, action=data)
@@ -503,37 +510,6 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         except Exception as e:
             self.logger.error("Error showing all settings", user_id=user.id, error=str(e))
 
-            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
-
-    async def _handle_toggle_notifications(self, query: CallbackQuery, question_manager, translator: Translator) -> None:
-        """Handle global notifications toggle."""
-        user = query.from_user
-
-        try:
-            from bot.database.user_operations import UserOperations
-
-            user_ops = UserOperations(self.db_client, self.user_cache)
-            
-            # Get current user settings
-            user_data = await user_ops.get_user_settings(user.id)
-            current_enabled = user_data.get("enabled", True) if user_data else True
-            
-            # Toggle notifications status
-            new_enabled = not current_enabled
-            success = await user_ops.update_user_settings(user.id, {"enabled": new_enabled})
-            
-            if success:
-                # Invalidate cache and refresh questions menu
-                await self.user_cache.invalidate(f"user_settings_{user.id}")
-                await self._handle_questions_menu(query, translator)
-                
-                self.logger.info("Notifications toggled", user_id=user.id, enabled=new_enabled)
-            else:
-                await query.edit_message_text(translator.translate("errors.settings_update_error"), parse_mode="Markdown")
-                self.logger.error("Failed to toggle notifications", user_id=user.id)
-
-        except Exception as e:
-            self.logger.error("Error toggling notifications", user_id=user.id, error=str(e))
             await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
     async def _handle_back_to_main(self, query: CallbackQuery, translator: Translator) -> None:
