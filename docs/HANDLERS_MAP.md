@@ -13,6 +13,7 @@
 - ✅ `questions_toggle_notifications` - встроенная логика (НЕ отдельный метод!)
 - ✅ `questions_show_all` - показать все настройки  
 - ✅ `questions_create:*`, `questions_edit:*`, `questions_delete:*`
+- ✅ `questions_edit_schedule:*` - редактирование расписания (placeholder)
 - ✅ `questions_toggle:*` - toggle статуса вопросов
 - ✅ `questions_test:*` - тестирование вопросов
 - ✅ `questions_templates_cat:*` - категории шаблонов

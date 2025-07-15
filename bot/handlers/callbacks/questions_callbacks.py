@@ -131,6 +131,9 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             elif data.startswith("questions_toggle:"):
                 await self._handle_toggle_question(query, data, question_manager, translator)
 
+            elif data.startswith("questions_edit_schedule:"):
+                await self._handle_edit_schedule(query, data, question_manager, translator)
+
             elif data.startswith("questions_test:"):
                 await self._handle_test_question(query, data, question_manager, translator)
 
@@ -510,6 +513,18 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         except Exception as e:
             self.logger.error("Error showing all settings", user_id=user.id, error=str(e))
 
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
+
+    async def _handle_edit_schedule(self, query: CallbackQuery, data: str, question_manager, translator: Translator) -> None:
+        """Handle question schedule editing."""
+        user = query.from_user
+        try:
+            question_id = int(data.split(":")[1])
+            # Placeholder: Schedule editing functionality
+            await query.edit_message_text(translator.translate("questions.edit_schedule_help"), parse_mode="Markdown")
+            self.logger.debug("Schedule edit initiated", user_id=user.id, question_id=question_id)
+        except (ValueError, IndexError) as e:
+            self.logger.error("Invalid schedule edit data", user_id=user.id, data=data, error=str(e))
             await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
     async def _handle_back_to_main(self, query: CallbackQuery, translator: Translator) -> None:
