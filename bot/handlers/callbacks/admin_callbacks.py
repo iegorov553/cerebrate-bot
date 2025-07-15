@@ -72,11 +72,11 @@ class AdminCallbackHandler(BaseCallbackHandler):
         version_string = format_version_string()
         version_info = get_version_info()
 
-        # Create admin panel message
-        admin_text = f"{translator.translate('admin.title')}\n\n"
-        admin_text += f"{translator.translate('admin.version', version=version_string)}\n"
-        admin_text += f"{translator.translate('admin.environment', env=version_info['environment'])}\n\n"
-        admin_text += f"{translator.translate('admin.choose_action')}"
+        # Create admin panel message using formatter
+        admin_text = translator.format_title(translator.translate('admin.title'))
+        admin_text += translator.format_info(translator.translate('admin.version', version=version_string))
+        admin_text += translator.format_info(translator.translate('admin.environment', env=version_info['environment']))
+        admin_text += "\n" + translator.translate('admin.choose_action')
 
         await query.edit_message_text(
             admin_text,
@@ -367,8 +367,8 @@ class AdminCallbackHandler(BaseCallbackHandler):
         keyboard = KeyboardGenerator.main_menu(is_admin, translator)
 
         # Create welcome message
-        welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-        welcome_text += translator.translate('welcome.description')
+        welcome_text = "👋 " + translator.translate('welcome.greeting', name=user.first_name)
+        welcome_text += "\n\n" + translator.translate('welcome.description')
 
         await query.edit_message_text(
             welcome_text,

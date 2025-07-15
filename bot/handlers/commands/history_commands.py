@@ -36,9 +36,12 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         InlineKeyboardButton(translator.translate('menu.history'), web_app=web_app)
     ]])
 
+    # Use formatter for combined text
+    message_text = translator.format_title(translator.translate('menu.history'))
+    message_text += translator.translate('history.webapp_description')
+    
     await update.message.reply_text(
-        f"{translator.title('menu.history')}"
-        f"{translator.translate('history.webapp_description')}",
+        message_text,
         reply_markup=keyboard,
         parse_mode='Markdown'
     )

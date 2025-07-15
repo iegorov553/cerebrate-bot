@@ -617,7 +617,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             default_q = questions_summary.get('default_question')
             if default_q:
                 status = "✅" if default_q.get('active', True) else "❌"
-                settings_text += f"{translator.translate('questions.default_marker')} {translator.translate('questions.default_question')} {status}\n"
+                settings_text += translator.translate('questions.default_marker') + " " + translator.translate('questions.default_question') + " " + status + "\n"
                 settings_text += f"   ⏰ {default_q.get('window_start', '09:00')}-{default_q.get('window_end', '22:00')}\n"
                 settings_text += f"   📊 {translator.translate('questions.interval_minutes', minutes=default_q.get('interval_minutes', 120))}\n\n"
 

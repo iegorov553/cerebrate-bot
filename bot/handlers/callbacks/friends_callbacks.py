@@ -78,9 +78,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         # Create basic friends menu
         keyboard = create_friends_menu(0, 0, translator)
 
+        # Use formatter for combined text
+        message_text = translator.format_title(translator.translate('menu.friends'))
+        message_text += translator.translate('friends.description')
+        
         await query.edit_message_text(
-            f"{translator.title('menu.friends')}"
-            f"{translator.translate('friends.description')}",
+            message_text,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
@@ -384,8 +387,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             # Generate keyboard with recommendations
             keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
 
-            # Create text with recommendations
-            text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
+            # Create text with recommendations using formatter
+            text = translator.format_title(translator.translate('friends.discover_title'))
             text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
 
             # Show first 3 recommendations in text
@@ -549,7 +552,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
                     })
 
                 keyboard = KeyboardGenerator.friend_discovery_list(recommendations, translator)
-                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
+                text = translator.format_title(translator.translate('friends.discover_title'))
                 text += translator.translate('friends.recommendations_found', count=len(recommendations)) + "\n\n"
 
                 # Show updated recommendations
@@ -580,7 +583,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
             else:
                 # No more recommendations
-                text = f"<b>{translator.translate('friends.discover_title')}</b>\n\n"
+                text = translator.format_title(translator.translate('friends.discover_title'))
                 text += translator.translate('friends.no_more_recommendations') + "\n\n"
                 text += translator.translate('friends.all_requests_sent')
                 keyboard = create_friends_menu(0, 0, translator)
@@ -610,8 +613,8 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         keyboard = KeyboardGenerator.main_menu(is_admin, translator)
 
         # Create welcome message
-        welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-        welcome_text += translator.translate('welcome.description')
+        welcome_text = "👋 " + translator.translate('welcome.greeting', name=user.first_name)
+        welcome_text += "\n\n" + translator.translate('welcome.description')
 
         await query.edit_message_text(
             welcome_text,

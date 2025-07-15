@@ -83,9 +83,12 @@ class FeedbackCallbackHandler(BaseCallbackHandler):
             )]
         ])
 
+        # Use formatter for combined text
+        message_text = translator.format_title(translator.translate('feedback.title'))
+        message_text += translator.translate('feedback.description')
+        
         await query.edit_message_text(
-            f"{translator.title('feedback.title')}"
-            f"{translator.translate('feedback.description')}",
+            message_text,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )
@@ -221,9 +224,10 @@ class FeedbackCallbackHandler(BaseCallbackHandler):
             )]
         ])
 
+        message_text = translator.translate(description_key) + "\n\n" + translator.translate('feedback.enter_description')
+        
         await query.edit_message_text(
-            f"{translator.translate(description_key)}\n\n"
-            f"{translator.translate('feedback.enter_description')}",
+            message_text,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )

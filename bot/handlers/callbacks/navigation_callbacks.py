@@ -70,8 +70,8 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         keyboard = KeyboardGenerator.main_menu(is_admin, translator)
 
         # Create welcome message
-        welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-        welcome_text += translator.translate('welcome.description')
+        welcome_text = "👋 " + translator.translate('welcome.greeting', name=user.first_name)
+        welcome_text += "\n\n" + translator.translate('welcome.description')
 
         await query.edit_message_text(
             welcome_text,
@@ -95,7 +95,7 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         # Generate language menu
         keyboard = KeyboardGenerator.language_menu(current_language, translator)
 
-        help_text = f"{translator.translate('language.title')}\n\n{translator.translate('language.subtitle')}"
+        help_text = translator.translate('language.title') + "\n\n" + translator.translate('language.subtitle')
 
         await query.edit_message_text(
             help_text,
@@ -210,9 +210,12 @@ class NavigationCallbackHandler(BaseCallbackHandler):
             )]
         ])
 
+        # Use formatter for combined text
+        message_text = translator.format_title(translator.translate('menu.history'))
+        message_text += translator.translate('history.webapp_description')
+        
         await query.edit_message_text(
-            f"{translator.title('menu.history')}"
-            f"{translator.translate('history.webapp_description')}",
+            message_text,
             reply_markup=keyboard,
             parse_mode='Markdown'
         )

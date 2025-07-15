@@ -358,6 +358,30 @@ class Translator:
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"🔒 **{escaped}**\n\n"
+    
+    # Format methods for already translated text
+    def format_bold(self, text: str) -> str:
+        """Format text as bold."""
+        escaped = self._escape_markdown(str(text))
+        return f"**{escaped}**"
+    
+    def format_title(self, text: str, emoji: str = "") -> str:
+        """Format text as title with optional emoji."""
+        escaped = self._escape_markdown(str(text))
+        formatted = f"**{escaped}**"
+        if emoji:
+            return f"{emoji} {formatted}\n\n"
+        return f"{formatted}\n\n"
+    
+    def format_info(self, text: str, emoji: str = "ℹ️") -> str:
+        """Format text as info message."""
+        escaped = self._escape_markdown(str(text))
+        return f"{emoji} {escaped}\n"
+    
+    def format_code(self, text: str) -> str:
+        """Format text as code."""
+        escaped = self._escape_markdown(str(text))
+        return f"`{escaped}`"
 
 
 # Global translator instance

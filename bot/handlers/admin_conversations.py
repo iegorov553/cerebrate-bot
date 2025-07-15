@@ -178,9 +178,8 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
         except Exception as e:
             logger.error(f"Error sending broadcast: {e}")
-            await query.edit_message_text(
-                f"{translator.translate('errors.broadcast_send_error')}:\n\n{str(e)}\n\n{translator.translate('errors.general_error')}"
-            )
+            error_message = translator.translate('errors.broadcast_send_error') + ":\n\n" + str(e) + "\n\n" + translator.translate('errors.general_error')
+            await query.edit_message_text(error_message)
 
     elif query.data == "broadcast_confirm_no":
         await query.edit_message_text(
