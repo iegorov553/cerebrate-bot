@@ -229,8 +229,8 @@
   "language": {
     "title": "🌍 **Language Selection**",
     "subtitle": "Choose your preferred language:",
-    "current": "Current language: {language_name} {flag}",
-    "changed": "✅ Language changed to {language_name} {flag}",
+    "current": "Current language: {language} {flag}",
+    "changed": "✅ Language changed to {language} {flag}",
     "russian": "Russian",
     "english": "English",
     "spanish": "Spanish",

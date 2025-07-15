@@ -151,14 +151,14 @@ class NavigationCallbackHandler(BaseCallbackHandler):
                 # Language change successful
                 success_message = new_translator.translate(
                     'language.changed',
-                    language_name=lang_info['native'],
+                    language=lang_info['native'],
                     flag=lang_info['flag']
                 )
             else:
                 # Language column might not exist, show message anyway
                 success_message = new_translator.translate(
                     'language.changed',
-                    language_name=lang_info['native'],
+                    language=lang_info['native'],
                     flag=lang_info['flag']
                 )
 
