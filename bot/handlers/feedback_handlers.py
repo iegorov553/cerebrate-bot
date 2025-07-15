@@ -113,7 +113,7 @@ async def handle_feedback_description(
     # Preview message
     preview_text = (
         f"{translator.translate('feedback.confirm_title')}\n\n"
-        f"**{translator.translate(f'feedback.{feedback_type}')}**\n\n"
+        f"{translator.title(f'feedback.{feedback_type}')}"
         f"*{description[:500]}{'...' if len(description) > 500 else ''}*"
     )
 

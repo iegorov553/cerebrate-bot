@@ -150,7 +150,7 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     incoming = requests_data.get('incoming', [])
     outgoing = requests_data.get('outgoing', [])
 
-    text = f"📥 **{translator.translate('friends.requests')}**\n\n"
+    text = translator.title('friends.requests', '📥')
 
     if incoming:
         text += f"{translator.translate('friends.requests_incoming')}\n"
@@ -191,7 +191,7 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     if not context.args:
         await update.message.reply_text(
-            f"👥 **{translator.translate('friends.accept_title')}**\n\n"
+            f"{translator.title('friends.accept_title', '👥')}"
             f"{translator.translate('friends.accept_usage')}",
             parse_mode='Markdown'
         )
@@ -256,7 +256,7 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
 
     if not context.args:
         await update.message.reply_text(
-            f"👥 **{translator.translate('friends.decline_title')}**\n\n"
+            f"{translator.title('friends.decline_title', '👥')}"
             f"{translator.translate('friends.decline_usage')}",
             parse_mode='Markdown'
         )

@@ -190,6 +190,175 @@ class Translator:
 
         return translation
 
+    # Markdown formatting methods
+    def _escape_markdown(self, text: str) -> str:
+        """
+        Escape special markdown characters.
+        
+        Args:
+            text: Text to escape
+            
+        Returns:
+            Escaped text safe for markdown
+        """
+        if not isinstance(text, str):
+            text = str(text)
+        return text.replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
+    
+    def bold(self, key: str, language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as bold text.
+        
+        Args:
+            key: Translation key
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Bold formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"**{escaped}**"
+    
+    def code(self, key: str, language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as code.
+        
+        Args:
+            key: Translation key
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Code formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"`{escaped}`"
+    
+    def title(self, key: str, emoji: str = "", language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as title with optional emoji.
+        
+        Args:
+            key: Translation key
+            emoji: Optional emoji prefix
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Title formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        formatted = f"**{escaped}**"
+        if emoji:
+            return f"{emoji} {formatted}\n\n"
+        return f"{formatted}\n\n"
+    
+    def field(self, label_key: str, value: str, language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate label key and format as field with value.
+        
+        Args:
+            label_key: Translation key for label
+            value: Field value
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Field formatted text
+        """
+        label = self.translate(label_key, language, **kwargs)
+        escaped_label = self._escape_markdown(label)
+        escaped_value = self._escape_markdown(str(value))
+        return f"**{escaped_label}:** {escaped_value}"
+    
+    def error(self, key: str, emoji: str = "❌", language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as error message.
+        
+        Args:
+            key: Translation key
+            emoji: Error emoji (default: ❌)
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Error formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"{emoji} **{escaped}**"
+    
+    def success(self, key: str, emoji: str = "✅", language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as success message.
+        
+        Args:
+            key: Translation key
+            emoji: Success emoji (default: ✅)
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Success formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"{emoji} **{escaped}**"
+    
+    def warning(self, key: str, emoji: str = "⚠️", language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as warning message.
+        
+        Args:
+            key: Translation key
+            emoji: Warning emoji (default: ⚠️)
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Warning formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"{emoji} **{escaped}**"
+    
+    def info(self, key: str, emoji: str = "ℹ️", language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as info message.
+        
+        Args:
+            key: Translation key
+            emoji: Info emoji (default: ℹ️)
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Info formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"{emoji} **{escaped}**"
+    
+    def access_denied(self, key: str = 'admin.access_denied', language: Optional[str] = None, **kwargs) -> str:
+        """
+        Translate key and format as access denied message.
+        
+        Args:
+            key: Translation key (default: admin.access_denied)
+            language: Override language (optional)
+            **kwargs: Template variables
+            
+        Returns:
+            Access denied formatted translated text
+        """
+        text = self.translate(key, language, **kwargs)
+        escaped = self._escape_markdown(text)
+        return f"🔒 **{escaped}**\n\n"
+
 
 # Global translator instance
 _global_translator = Translator()

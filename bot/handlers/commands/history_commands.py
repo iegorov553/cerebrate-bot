@@ -37,7 +37,7 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     ]])
 
     await update.message.reply_text(
-        f"**{translator.translate('menu.history')}**\n\n"
+        f"{translator.title('menu.history')}"
         f"{translator.translate('history.webapp_description')}",
         reply_markup=keyboard,
         parse_mode='Markdown'

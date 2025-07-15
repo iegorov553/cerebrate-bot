@@ -135,7 +135,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
             if not admin_ops.is_admin(user_id):
                 # Access denied
                 await query.edit_message_text(
-                    f"🔒 **{translator.translate('admin.access_denied')}**\n\n"
+                    f"{translator.access_denied('admin.access_denied')}"
                     f"{translator.translate('admin.admin_only')}",
                     reply_markup=KeyboardGenerator.main_menu(False, translator),
                     parse_mode='Markdown'

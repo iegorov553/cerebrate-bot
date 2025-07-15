@@ -79,7 +79,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         keyboard = create_friends_menu(0, 0, translator)
 
         await query.edit_message_text(
-            f"**{translator.translate('menu.friends')}**\n\n"
+            f"{translator.title('menu.friends')}"
             f"{translator.translate('friends.description')}",
             reply_markup=keyboard,
             parse_mode='Markdown'
@@ -360,7 +360,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
             if not raw_recommendations:
                 # No recommendations found
                 await query.edit_message_text(
-                    f"**{translator.translate('friends.discover_title')}**\n\n"
+                    f"{translator.title('friends.discover_title')}"
                     f"{translator.translate('friends.no_recommendations')}",
                     reply_markup=create_friends_menu(0, 0, translator),
                     parse_mode='Markdown'

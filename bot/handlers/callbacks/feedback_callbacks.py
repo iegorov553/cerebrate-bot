@@ -84,7 +84,7 @@ class FeedbackCallbackHandler(BaseCallbackHandler):
         ])
 
         await query.edit_message_text(
-            f"**{translator.translate('feedback.title')}**\n\n"
+            f"{translator.title('feedback.title')}"
             f"{translator.translate('feedback.description')}",
             reply_markup=keyboard,
             parse_mode='Markdown'

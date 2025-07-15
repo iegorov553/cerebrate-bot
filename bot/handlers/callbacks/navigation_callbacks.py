@@ -211,7 +211,7 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         ])
 
         await query.edit_message_text(
-            f"**{translator.translate('menu.history')}**\n\n"
+            f"{translator.title('menu.history')}"
             f"{translator.translate('history.webapp_description')}",
             reply_markup=keyboard,
             parse_mode='Markdown'
