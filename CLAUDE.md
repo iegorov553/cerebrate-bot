@@ -2,6 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+# 🗺️ КАРТА ПРОЕКТА - ОБЯЗАТЕЛЬНО ЧИТАЙ ПЕРЕД КАЖДОЙ ЗАДАЧЕЙ!
+
+## ⚡ КРИТИЧЕСКИЕ ФАКТЫ (ЗАПОМНИ!)
+- **Меню settings УДАЛЕНО** - все настройки в questions menu!
+- **Callback patterns**: questions_*, friends_*, admin_*, feedback_*, menu_*
+- **Handlers location**: bot/handlers/callbacks/ (см. docs/HANDLERS_MAP.md)
+- **Settings toggles**: обрабатываются в QuestionsCallbackHandler
+- **Rate limits**: по типам действий (см. bot/utils/rate_limiter.py)
+
+## 🚫 ЧТО НЕ ДЕЛАТЬ (ИЗБЕГАЙ ОШИБОК!)
+- ❌ НЕ создавать settings handlers - используй QuestionsCallbackHandler
+- ❌ НЕ добавлять отдельные методы для простых toggle (2-3 строки кода)
+- ❌ НЕ дублировать логику - проверь existing handlers в docs/HANDLERS_MAP.md
+- ❌ НЕ забывать cache invalidation после DB updates
+- ❌ НЕ коммитить без обновления CLAUDE.md и HANDLERS_MAP.md
+
+## 🎯 АЛГОРИТМ ПЕРЕД ЗАДАЧЕЙ
+1. ✅ Прочитай CLAUDE.md (этот файл)
+2. ✅ Проверь docs/HANDLERS_MAP.md - существующие handlers
+3. ✅ Проверь docs/QUICK_REFERENCE.md - паттерны и примеры
+4. ✅ Поиск в коде: `grep -r "паттерн"` 
+
+## 🔄 АЛГОРИТМ ПЕРЕД КОММИТОМ
+1. ✅ Обнови CLAUDE.md если изменилась архитектура
+2. ✅ Обнови docs/HANDLERS_MAP.md если добавил/изменил handlers
+3. ✅ Обнови docs/QUICK_REFERENCE.md если добавил новые паттерны
+4. ✅ Проверь что документация актуальна
+
+## 🏗️ Архитектурные решения  
+- **Handler pattern**: BaseCallbackHandler -> специализированные классы
+- **Callback routing**: CallbackRouter распределяет по can_handle()
+- **Settings**: в QuestionsCallbackHandler (НЕ отдельное меню!)
+- **Cache**: TTL 5 мин, ключи user_settings_{user_id}
+
 ## Project Overview
 
 **Doyobi Diary** is a modern Telegram bot for activity tracking and social connections with Enterprise-grade architecture. The project features a comprehensive ecosystem including a bot, web application, and monitoring system with hybrid modular architecture.
@@ -326,6 +360,18 @@ export GITHUB_FEEDBACK_TOKEN="your_github_token"
   - Component diagrams and data flow
   - Migration roadmap and patterns
   - Performance architecture details
+
+### 🤖 AI Development Documentation (Claude Code)
+- **[docs/HANDLERS_MAP.md](docs/HANDLERS_MAP.md)** - Complete handlers registry
+  - All callback handlers with patterns and locations
+  - Refactoring priorities and file sizes
+  - Rules for adding new handlers
+  - Deprecated/removed handlers list
+- **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - Developer quick reference
+  - Copy-paste templates for common tasks
+  - Decision tree for new features
+  - Database operation patterns
+  - Common mistakes and how to avoid them
 
 ### 🚀 Deployment and Operations
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
