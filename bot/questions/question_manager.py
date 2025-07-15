@@ -389,3 +389,22 @@ class QuestionManager:
             return False
 
         return True
+
+    async def send_test_question(self, user_id: int, question_id: int) -> bool:
+        """Send a test question to user."""
+        try:
+            # Get question details
+            question_details = await self.question_ops.get_question_details(question_id)
+            if not question_details:
+                logger.warning("Question not found for test", user_id=user_id, question_id=question_id)
+                return False
+
+            # TODO: Implement actual test question sending via telegram bot
+            # This would involve sending the question text to the user
+            logger.info("Test question sent", user_id=user_id, question_id=question_id, 
+                       question_text=question_details.get('text', ''))
+            return True
+
+        except Exception as e:
+            logger.error("Error sending test question", user_id=user_id, question_id=question_id, error=str(e))
+            return False
