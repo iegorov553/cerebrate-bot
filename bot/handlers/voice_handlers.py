@@ -20,7 +20,8 @@ from bot.services.whisper_client import (
     WhisperClient,
     AudioTooLargeError,
     AudioTooLongError,
-    TranscriptionError
+    TranscriptionError,
+    ProviderExhaustedError
 )
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
@@ -139,21 +140,37 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
     temp_file_path = None
 
     try:
-        # Check if Whisper is configured
-        if not config.openai_api_key:
-            logger.warning(f"OPENAI_API_KEY not configured for user {user.id}")
+        # Check if voice recognition is configured
+        if not config.is_voice_recognition_enabled():
+            logger.warning(f"Voice recognition not configured for user {user.id}")
             error_text = translator.translate('voice.error_not_configured')
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
 
-        logger.info(f"Processing voice message for user {user.id}, API key configured: {bool(config.openai_api_key)}, duration: {message.voice.duration}s")
+        logger.info(f"Processing voice message for user {user.id}, providers: Groq={config.is_groq_enabled()}, OpenAI={config.is_whisper_enabled()}, duration: {message.voice.duration}s")
 
-        # Create WhisperClient
+        # Create admin notification callback
+        async def admin_notification_callback(message: str):
+            if config.is_admin_configured():
+                try:
+                    await context.bot.send_message(
+                        chat_id=config.admin_user_id,
+                        text=f"🔧 Voice Recognition Provider Switch\n\n{message}"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send admin notification: {e}")
+
+        # Create WhisperClient with multiple providers
         whisper_client = WhisperClient(
-            api_key=config.openai_api_key,
-            model=config.whisper_model,
+            openai_api_key=config.openai_api_key,
+            groq_api_key=config.groq_api_key,
+            openai_model=config.whisper_model,
+            groq_primary_model=config.groq_primary_model,
+            groq_fallback_model=config.groq_fallback_model,
+            groq_timeout_seconds=config.groq_timeout_seconds,
             max_file_size_mb=config.max_voice_file_size_mb,
-            max_duration_seconds=config.max_voice_duration_seconds
+            max_duration_seconds=config.max_voice_duration_seconds,
+            admin_notification_callback=admin_notification_callback
         )
 
         # Check if file format is supported
@@ -218,6 +235,12 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 'voice.error_too_long',
                 max_duration=config.max_voice_duration_seconds
             )
+            await update_processing_message(update, processing_message_id, error_text, context.bot)
+            return
+
+        except ProviderExhaustedError as e:
+            logger.error(f"All transcription providers exhausted: {e}")
+            error_text = translator.translate('voice.error_all_providers_exhausted')
             await update_processing_message(update, processing_message_id, error_text, context.bot)
             return
 

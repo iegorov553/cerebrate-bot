@@ -315,7 +315,8 @@
     "error_save": "❌ Failed to save transcription",
     "error_no_question": "❌ Question system error",
     "error_processing": "❌ Transcription processing error",
-    "error_general": "❌ Voice message processing error"
+    "error_general": "❌ Voice message processing error",
+    "error_all_providers_exhausted": "❌ All speech recognition services are temporarily unavailable. Please try again later."
   },
   "feedback": {
     "title": "💬 Feedback",

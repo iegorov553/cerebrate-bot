@@ -77,7 +77,8 @@
    export ADMIN_USER_ID="your_telegram_id"  # Опционально: для админ-функций
    
    # Voice Messages (опционально)
-   export OPENAI_API_KEY="sk-your_openai_key"
+   export GROQ_API_KEY="gsk_your_groq_key"        # Основной провайдер (рекомендуется)
+   export OPENAI_API_KEY="sk-your_openai_key"     # Резервный провайдер
    
    # Мониторинг (опционально)
    export SENTRY_DSN="your_sentry_dsn"

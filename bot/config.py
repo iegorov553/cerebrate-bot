@@ -45,6 +45,12 @@ class Config:
     whisper_model: str = "whisper-1"
     max_voice_file_size_mb: int = 25
     max_voice_duration_seconds: int = 120
+    
+    # Groq API Configuration
+    groq_api_key: Optional[str] = None
+    groq_primary_model: str = "whisper-large-v3"
+    groq_fallback_model: str = "whisper-large-v3-turbo"
+    groq_timeout_seconds: int = 30
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -89,6 +95,12 @@ class Config:
             whisper_model=os.getenv("WHISPER_MODEL", "whisper-1"),
             max_voice_file_size_mb=int(os.getenv("MAX_VOICE_FILE_SIZE_MB", "25")),
             max_voice_duration_seconds=int(os.getenv("MAX_VOICE_DURATION_SECONDS", "120")),
+            
+            # Groq API
+            groq_api_key=os.getenv("GROQ_API_KEY"),
+            groq_primary_model=os.getenv("GROQ_PRIMARY_MODEL", "whisper-large-v3"),
+            groq_fallback_model=os.getenv("GROQ_FALLBACK_MODEL", "whisper-large-v3-turbo"),
+            groq_timeout_seconds=int(os.getenv("GROQ_TIMEOUT_SECONDS", "30")),
         )
 
     def validate(self) -> None:
@@ -117,3 +129,11 @@ class Config:
     def is_whisper_enabled(self) -> bool:
         """Check if Whisper voice recognition is enabled."""
         return self.openai_api_key is not None
+    
+    def is_groq_enabled(self) -> bool:
+        """Check if Groq API is enabled."""
+        return self.groq_api_key is not None
+    
+    def is_voice_recognition_enabled(self) -> bool:
+        """Check if any voice recognition provider is enabled."""
+        return self.is_groq_enabled() or self.is_whisper_enabled()

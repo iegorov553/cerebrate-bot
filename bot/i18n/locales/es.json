@@ -315,7 +315,8 @@
     "error_save": "❌ Error al guardar transcripción",
     "error_no_question": "❌ Error del sistema de preguntas",
     "error_processing": "❌ Error procesando transcripción",
-    "error_general": "❌ Error procesando mensaje de voz"
+    "error_general": "❌ Error procesando mensaje de voz",
+    "error_all_providers_exhausted": "❌ Todos los servicios de reconocimiento de voz están temporalmente no disponibles. Por favor intenta más tarde."
   },
   "feedback": {
     "title": "💬 Retroalimentación",
