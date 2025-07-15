@@ -430,7 +430,7 @@ class KeyboardGenerator:
         # Global notifications toggle
         notif_status = "✅" if notifications_enabled else "❌"
         notif_text = translator.translate("questions.notifications_toggle", status=notif_status)
-        keyboard.append([InlineKeyboardButton(notif_text, callback_data="settings_toggle_notifications")])
+        keyboard.append([InlineKeyboardButton(notif_text, callback_data="questions_toggle_notifications")])
 
         keyboard.append([])  # Empty row separator
 
