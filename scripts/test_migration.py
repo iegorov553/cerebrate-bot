@@ -17,10 +17,13 @@
     - Установленный пакет supabase
 """
 
-from bot.config import Config
-from supabase import create_client, Client
 import os
 import sys
+
+from supabase import Client, create_client
+
+from bot.config import Config
+
 # Removed unused imports: asyncio, datetime, typing imports
 
 # Добавляем путь к проекту
@@ -35,14 +38,9 @@ class MigrationTester:
         self.config = Config()
 
         if not self.config.SUPABASE_URL or not self.config.SUPABASE_SERVICE_ROLE_KEY:
-            raise ValueError(
-                "❌ Не найдены переменные окружения SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY"
-            )
+            raise ValueError("❌ Не найдены переменные окружения SUPABASE_URL или SUPABASE_SERVICE_ROLE_KEY")
 
-        self.supabase: Client = create_client(
-            self.config.SUPABASE_URL,
-            self.config.SUPABASE_SERVICE_ROLE_KEY
-        )
+        self.supabase: Client = create_client(self.config.SUPABASE_URL, self.config.SUPABASE_SERVICE_ROLE_KEY)
 
         print("✅ Подключение к Supabase установлено")
 
@@ -50,30 +48,24 @@ class MigrationTester:
         """Проверяет, что все необходимые таблицы созданы"""
         print("\n🔍 Проверка создания таблиц...")
 
-        required_tables = [
-            'users',
-            'tg_jobs',
-            'friendships',
-            'user_questions',
-            'question_notifications'
-        ]
+        required_tables = ["users", "tg_jobs", "friendships", "user_questions", "question_notifications"]
 
         try:
             # Получаем список всех таблиц
             result = self.supabase.rpc(
-                'exec_sql',
+                "exec_sql",
                 {
-                    'query': '''
+                    "query": """
                         SELECT table_name
                         FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_type = 'BASE TABLE'
                         ORDER BY table_name
-                    '''
-                }
+                    """
+                },
             ).execute()
 
-            existing_tables = [row['result']['table_name'] for row in result.data]
+            existing_tables = [row["result"]["table_name"] for row in result.data]
 
             missing_tables = []
             for table in required_tables:
@@ -99,29 +91,29 @@ class MigrationTester:
         print("\n🚀 Проверка функций оптимизации...")
 
         required_functions = [
-            'exec_sql',
-            'get_friend_requests_optimized',
-            'get_friends_list_optimized',
-            'get_friends_of_friends_optimized',
-            'get_user_stats',
-            'cleanup_expired_notifications'
+            "exec_sql",
+            "get_friend_requests_optimized",
+            "get_friends_list_optimized",
+            "get_friends_of_friends_optimized",
+            "get_user_stats",
+            "cleanup_expired_notifications",
         ]
 
         try:
             result = self.supabase.rpc(
-                'exec_sql',
+                "exec_sql",
                 {
-                    'query': '''
+                    "query": """
                         SELECT routine_name
                         FROM information_schema.routines
                         WHERE routine_schema = 'public'
                         AND routine_type = 'FUNCTION'
                         ORDER BY routine_name
-                    '''
-                }
+                    """
+                },
             ).execute()
 
-            existing_functions = [row['result']['routine_name'] for row in result.data]
+            existing_functions = [row["result"]["routine_name"] for row in result.data]
 
             missing_functions = []
             for func in required_functions:
@@ -148,18 +140,18 @@ class MigrationTester:
 
         try:
             result = self.supabase.rpc(
-                'exec_sql',
+                "exec_sql",
                 {
-                    'query': '''
+                    "query": """
                         SELECT indexname, tablename
                         FROM pg_indexes
                         WHERE schemaname = 'public'
                         ORDER BY tablename, indexname
-                    '''
-                }
+                    """
+                },
             ).execute()
 
-            indexes = [(row['result']['tablename'], row['result']['indexname']) for row in result.data]
+            indexes = [(row["result"]["tablename"], row["result"]["indexname"]) for row in result.data]
 
             # Группируем индексы по таблицам
             indexes_by_table = {}
@@ -170,10 +162,10 @@ class MigrationTester:
 
             # Проверяем критически важные индексы
             critical_indexes = {
-                'users': ['idx_users_last_notification_sent', 'idx_users_language'],
-                'tg_jobs': ['idx_tg_jobs_tg_id', 'idx_tg_jobs_question'],
-                'friendships': ['idx_friendships_requester', 'idx_friendships_addressee'],
-                'user_questions': ['idx_user_questions_default', 'idx_user_questions_user_active']
+                "users": ["idx_users_last_notification_sent", "idx_users_language"],
+                "tg_jobs": ["idx_tg_jobs_tg_id", "idx_tg_jobs_question"],
+                "friendships": ["idx_friendships_requester", "idx_friendships_addressee"],
+                "user_questions": ["idx_user_questions_default", "idx_user_questions_user_active"],
             }
 
             total_indexes = sum(len(idx_list) for idx_list in indexes_by_table.values())
@@ -206,24 +198,24 @@ class MigrationTester:
 
         try:
             # Проверяем пользователей
-            users_result = self.supabase.table('users').select('tg_id, tg_username, language').execute()
+            users_result = self.supabase.table("users").select("tg_id, tg_username, language").execute()
             users_count = len(users_result.data)
             print(f"  ✅ Пользователей: {users_count}")
 
             # Проверяем вопросы
-            questions_result = self.supabase.table('user_questions').select('id, user_id, is_default').execute()
+            questions_result = self.supabase.table("user_questions").select("id, user_id, is_default").execute()
             questions_count = len(questions_result.data)
-            default_questions = sum(1 for q in questions_result.data if q['is_default'])
+            default_questions = sum(1 for q in questions_result.data if q["is_default"])
             print(f"  ✅ Вопросов: {questions_count} (дефолтных: {default_questions})")
 
             # Проверяем активности
-            jobs_result = self.supabase.table('tg_jobs').select('id, tg_id, question_id').execute()
+            jobs_result = self.supabase.table("tg_jobs").select("id, tg_id, question_id").execute()
             jobs_count = len(jobs_result.data)
-            jobs_with_questions = sum(1 for j in jobs_result.data if j['question_id'])
+            jobs_with_questions = sum(1 for j in jobs_result.data if j["question_id"])
             print(f"  ✅ Активностей: {jobs_count} (с привязкой к вопросам: {jobs_with_questions})")
 
             # Проверяем дружеские связи
-            friendships_result = self.supabase.table('friendships').select('friendship_id, status').execute()
+            friendships_result = self.supabase.table("friendships").select("friendship_id, status").execute()
             friendships_count = len(friendships_result.data)
             print(f"  ✅ Дружеских связей: {friendships_count}")
 
@@ -245,7 +237,7 @@ class MigrationTester:
 
         try:
             # Тестируем статистику пользователей
-            stats_result = self.supabase.rpc('get_user_stats').execute()
+            stats_result = self.supabase.rpc("get_user_stats").execute()
             if stats_result.data:
                 stats = stats_result.data[0]
                 print(f"  ✅ get_user_stats: {stats['total_users']} пользователей, {stats['active_users']} активных")
@@ -254,31 +246,24 @@ class MigrationTester:
                 return False
 
             # Получаем ID первого тестового пользователя
-            users_result = self.supabase.table('users').select('tg_id').limit(1).execute()
+            users_result = self.supabase.table("users").select("tg_id").limit(1).execute()
             if not users_result.data:
                 print("  ❌ Нет пользователей для тестирования")
                 return False
 
-            test_user_id = users_result.data[0]['tg_id']
+            test_user_id = users_result.data[0]["tg_id"]
 
             # Тестируем список друзей
-            friends_result = self.supabase.rpc(
-                'get_friends_list_optimized',
-                {'p_user_id': test_user_id}
-            ).execute()
+            friends_result = self.supabase.rpc("get_friends_list_optimized", {"p_user_id": test_user_id}).execute()
             print(f"  ✅ get_friends_list_optimized: {len(friends_result.data)} друзей")
 
             # Тестируем запросы в друзья
-            requests_result = self.supabase.rpc(
-                'get_friend_requests_optimized',
-                {'p_user_id': test_user_id}
-            ).execute()
+            requests_result = self.supabase.rpc("get_friend_requests_optimized", {"p_user_id": test_user_id}).execute()
             print(f"  ✅ get_friend_requests_optimized: {len(requests_result.data)} запросов")
 
             # Тестируем поиск друзей друзей
             discovery_result = self.supabase.rpc(
-                'get_friends_of_friends_optimized',
-                {'p_user_id': test_user_id, 'p_limit': 5}
+                "get_friends_of_friends_optimized", {"p_user_id": test_user_id, "p_limit": 5}
             ).execute()
             print(f"  ✅ get_friends_of_friends_optimized: {len(discovery_result.data)} рекомендаций")
 
@@ -296,11 +281,13 @@ class MigrationTester:
         try:
             # Тестируем ограничение на язык пользователя
             try:
-                self.supabase.table('users').insert({
-                    'tg_id': 999999999,
-                    'tg_username': 'test_constraint',
-                    'language': 'invalid_lang'  # Недопустимый язык
-                }).execute()
+                self.supabase.table("users").insert(
+                    {
+                        "tg_id": 999999999,
+                        "tg_username": "test_constraint",
+                        "language": "invalid_lang",  # Недопустимый язык
+                    }
+                ).execute()
                 print("  ❌ Ограничение на язык не работает")
                 return False
             except Exception:
@@ -308,10 +295,12 @@ class MigrationTester:
 
             # Тестируем ограничение на дружбу с самим собой
             try:
-                self.supabase.table('friendships').insert({
-                    'requester_id': 123456789,
-                    'addressee_id': 123456789  # Тот же пользователь
-                }).execute()
+                self.supabase.table("friendships").insert(
+                    {
+                        "requester_id": 123456789,
+                        "addressee_id": 123456789,  # Тот же пользователь
+                    }
+                ).execute()
                 print("  ❌ Ограничение на дружбу с собой не работает")
                 return False
             except Exception:
@@ -320,12 +309,14 @@ class MigrationTester:
             # Тестируем ограничение на минимальный интервал в вопросах
             try:
                 test_user_id = 123456789
-                self.supabase.table('user_questions').insert({
-                    'user_id': test_user_id,
-                    'question_name': 'Test Question',
-                    'question_text': 'Test?',
-                    'interval_minutes': 15  # Меньше минимального (30)
-                }).execute()
+                self.supabase.table("user_questions").insert(
+                    {
+                        "user_id": test_user_id,
+                        "question_name": "Test Question",
+                        "question_text": "Test?",
+                        "interval_minutes": 15,  # Меньше минимального (30)
+                    }
+                ).execute()
                 print("  ❌ Ограничение на минимальный интервал не работает")
                 return False
             except Exception:
@@ -349,7 +340,7 @@ class MigrationTester:
             ("Создание индексов", self.test_indexes_created),
             ("Тестовые данные", self.test_test_data),
             ("Функции оптимизации", self.test_optimization_functions),
-            ("Ограничения БД", self.test_constraints)
+            ("Ограничения БД", self.test_constraints),
         ]
 
         passed_tests = 0

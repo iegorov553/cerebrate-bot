@@ -29,7 +29,7 @@ class TestHandlerIntegration:
         application = MagicMock(spec=Application)
         application.bot_data = {}
 
-        with patch('bot.database.client.create_client'):
+        with patch("bot.database.client.create_client"):
             config = Config.from_env()
             db_client = MagicMock(spec=DatabaseClient)
             user_cache = MagicMock(spec=TTLCache)
@@ -39,22 +39,19 @@ class TestHandlerIntegration:
             callback_router = CallbackRouter(db_client, config, user_cache)
 
             # Store dependencies in bot_data
-            application.bot_data.update({
-                'db_client': db_client,
-                'user_cache': user_cache,
-                'rate_limiter': rate_limiter,
-                'config': config
-            })
+            application.bot_data.update(
+                {"db_client": db_client, "user_cache": user_cache, "rate_limiter": rate_limiter, "config": config}
+            )
 
             # Verify bot_data was populated
-            assert 'db_client' in application.bot_data
-            assert 'user_cache' in application.bot_data
-            assert 'rate_limiter' in application.bot_data
-            assert 'config' in application.bot_data
+            assert "db_client" in application.bot_data
+            assert "user_cache" in application.bot_data
+            assert "rate_limiter" in application.bot_data
+            assert "config" in application.bot_data
 
             # Verify router was created successfully
             assert callback_router is not None
-            assert hasattr(callback_router, 'route_callback')
+            assert hasattr(callback_router, "route_callback")
 
     @pytest.mark.asyncio
     async def test_keyboard_callback_data_consistency(self):
@@ -72,9 +69,7 @@ class TestHandlerIntegration:
                     callback_data_values.append(button.callback_data)
 
         # Define what callback handler should support
-        expected_handlers = [
-            "menu_questions", "menu_friends", "menu_language", "feedback_menu"
-        ]
+        expected_handlers = ["menu_questions", "menu_friends", "menu_language", "feedback_menu"]
 
         # Verify all expected callback_data are present
         for expected in expected_handlers:
@@ -95,7 +90,7 @@ class TestHandlerIntegration:
         application = MagicMock(spec=Application)
         application.bot_data = {}
 
-        with patch('bot.database.client.create_client'):
+        with patch("bot.database.client.create_client"):
             config = Config.from_env()
             db_client = MagicMock(spec=DatabaseClient)
             user_cache = MagicMock(spec=TTLCache)
@@ -105,7 +100,7 @@ class TestHandlerIntegration:
             setup_message_handlers(application, db_client, user_cache, rate_limiter, config)
 
             # Verify bot_data was populated
-            assert 'db_client' in application.bot_data
+            assert "db_client" in application.bot_data
 
             # Verify MessageHandler was registered
             application.add_handler.assert_called_once()
@@ -136,32 +131,28 @@ class TestHandlerIntegration:
         context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
 
         # Mock bot_data
-        with patch('bot.database.client.create_client'):
+        with patch("bot.database.client.create_client"):
             config = Config.from_env()
             db_client = MagicMock(spec=DatabaseClient)
             user_cache = MagicMock(spec=TTLCache)
 
-            context.bot_data = {
-                'config': config,
-                'db_client': db_client,
-                'user_cache': user_cache
-            }
+            context.bot_data = {"config": config, "db_client": db_client, "user_cache": user_cache}
 
             # Mock user operations
             mock_user_data = {
-                'enabled': True,
-                'window_start': '09:00:00',
-                'window_end': '22:00:00',
-                'interval_min': 120,
-                'language': 'ru'
+                "enabled": True,
+                "window_start": "09:00:00",
+                "window_end": "22:00:00",
+                "interval_min": 120,
+                "language": "ru",
             }
 
-            with patch('bot.database.user_operations.UserOperations') as mock_user_ops_class:
+            with patch("bot.database.user_operations.UserOperations") as mock_user_ops_class:
                 mock_user_ops = AsyncMock()
                 mock_user_ops.get_user_settings.return_value = mock_user_data
                 mock_user_ops_class.return_value = mock_user_ops
 
-                with patch('bot.questions.QuestionManager') as mock_question_manager_class:
+                with patch("bot.questions.QuestionManager") as mock_question_manager_class:
                     mock_question_manager = AsyncMock()
                     mock_question_manager.get_user_questions.return_value = []
                     mock_question_manager_class.return_value = mock_question_manager
@@ -206,16 +197,16 @@ class TestHandlerIntegration:
         context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
 
         # Mock bot_data
-        with patch('bot.database.client.create_client'):
+        with patch("bot.database.client.create_client"):
             config = Config.from_env()
             context.bot_data = {
-                'config': config,
-                'db_client': MagicMock(spec=DatabaseClient),
-                'user_cache': MagicMock(spec=TTLCache)
+                "config": config,
+                "db_client": MagicMock(spec=DatabaseClient),
+                "user_cache": MagicMock(spec=TTLCache),
             }
 
             # Mock user operations
-            with patch('bot.database.user_operations.UserOperations') as mock_user_ops_class:
+            with patch("bot.database.user_operations.UserOperations") as mock_user_ops_class:
                 mock_user_ops = AsyncMock()
                 mock_user_ops.ensure_user_exists.return_value = {"id": 123456789}
                 mock_user_ops.log_activity.return_value = True
@@ -226,17 +217,14 @@ class TestHandlerIntegration:
 
                 # Verify user was registered
                 mock_user_ops.ensure_user_exists.assert_called_once_with(
-                    tg_id=123456789,
-                    username="testuser",
-                    first_name="Test",
-                    last_name=None
+                    tg_id=123456789, username="testuser", first_name="Test", last_name=None
                 )
 
                 # Verify activity was logged (with question_id parameter)
                 mock_user_ops.log_activity.assert_called_once()
                 args, kwargs = mock_user_ops.log_activity.call_args
                 assert args == (123456789, "This is my activity")
-                assert 'question_id' in kwargs
+                assert "question_id" in kwargs
 
     @pytest.mark.asyncio
     async def test_command_exclusion_from_activity_logging(self):
@@ -297,7 +285,7 @@ class TestTestingStrategy:
             "Activity logging",
             "Friend management",
             "Callback handler integration",
-            "Message handler integration"
+            "Message handler integration",
         ]
 
         # TODO: Verify each path has corresponding tests

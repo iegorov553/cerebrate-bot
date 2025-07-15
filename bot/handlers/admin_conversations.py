@@ -18,8 +18,8 @@ from telegram.ext import (
 from bot.admin.admin_operations import AdminOperations
 from bot.admin.broadcast_manager import BroadcastManager
 from bot.config import Config
-from bot.i18n.translator import Translator
 from bot.database.client import DatabaseClient
+from bot.i18n.translator import Translator
 from bot.utils.rate_limiter import MultiTierRateLimiter, rate_limit
 from monitoring import get_logger, set_user_context, track_errors_async
 
@@ -33,19 +33,19 @@ WAITING_BROADCAST_CONFIRMATION = 2
 
 def require_admin(func):
     """Decorator to require admin privileges."""
+
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         if not user:
             return ConversationHandler.END
 
-        admin_ops: AdminOperations = context.bot_data['admin_ops']
+        admin_ops: AdminOperations = context.bot_data["admin_ops"]
         if not admin_ops.is_admin(user.id):
-            await update.message.reply_text(
-                translator.translate('admin.access_denied')
-            )
+            await update.message.reply_text(translator.translate("admin.access_denied"))
             return ConversationHandler.END
 
         return await func(update, context)
+
     return wrapper
 
 
@@ -62,7 +62,7 @@ async def start_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         + translator.translate("broadcast.enter_message")
         + translator.translate("broadcast.markdown_support")
         + translator.translate("broadcast.cancel_info"),
-        parse_mode='Markdown'
+        parse_mode="Markdown",
     )
 
     return WAITING_BROADCAST_TEXT
@@ -83,7 +83,7 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
         + translator.translate("broadcast.enter_message")
         + translator.translate("broadcast.markdown_support")
         + translator.translate("broadcast.cancel_info"),
-        parse_mode='Markdown'
+        parse_mode="Markdown",
     )
 
     return WAITING_BROADCAST_TEXT
@@ -95,15 +95,17 @@ async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TY
     message_text = update.message.text
 
     # Store broadcast text in user_data
-    context.user_data['broadcast_text'] = message_text
+    context.user_data["broadcast_text"] = message_text
 
     # Create confirmation keyboard
-    keyboard = InlineKeyboardMarkup([
+    keyboard = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(translator.translate('broadcast.confirm_yes'), callback_data="broadcast_confirm_yes"),
-            InlineKeyboardButton(translator.translate('broadcast.confirm_no'), callback_data="broadcast_confirm_no")
+            [
+                InlineKeyboardButton(translator.translate("broadcast.confirm_yes"), callback_data="broadcast_confirm_yes"),
+                InlineKeyboardButton(translator.translate("broadcast.confirm_no"), callback_data="broadcast_confirm_no"),
+            ]
         ]
-    ])
+    )
 
     # Show preview with buttons
     preview_text = (
@@ -112,11 +114,7 @@ async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TY
         f"{translator.translate('broadcast.confirm_question')}"
     )
 
-    await update.message.reply_text(
-        preview_text,
-        reply_markup=keyboard,
-        parse_mode='Markdown'
-    )
+    await update.message.reply_text(preview_text, reply_markup=keyboard, parse_mode="Markdown")
 
     return WAITING_BROADCAST_CONFIRMATION
 
@@ -132,15 +130,13 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
     if query.data == "broadcast_confirm_yes":
         # Get broadcast text
-        broadcast_text = context.user_data.get('broadcast_text')
+        broadcast_text = context.user_data.get("broadcast_text")
         if not broadcast_text:
-            await query.edit_message_text(
-                translator.translate('errors.broadcast_not_found')
-            )
+            await query.edit_message_text(translator.translate("errors.broadcast_not_found"))
             return ConversationHandler.END
 
         # Get dependencies
-        db_client: DatabaseClient = context.bot_data['db_client']
+        db_client: DatabaseClient = context.bot_data["db_client"]
 
         # Create broadcast manager and send
         from bot.database.user_operations import UserOperations
@@ -148,20 +144,13 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 
         cache_manager = CacheManager()
         user_ops = UserOperations(db_client, cache_manager)
-        broadcast_manager = BroadcastManager(
-            bot=context.bot,
-            user_operations=user_ops
-        )
+        broadcast_manager = BroadcastManager(bot=context.bot, user_operations=user_ops)
 
-        await query.edit_message_text(
-            translator.translate('broadcast.sending_message')
-        )
+        await query.edit_message_text(translator.translate("broadcast.sending_message"))
 
         try:
             # Send broadcast
-            result = await broadcast_manager.send_broadcast(
-                message=broadcast_text
-            )
+            result = await broadcast_manager.send_broadcast(message=broadcast_text)
 
             # Show results
             success_text = (
@@ -174,17 +163,21 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
                 f"⏱️ Время выполнения: {result.duration_seconds:.1f} сек"
             )
 
-            await query.edit_message_text(success_text, parse_mode='Markdown')
+            await query.edit_message_text(success_text, parse_mode="Markdown")
 
         except Exception as e:
             logger.error(f"Error sending broadcast: {e}")
-            error_message = translator.translate('errors.broadcast_send_error') + ":\n\n" + str(e) + "\n\n" + translator.translate('errors.general_error')
+            error_message = (
+                translator.translate("errors.broadcast_send_error")
+                + ":\n\n"
+                + str(e)
+                + "\n\n"
+                + translator.translate("errors.general_error")
+            )
             await query.edit_message_text(error_message)
 
     elif query.data == "broadcast_confirm_no":
-        await query.edit_message_text(
-            translator.translate('broadcast.cancelled_message')
-        )
+        await query.edit_message_text(translator.translate("broadcast.cancelled_message"))
 
     # Clear user data and end conversation
     context.user_data.clear()
@@ -196,9 +189,7 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     """Cancel broadcast conversation."""
     context.user_data.clear()
 
-    await update.message.reply_text(
-        translator.translate('broadcast.creation_cancelled')
-    )
+    await update.message.reply_text(translator.translate("broadcast.creation_cancelled"))
 
     return ConversationHandler.END
 
@@ -208,8 +199,7 @@ async def broadcast_timeout(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     """Handle conversation timeout."""
     if update.effective_user:
         await context.bot.send_message(
-            chat_id=update.effective_user.id,
-            text=translator.translate('broadcast.timeout_message')
+            chat_id=update.effective_user.id, text=translator.translate("broadcast.timeout_message")
         )
 
 
@@ -219,42 +209,28 @@ def create_broadcast_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[
             CommandHandler("broadcast", start_broadcast),
-            CallbackQueryHandler(
-                start_broadcast_from_callback,
-                pattern="^admin_broadcast$"
-            )
+            CallbackQueryHandler(start_broadcast_from_callback, pattern="^admin_broadcast$"),
         ],
         states={
-            WAITING_BROADCAST_TEXT: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND,
-                    handle_broadcast_text
-                )
-            ],
+            WAITING_BROADCAST_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_broadcast_text)],
             WAITING_BROADCAST_CONFIRMATION: [
-                CallbackQueryHandler(
-                    handle_broadcast_confirmation,
-                    pattern="^broadcast_confirm_(yes|no)$"
-                )
+                CallbackQueryHandler(handle_broadcast_confirmation, pattern="^broadcast_confirm_(yes|no)$")
             ],
         },
         fallbacks=[
             CommandHandler("cancel", cancel_broadcast),
-            MessageHandler(filters.COMMAND, cancel_broadcast)  # любая команда отменяет
+            MessageHandler(filters.COMMAND, cancel_broadcast),  # любая команда отменяет
         ],
         per_user=True,  # отдельный диалог для каждого пользователя
         per_message=True,  # отслеживать для каждого сообщения
         conversation_timeout=300,  # 5 минут
         name="broadcast_conversation",
-        persistent=False  # не сохраняем между перезапусками
+        persistent=False,  # не сохраняем между перезапусками
     )
 
 
 def setup_admin_conversations(
-    application: Application,
-    db_client: DatabaseClient,
-    rate_limiter: MultiTierRateLimiter,
-    config: Config
+    application: Application, db_client: DatabaseClient, rate_limiter: MultiTierRateLimiter, config: Config
 ) -> None:
     """Setup all admin conversation handlers."""
 
@@ -266,12 +242,9 @@ def setup_admin_conversations(
     admin_ops = AdminOperations(db_client, config)
 
     # Store in bot data for handlers
-    application.bot_data.update({
-        'db_client': db_client,
-        'config': config,
-        'admin_ops': admin_ops,
-        'rate_limiter': rate_limiter
-    })
+    application.bot_data.update(
+        {"db_client": db_client, "config": config, "admin_ops": admin_ops, "rate_limiter": rate_limiter}
+    )
 
     # Add broadcast conversation with HIGH PRIORITY
     broadcast_conv = create_broadcast_conversation()

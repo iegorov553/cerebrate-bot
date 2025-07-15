@@ -9,6 +9,7 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 @pytest.mark.integration
 class TestBotIntegration:
     """Integration tests for bot functionality."""
@@ -27,11 +28,11 @@ class TestBotIntegration:
         mock_table = mock_supabase.table()
         mock_table.select().eq().execute.side_effect = [
             mock_empty_response,  # User doesn't exist
-            mock_create_response  # User created
+            mock_create_response,  # User created
         ]
         mock_table.insert().execute.return_value = mock_create_response
 
-        with patch('bot.database.client.create_client') as mock_create_client:
+        with patch("bot.database.client.create_client") as mock_create_client:
             mock_create_client.return_value = mock_supabase
 
             from bot.config import Config
@@ -42,12 +43,7 @@ class TestBotIntegration:
             db_client = DatabaseClient(config)
             user_ops = UserOperations(db_client, None)
 
-            await user_ops.ensure_user_exists(
-                tg_id=123456789,
-                username="testuser",
-                first_name="Test",
-                last_name="User"
-            )
+            await user_ops.ensure_user_exists(tg_id=123456789, username="testuser", first_name="Test", last_name="User")
 
         # Verify user was created
         assert mock_table.insert.call_count >= 1
@@ -62,7 +58,7 @@ class TestBotIntegration:
     @pytest.mark.asyncio
     async def test_friend_request_workflow(self, mock_supabase):
         """Test complete friend request workflow."""
-        with patch('bot.database.client.create_client') as mock_create_client:
+        with patch("bot.database.client.create_client") as mock_create_client:
             mock_create_client.return_value = mock_supabase
 
             from bot.config import Config
@@ -107,18 +103,20 @@ class TestBotIntegration:
         """Test notification scheduling with user settings."""
         # Mock user with specific settings
         mock_user_response = MagicMock()
-        mock_user_response.data = [{
-            "tg_id": 123456789,
-            "enabled": True,
-            "window_start": "09:00:00",
-            "window_end": "17:00:00",
-            "interval_min": 60,
-            "last_notification_sent": None
-        }]
+        mock_user_response.data = [
+            {
+                "tg_id": 123456789,
+                "enabled": True,
+                "window_start": "09:00:00",
+                "window_end": "17:00:00",
+                "interval_min": 60,
+                "last_notification_sent": None,
+            }
+        ]
 
         mock_supabase.table().select().eq().execute.return_value = mock_user_response
 
-        with patch('bot.database.client.DatabaseClient'):
+        with patch("bot.database.client.DatabaseClient"):
             from cerebrate_bot import get_user_settings_cached
 
             settings = await get_user_settings_cached(123456789)
@@ -142,15 +140,15 @@ class TestBotIntegration:
             "enabled": True,
             "window_start": "09:00:00",
             "window_end": "17:00:00",
-            "interval_min": 60
+            "interval_min": 60,
         }
 
-        with patch('cerebrate_bot.supabase') as mock_supabase:
+        with patch("cerebrate_bot.supabase") as mock_supabase:
             mock_response = MagicMock()
             mock_response.data = [mock_user_data]
             mock_supabase.table().select().eq().execute.return_value = mock_response
 
-            with patch('cerebrate_bot.cache', cache):
+            with patch("cerebrate_bot.cache", cache):
                 # First call should hit database
                 result1 = await get_user_settings_cached(123456789)
 

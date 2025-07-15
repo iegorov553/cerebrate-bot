@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 class Translator:
     """Main translation class with template support and fallbacks."""
 
-    def __init__(self, default_language: str = 'ru'):
+    def __init__(self, default_language: str = "ru"):
         self.default_language = default_language
         self.current_language = default_language
         self._translations: Dict[str, Dict[str, Any]] = {}
@@ -21,19 +21,19 @@ class Translator:
 
     def _load_all_translations(self) -> None:
         """Load all translation files."""
-        locales_dir = os.path.join(os.path.dirname(__file__), 'locales')
+        locales_dir = os.path.join(os.path.dirname(__file__), "locales")
 
         if not os.path.exists(locales_dir):
             logger.error(f"Locales directory not found: {locales_dir}")
             return
 
         for filename in os.listdir(locales_dir):
-            if filename.endswith('.json'):
+            if filename.endswith(".json"):
                 lang_code = filename[:-5]  # Remove .json extension
                 file_path = os.path.join(locales_dir, filename)
 
                 try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         self._translations[lang_code] = json.load(f)
                     logger.info(f"Loaded translations for language: {lang_code}")
                 except Exception as e:
@@ -107,7 +107,7 @@ class Translator:
         # Navigate through nested dictionary using dot notation
         current = self._translations[language]
 
-        for part in key.split('.'):
+        for part in key.split("."):
             if isinstance(current, dict) and part in current:
                 current = current[part]
             else:
@@ -130,16 +130,12 @@ class Translator:
             Dictionary with language information
         """
         language_names = {
-            'ru': {'name': self.translate("language.russian"), 'native': self.translate("language.russian"), 'flag': '🇷🇺'},
-            'en': {'name': 'English', 'native': 'English', 'flag': '🇺🇸'},
-            'es': {'name': 'Spanish', 'native': 'Español', 'flag': '🇪🇸'}
+            "ru": {"name": self.translate("language.russian"), "native": self.translate("language.russian"), "flag": "🇷🇺"},
+            "en": {"name": "English", "native": "English", "flag": "🇺🇸"},
+            "es": {"name": "Spanish", "native": "Español", "flag": "🇪🇸"},
         }
 
-        return language_names.get(language_code, {
-            'name': language_code,
-            'native': language_code,
-            'flag': '🌐'
-        })
+        return language_names.get(language_code, {"name": language_code, "native": language_code, "flag": "🌐"})
 
     def pluralize(self, key: str, count: int, language: Optional[str] = None, **kwargs) -> str:
         """
@@ -154,7 +150,7 @@ class Translator:
         Returns:
             Pluralized translation
         """
-        kwargs['count'] = count
+        kwargs["count"] = count
         target_lang = language or self.current_language
 
         # Try different pluralization keys
@@ -194,59 +190,59 @@ class Translator:
     def _escape_markdown(self, text: str) -> str:
         """
         Escape special markdown characters.
-        
+
         Args:
             text: Text to escape
-            
+
         Returns:
             Escaped text safe for markdown
         """
         if not isinstance(text, str):
             text = str(text)
-        return text.replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
-    
+        return text.replace("*", "\\*").replace("_", "\\_").replace("`", "\\`")
+
     def bold(self, key: str, language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as bold text.
-        
+
         Args:
             key: Translation key
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Bold formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"**{escaped}**"
-    
+
     def code(self, key: str, language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as code.
-        
+
         Args:
             key: Translation key
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Code formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"`{escaped}`"
-    
+
     def title(self, key: str, emoji: str = "", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as title with optional emoji.
-        
+
         Args:
             key: Translation key
             emoji: Optional emoji prefix
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Title formatted translated text
         """
@@ -256,17 +252,17 @@ class Translator:
         if emoji:
             return f"{emoji} {formatted}\n\n"
         return f"{formatted}\n\n"
-    
+
     def field(self, label_key: str, value: str, language: Optional[str] = None, **kwargs) -> str:
         """
         Translate label key and format as field with value.
-        
+
         Args:
             label_key: Translation key for label
             value: Field value
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Field formatted text
         """
@@ -274,97 +270,97 @@ class Translator:
         escaped_label = self._escape_markdown(label)
         escaped_value = self._escape_markdown(str(value))
         return f"**{escaped_label}:** {escaped_value}"
-    
+
     def error(self, key: str, emoji: str = "❌", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as error message.
-        
+
         Args:
             key: Translation key
             emoji: Error emoji (default: ❌)
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Error formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"{emoji} **{escaped}**"
-    
+
     def success(self, key: str, emoji: str = "✅", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as success message.
-        
+
         Args:
             key: Translation key
             emoji: Success emoji (default: ✅)
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Success formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"{emoji} **{escaped}**"
-    
+
     def warning(self, key: str, emoji: str = "⚠️", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as warning message.
-        
+
         Args:
             key: Translation key
             emoji: Warning emoji (default: ⚠️)
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Warning formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"{emoji} **{escaped}**"
-    
+
     def info(self, key: str, emoji: str = "ℹ️", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as info message.
-        
+
         Args:
             key: Translation key
             emoji: Info emoji (default: ℹ️)
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Info formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"{emoji} **{escaped}**"
-    
-    def access_denied(self, key: str = 'admin.access_denied', language: Optional[str] = None, **kwargs) -> str:
+
+    def access_denied(self, key: str = "admin.access_denied", language: Optional[str] = None, **kwargs) -> str:
         """
         Translate key and format as access denied message.
-        
+
         Args:
             key: Translation key (default: admin.access_denied)
             language: Override language (optional)
             **kwargs: Template variables
-            
+
         Returns:
             Access denied formatted translated text
         """
         text = self.translate(key, language, **kwargs)
         escaped = self._escape_markdown(text)
         return f"🔒 **{escaped}**\n\n"
-    
+
     # Format methods for already translated text
     def format_bold(self, text: str) -> str:
         """Format text as bold."""
         escaped = self._escape_markdown(str(text))
         return f"**{escaped}**"
-    
+
     def format_title(self, text: str, emoji: str = "") -> str:
         """Format text as title with optional emoji."""
         escaped = self._escape_markdown(str(text))
@@ -372,12 +368,12 @@ class Translator:
         if emoji:
             return f"{emoji} {formatted}\n\n"
         return f"{formatted}\n\n"
-    
+
     def format_info(self, text: str, emoji: str = "ℹ️") -> str:
         """Format text as info message."""
         escaped = self._escape_markdown(str(text))
         return f"{emoji} {escaped}\n"
-    
+
     def format_code(self, text: str) -> str:
         """Format text as code."""
         escaped = self._escape_markdown(str(text))

@@ -34,7 +34,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"{translator.translate('friends.add_friend_title')}\n\n"
             f"{translator.translate('friends.add_friend_usage')}\n\n"
             f"{translator.translate('friends.add_friend_example')}",
-            parse_mode='Markdown'
+            parse_mode="Markdown",
         )
         return
 
@@ -42,23 +42,23 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     target_username_raw = context.args[0]
 
     from bot.utils.datetime_utils import validate_username
+
     is_valid, error_msg = validate_username(target_username_raw)
     if not is_valid:
         await update.message.reply_text(
-            f"❌ {error_msg}\n\n"
-            f"{translator.translate('friends.add_friend_example')}",
-            parse_mode='Markdown'
+            f"❌ {error_msg}\n\n" f"{translator.translate('friends.add_friend_example')}", parse_mode="Markdown"
         )
         return
 
-    target_username = target_username_raw.lstrip('@')
+    target_username = target_username_raw.lstrip("@")
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     # Implement friend request logic
     from bot.database.friend_operations import FriendOperations
+
     friend_ops = FriendOperations(db_client)
     user_ops = UserOperations(db_client, user_cache)
 
@@ -71,7 +71,7 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         return
 
-    target_id = target_user['tg_id']
+    target_id = target_user["tg_id"]
 
     # Send friend request (will check for existing friendship internally)
     success = await friend_ops.create_friend_request(user.id, target_id)
@@ -86,15 +86,13 @@ async def add_friend_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             await context.bot.send_message(
                 chat_id=target_id,
                 text=f"{translator.translate('friends.add_friend_notification', username=user.username or user.first_name)}\n\n"
-                     f"{translator.translate('friends.add_friend_help')}"
+                f"{translator.translate('friends.add_friend_help')}",
             )
         except Exception as e:
             logger.warning(f"Could not notify user {target_id}: {e}")
 
     else:
-        await update.message.reply_text(
-            translator.translate('friends.request_failed')
-        )
+        await update.message.reply_text(translator.translate("friends.request_failed"))
 
 
 @rate_limit("general")
@@ -116,10 +114,9 @@ async def friends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     keyboard = create_friends_menu(0, 0, translator)
 
     await update.message.reply_text(
-        f"{translator.translate('friends.title')}\n\n"
-        f"{translator.translate('friends.choose_action')}",
+        f"{translator.translate('friends.title')}\n\n" f"{translator.translate('friends.choose_action')}",
         reply_markup=keyboard,
-        parse_mode='Markdown'
+        parse_mode="Markdown",
     )
 
 
@@ -139,31 +136,39 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     translator.set_language(user_language)
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
+    db_client: DatabaseClient = context.bot_data["db_client"]
 
     from bot.database.friend_operations import FriendOperations
+
     friend_ops = FriendOperations(db_client)
 
     # Get friend requests
     requests_data = await friend_ops.get_friend_requests_optimized(user.id)
 
-    incoming = requests_data.get('incoming', [])
-    outgoing = requests_data.get('outgoing', [])
+    incoming = requests_data.get("incoming", [])
+    outgoing = requests_data.get("outgoing", [])
 
-    text = translator.title('friends.requests', '📥')
+    text = translator.title("friends.requests", "📥")
 
     if incoming:
         text += f"{translator.translate('friends.requests_incoming')}\n"
         for req in incoming[:5]:  # Показываем только первые 5
-            username = req.get('tg_username', translator.translate('common.unknown'))
-            name = req.get('tg_first_name', '')
+            username = req.get("tg_username", translator.translate("common.unknown"))
+            name = req.get("tg_first_name", "")
             text += f"• @{username} ({name})\n"
+
             def escape_markdown_safe(text):
                 if not text:
                     return ""
-                return (str(text).replace('_', '\\_').replace('*', '\\*')
-                        .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
-            
+                return (
+                    str(text)
+                    .replace("_", "\\_")
+                    .replace("*", "\\*")
+                    .replace("`", "\\`")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                )
+
             safe_username = escape_markdown_safe(username)
             accept_cmd = f"`/accept @{safe_username}`"
             decline_cmd = f"`/decline @{safe_username}`"
@@ -174,13 +179,13 @@ async def friend_requests_command(update: Update, context: ContextTypes.DEFAULT_
     if outgoing:
         text += f"{translator.translate('friends.requests_outgoing')}\n"
         for req in outgoing[:5]:  # Показываем только первые 5
-            username = req.get('tg_username', translator.translate('common.unknown'))
-            name = req.get('tg_first_name', '')
+            username = req.get("tg_username", translator.translate("common.unknown"))
+            name = req.get("tg_first_name", "")
             text += f"• @{username} ({name}) {translator.translate('friends.request_waiting')}\n"
     else:
-        text += translator.translate('friends.requests_none_outgoing')
+        text += translator.translate("friends.requests_none_outgoing")
 
-    await update.message.reply_text(text, parse_mode='Markdown')
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 @rate_limit("friend_request")
@@ -200,17 +205,16 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
 
     if not context.args:
         await update.message.reply_text(
-            f"{translator.title('friends.accept_title', '👥')}"
-            f"{translator.translate('friends.accept_usage')}",
-            parse_mode='Markdown'
+            f"{translator.title('friends.accept_title', '👥')}" f"{translator.translate('friends.accept_usage')}",
+            parse_mode="Markdown",
         )
         return
 
-    target_username = context.args[0].lstrip('@')
+    target_username = context.args[0].lstrip("@")
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     from bot.database.friend_operations import FriendOperations
     from bot.database.user_operations import UserOperations
@@ -221,13 +225,11 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
     # Find requester by username
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
-        await update.message.reply_text(
-            translator.translate('friends.user_not_found', username=target_username)
-        )
+        await update.message.reply_text(translator.translate("friends.user_not_found", username=target_username))
         return
 
     # Accept friend request
-    success = await friend_ops.accept_friend_request(requester['tg_id'], user.id)
+    success = await friend_ops.accept_friend_request(requester["tg_id"], user.id)
     if success:
         await update.message.reply_text(
             f"{translator.translate('friends.request_accepted', username=target_username)}\n\n"
@@ -237,15 +239,13 @@ async def accept_friend_command(update: Update, context: ContextTypes.DEFAULT_TY
         # Notify requester if possible
         try:
             await context.bot.send_message(
-                chat_id=requester['tg_id'],
-                text=translator.translate('friends.request_notification_sent', username=user.username or user.first_name)
+                chat_id=requester["tg_id"],
+                text=translator.translate("friends.request_notification_sent", username=user.username or user.first_name),
             )
         except Exception as e:
             logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
     else:
-        await update.message.reply_text(
-            translator.translate('friends.request_not_found', username=target_username)
-        )
+        await update.message.reply_text(translator.translate("friends.request_not_found", username=target_username))
 
 
 @rate_limit("friend_request")
@@ -265,17 +265,16 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
 
     if not context.args:
         await update.message.reply_text(
-            f"{translator.title('friends.decline_title', '👥')}"
-            f"{translator.translate('friends.decline_usage')}",
-            parse_mode='Markdown'
+            f"{translator.title('friends.decline_title', '👥')}" f"{translator.translate('friends.decline_usage')}",
+            parse_mode="Markdown",
         )
         return
 
-    target_username = context.args[0].lstrip('@')
+    target_username = context.args[0].lstrip("@")
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     from bot.database.friend_operations import FriendOperations
     from bot.database.user_operations import UserOperations
@@ -286,30 +285,24 @@ async def decline_friend_command(update: Update, context: ContextTypes.DEFAULT_T
     # Find requester by username
     requester = await user_ops.find_user_by_username(target_username)
     if not requester:
-        await update.message.reply_text(
-            translator.translate('friends.user_not_found', username=target_username)
-        )
+        await update.message.reply_text(translator.translate("friends.user_not_found", username=target_username))
         return
 
     # Decline friend request
-    success = await friend_ops.decline_friend_request(requester['tg_id'], user.id)
+    success = await friend_ops.decline_friend_request(requester["tg_id"], user.id)
     if success:
-        await update.message.reply_text(
-            translator.translate('friends.request_declined', username=target_username)
-        )
+        await update.message.reply_text(translator.translate("friends.request_declined", username=target_username))
 
         # Notify requester if possible
         try:
             await context.bot.send_message(
-                chat_id=requester['tg_id'],
-                text=translator.translate('friends.request_notification_declined', username=user.username or user.first_name)
+                chat_id=requester["tg_id"],
+                text=translator.translate("friends.request_notification_declined", username=user.username or user.first_name),
             )
         except Exception as e:
             logger.warning(f"Could not notify user {requester['tg_id']}: {e}")
     else:
-        await update.message.reply_text(
-            translator.translate('friends.request_not_found', username=target_username)
-        )
+        await update.message.reply_text(translator.translate("friends.request_not_found", username=target_username))
 
 
 def setup_social_commands(application: Application) -> None:
@@ -319,5 +312,5 @@ def setup_social_commands(application: Application) -> None:
     application.add_handler(CommandHandler("friend_requests", friend_requests_command))
     application.add_handler(CommandHandler("accept", accept_friend_command))
     application.add_handler(CommandHandler("decline", decline_friend_command))
-    
+
     logger.info("Social commands registered successfully")

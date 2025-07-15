@@ -39,17 +39,11 @@ class SchedulerService:
                 self._check_and_send_notifications,
                 "cron",
                 minute="*",  # Every minute
-                id="notification_check"
+                id="notification_check",
             )
 
             # Schedule daily cleanup at 3 AM
-            self.scheduler.add_job(
-                self._daily_cleanup,
-                "cron",
-                hour=3,
-                minute=0,
-                id="daily_cleanup"
-            )
+            self.scheduler.add_job(self._daily_cleanup, "cron", hour=3, minute=0, id="daily_cleanup")
 
             self.scheduler.start()
             logger.info("Scheduler service started successfully")
@@ -95,29 +89,29 @@ class SchedulerService:
     async def _should_send_notification(self, user: dict, current_time: datetime) -> bool:
         """Determine if a user should receive a notification."""
         try:
-            tg_id = user.get('tg_id')
+            tg_id = user.get("tg_id")
 
             # Check if notifications are enabled
-            if not user.get('enabled', False):
+            if not user.get("enabled", False):
                 return False
 
             # Check time window
-            window_start = user.get('window_start', '09:00:00')
-            window_end = user.get('window_end', '22:00:00')
+            window_start = user.get("window_start", "09:00:00")
+            window_end = user.get("window_end", "22:00:00")
 
-            current_time_str = current_time.time().strftime('%H:%M:%S')
+            current_time_str = current_time.time().strftime("%H:%M:%S")
 
             if not (window_start <= current_time_str <= window_end):
                 logger.debug(f"User {tg_id} outside time window")
                 return False
 
             # Check interval
-            interval_min = user.get('interval_min', 120)
-            last_notification = user.get('last_notification_sent')
+            interval_min = user.get("interval_min", 120)
+            last_notification = user.get("last_notification_sent")
 
             if last_notification:
                 try:
-                    last_notification_dt = datetime.fromisoformat(last_notification.replace('Z', '+00:00'))
+                    last_notification_dt = datetime.fromisoformat(last_notification.replace("Z", "+00:00"))
                     time_since_last = (current_time - last_notification_dt).total_seconds() / 60
 
                     if time_since_last < interval_min:
@@ -137,17 +131,14 @@ class SchedulerService:
     async def _send_notification_to_user(self, user: dict) -> None:
         """Send notification to a specific user."""
         try:
-            tg_id = user.get('tg_id')
+            tg_id = user.get("tg_id")
 
             if not tg_id:
                 logger.error("User missing tg_id")
                 return
 
             # Send the notification
-            await self.application.bot.send_message(
-                chat_id=tg_id,
-                text=self.config.question_text
-            )
+            await self.application.bot.send_message(chat_id=tg_id, text=self.config.question_text)
 
             # Update last notification timestamp
             await self.user_ops.update_last_notification(tg_id)

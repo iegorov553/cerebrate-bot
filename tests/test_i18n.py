@@ -199,7 +199,7 @@ class TestTranslationConsistency:
             "menu.history",
             "menu.language",
             "welcome.greeting",
-            "errors.general"
+            "errors.general",
         ]
 
         for lang in languages:
@@ -231,5 +231,6 @@ class TestTranslationConsistency:
             translator.set_language(lang)
             for key in test_keys:
                 result = translator.translate(key)
-                assert "{" not in result or "}" not in result or "name" in result, \
-                    f"Translation contains JSON artifacts: {key} in {lang} = {result}"
+                assert (
+                    "{" not in result or "}" not in result or "name" in result
+                ), f"Translation contains JSON artifacts: {key} in {lang} = {result}"

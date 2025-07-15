@@ -14,19 +14,19 @@ class LanguageDetector:
     """Detects user language preferences."""
 
     SUPPORTED_LANGUAGES = {
-        'ru': 'ru',  # Russian
-        'en': 'en',  # English
-        'es': 'es',  # Spanish (Spain)
-        'es-ES': 'es',
-        'es-MX': 'es',  # Mexican Spanish
-        'es-AR': 'es',  # Argentine Spanish
-        'en-US': 'en',  # American English
-        'en-GB': 'en',  # British English
-        'en-AU': 'en',  # Australian English
-        'ru-RU': 'ru',  # Russian (Russia)
+        "ru": "ru",  # Russian
+        "en": "en",  # English
+        "es": "es",  # Spanish (Spain)
+        "es-ES": "es",
+        "es-MX": "es",  # Mexican Spanish
+        "es-AR": "es",  # Argentine Spanish
+        "en-US": "en",  # American English
+        "en-GB": "en",  # British English
+        "en-AU": "en",  # Australian English
+        "ru-RU": "ru",  # Russian (Russia)
     }
 
-    DEFAULT_LANGUAGE = 'ru'
+    DEFAULT_LANGUAGE = "ru"
 
     @classmethod
     def detect_from_telegram_user(cls, user: User) -> str:
@@ -52,7 +52,7 @@ class LanguageDetector:
                 return detected
 
             # Check prefix match (e.g., 'en-US' -> 'en')
-            lang_prefix = user_lang.split('-')[0].lower()
+            lang_prefix = user_lang.split("-")[0].lower()
             if lang_prefix in cls.SUPPORTED_LANGUAGES:
                 detected = cls.SUPPORTED_LANGUAGES[lang_prefix]
                 logger.debug(f"Language detected from prefix: {user_lang} -> {detected}")
@@ -78,9 +78,9 @@ class LanguageDetector:
         text_lower = text.lower()
 
         # Simple heuristics for language detection
-        russian_indicators = ['привет', 'настройки', 'друзья', 'помощь', 'статистика']
-        english_indicators = ['hello', 'settings', 'friends', 'help', 'statistics']
-        spanish_indicators = ['hola', 'configuración', 'amigos', 'ayuda', 'estadísticas']
+        russian_indicators = ["привет", "настройки", "друзья", "помощь", "статистика"]
+        english_indicators = ["hello", "settings", "friends", "help", "statistics"]
+        spanish_indicators = ["hola", "configuración", "amigos", "ayuda", "estadísticas"]
 
         # Count matches
         ru_score = sum(1 for word in russian_indicators if word in text_lower)
@@ -88,7 +88,7 @@ class LanguageDetector:
         es_score = sum(1 for word in spanish_indicators if word in text_lower)
 
         # Return language with highest score
-        scores = {'ru': ru_score, 'en': en_score, 'es': es_score}
+        scores = {"ru": ru_score, "en": en_score, "es": es_score}
         detected = max(scores, key=scores.get)
 
         if scores[detected] > 0:
@@ -108,7 +108,7 @@ class LanguageDetector:
         Returns:
             True if supported, False otherwise
         """
-        return language_code in ['ru', 'en', 'es']
+        return language_code in ["ru", "en", "es"]
 
 
 def detect_user_language(user: User, fallback_text: Optional[str] = None) -> str:

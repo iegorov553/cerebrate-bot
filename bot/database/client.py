@@ -20,10 +20,7 @@ class DatabaseClient:
     def _initialize_client(self) -> None:
         """Initialize Supabase client."""
         try:
-            self._client = create_client(
-                self.config.supabase_url,
-                self.config.supabase_service_role_key
-            )
+            self._client = create_client(self.config.supabase_url, self.config.supabase_service_role_key)
             logger.info("Database client initialized successfully")
 
             # Test connection

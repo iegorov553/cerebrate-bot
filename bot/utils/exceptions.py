@@ -5,16 +5,19 @@ Custom exceptions for Doyobi Diary.
 
 class BotError(Exception):
     """Base exception for bot-related errors."""
+
     pass
 
 
 class DatabaseError(BotError):
     """Exception raised for database-related errors."""
+
     pass
 
 
 class ValidationError(BotError):
     """Exception raised for validation errors."""
+
     pass
 
 
@@ -30,14 +33,17 @@ class RateLimitExceeded(BotError):
 
 class AdminRequired(BotError):
     """Exception raised when admin access is required."""
+
     pass
 
 
 class UserNotFound(BotError):
     """Exception raised when user is not found."""
+
     pass
 
 
 class FriendshipError(BotError):
     """Exception raised for friendship-related errors."""
+
     pass

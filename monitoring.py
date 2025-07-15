@@ -63,19 +63,19 @@ def before_send_filter(event, hint):
     """Filter events before sending to Sentry."""
 
     # Don't send test events
-    if event.get('environment') == 'test':
+    if event.get("environment") == "test":
         return None
 
     # Filter out common noisy errors
-    if 'exc_info' in hint:
-        exc_type, exc_value, tb = hint['exc_info']
+    if "exc_info" in hint:
+        exc_type, exc_value, tb = hint["exc_info"]
 
         # Skip certain telegram errors
-        if 'telegram' in str(exc_type).lower():
+        if "telegram" in str(exc_type).lower():
             # Skip user blocked bot, message too old, etc.
             if any(
                 skip_phrase in str(exc_value).lower()
-                for skip_phrase in ['forbidden', 'blocked', 'message is too old', 'chat not found', 'user deactivated']
+                for skip_phrase in ["forbidden", "blocked", "message is too old", "chat not found", "user deactivated"]
             ):
                 return None
 
@@ -86,11 +86,11 @@ def before_send_transaction_filter(event, hint):
     """Filter transaction events before sending to Sentry."""
 
     # Don't track test transactions
-    if event.get('environment') == 'test':
+    if event.get("environment") == "test":
         return None
 
     # Skip very fast transactions (< 100ms)
-    if event.get('timestamp', 0) - event.get('start_timestamp', 0) < 0.1:
+    if event.get("timestamp", 0) - event.get("start_timestamp", 0) < 0.1:
         return None
 
     return event
@@ -208,9 +208,7 @@ def track_errors_async(operation_name: str = None):
                 except Exception as e:
                     # Log structured error
                     logger = get_logger(func.__module__)
-                    logger.error(
-                        "Async function execution failed", function=func.__name__, error=str(e), operation=op_name
-                    )
+                    logger.error("Async function execution failed", function=func.__name__, error=str(e), operation=op_name)
 
                     # Add extra context to Sentry
                     sentry_sdk.set_extra("function_args", str(args)[:500])
@@ -257,9 +255,7 @@ def set_user_context(user_id: int, username: str = None, first_name: str = None)
 
 def add_bot_context(command: str = None, chat_type: str = None, message_type: str = None):
     """Add bot-specific context to Sentry."""
-    sentry_sdk.set_context(
-        "bot_interaction", {"command": command, "chat_type": chat_type, "message_type": message_type}
-    )
+    sentry_sdk.set_context("bot_interaction", {"command": command, "chat_type": chat_type, "message_type": message_type})
 
 
 def log_bot_metrics(metric_name: str, value: float, tags: dict = None):
@@ -370,9 +366,7 @@ def check_system_health_and_alert(health_status):
 
     if isinstance(health_status, SystemHealth):
         if health_status.status == "unhealthy":
-            alert_critical_error(
-                "System unhealthy", f"Multiple components failing: {list(health_status.components.keys())}"
-            )
+            alert_critical_error("System unhealthy", f"Multiple components failing: {list(health_status.components.keys())}")
         elif health_status.status == "degraded":
             with sentry_sdk.configure_scope() as scope:
                 scope.set_tag("alert_level", "warning")
@@ -445,9 +439,7 @@ async def periodic_health_check(application, health_service, interval_minutes: i
 
             # Log health status
             logger = get_logger("health_monitor")
-            logger.info(
-                "Periodic health check completed", status=health_status.status, uptime=health_status.uptime_seconds
-            )
+            logger.info("Periodic health check completed", status=health_status.status, uptime=health_status.uptime_seconds)
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")

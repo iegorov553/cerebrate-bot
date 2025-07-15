@@ -6,8 +6,8 @@ import traceback
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot.utils.exceptions import AdminRequired, RateLimitExceeded, ValidationError
 from bot.i18n.translator import Translator
+from bot.utils.exceptions import AdminRequired, RateLimitExceeded, ValidationError
 from monitoring import get_logger, set_user_context
 
 logger = get_logger(__name__)
@@ -19,11 +19,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Set user context if available
     if isinstance(update, Update) and update.effective_user:
-        set_user_context(
-            update.effective_user.id,
-            update.effective_user.username,
-            update.effective_user.first_name
-        )
+        set_user_context(update.effective_user.id, update.effective_user.username, update.effective_user.first_name)
 
     error = context.error
 
@@ -42,18 +38,14 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Log all other errors
     logger.error(
-        "Unhandled error occurred",
-        error_type=type(error).__name__,
-        error_message=str(error),
-        traceback=traceback.format_exc()
+        "Unhandled error occurred", error_type=type(error).__name__, error_message=str(error), traceback=traceback.format_exc()
     )
 
     # Send generic error message to user
     if isinstance(update, Update) and update.effective_chat:
         try:
             await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=translator.translate("errors.general_with_admin")
+                chat_id=update.effective_chat.id, text=translator.translate("errors.general_with_admin")
             )
         except Exception:
             # If we can't even send an error message, just log it
@@ -73,22 +65,20 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             minutes = error.retry_after // 60
             time_msg = f"{minutes} минут"
 
-        message = f"{translator.translate('errors.rate_limit_title')}" \
-            f"{translator.translate('errors.rate_limit_message')}" \
-            f"Попробуйте снова через {time_msg}.\n\n" \
+        message = (
+            f"{translator.translate('errors.rate_limit_title')}"
+            f"{translator.translate('errors.rate_limit_message')}"
+            f"Попробуйте снова через {time_msg}.\n\n"
             f"Действие: {error.action}"
-
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=message,
-            parse_mode='Markdown'
         )
+
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="Markdown")
 
         logger.warning(
             "Rate limit message sent to user",
             user_id=update.effective_user.id if update.effective_user else None,
             action=error.action,
-            retry_after=error.retry_after
+            retry_after=error.retry_after,
         )
 
     except Exception as exc:
@@ -103,16 +93,9 @@ async def handle_admin_required_error(update: Update, context: ContextTypes.DEFA
     try:
         message = translator.translate("errors.admin_access_denied")
 
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=message,
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="Markdown")
 
-        logger.warning(
-            "Admin access denied",
-            user_id=update.effective_user.id if update.effective_user else None
-        )
+        logger.warning("Admin access denied", user_id=update.effective_user.id if update.effective_user else None)
 
     except Exception as exc:
         logger.error("Failed to send admin required message", error=str(exc))
@@ -126,19 +109,13 @@ async def handle_validation_error(update: Update, context: ContextTypes.DEFAULT_
     try:
         # Use default translator for validation errors
         translator = Translator()
-        
+
         message = f"{translator.translate('errors.validation')}\n\n{str(error)}"
 
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=message,
-            parse_mode='Markdown'
-        )
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=message, parse_mode="Markdown")
 
         logger.warning(
-            "Validation error",
-            user_id=update.effective_user.id if update.effective_user else None,
-            error_message=str(error)
+            "Validation error", user_id=update.effective_user.id if update.effective_user else None, error_message=str(error)
         )
 
     except Exception as exc:

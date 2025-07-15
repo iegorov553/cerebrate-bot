@@ -40,5 +40,5 @@ __all__ = [
     "RateLimitExceeded",
     "AdminRequired",
     "UserNotFound",
-    "FriendshipError"
+    "FriendshipError",
 ]

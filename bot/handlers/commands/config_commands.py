@@ -30,7 +30,7 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             + translator.translate("config.examples_title")
             + translator.translate("config.window_example1")
             + translator.translate("config.window_example2"),
-            parse_mode='Markdown'
+            parse_mode="Markdown",
         )
         return
 
@@ -38,22 +38,24 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     # Validate time format
     from bot.utils.datetime_utils import validate_time_window
+
     is_valid, error_msg, start_time, end_time = validate_time_window(time_range)
     if not is_valid:
         await update.message.reply_text(
             f"❌ {error_msg}\n\n"
             + translator.translate("config.window_format")
             + translator.translate("config.window_format_example"),
-            parse_mode='Markdown'
+            parse_mode="Markdown",
         )
         return
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     # Initialize question manager and ensure user has default question
     from bot.questions import QuestionManager
+
     question_manager = QuestionManager(db_client, user_cache)
 
     try:
@@ -63,16 +65,12 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         # Get default question
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
-            await update.message.reply_text(
-                translator.translate('errors.default_question_error')
-            )
+            await update.message.reply_text(translator.translate("errors.default_question_error"))
             return
 
         # Update time window for default question
         success = await question_manager.question_ops.update_question_schedule(
-            default_question['id'],
-            window_start=start_time.strftime('%H:%M:%S'),
-            window_end=end_time.strftime('%H:%M:%S')
+            default_question["id"], window_start=start_time.strftime("%H:%M:%S"), window_end=end_time.strftime("%H:%M:%S")
         )
 
         if success:
@@ -80,18 +78,14 @@ async def window_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 f"{translator.translate('config.window_updated')}"
                 f"{translator.translate('config.window_new_time')}{start_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}\n\n"
                 f"{translator.translate('config.window_updated_note')}",
-                parse_mode='Markdown'
+                parse_mode="Markdown",
             )
             logger.info(f"Time window updated for user {user.id}: {time_range}")
         else:
-            await update.message.reply_text(
-                translator.translate('errors.time_window_update_error')
-            )
+            await update.message.reply_text(translator.translate("errors.time_window_update_error"))
     except Exception as e:
         logger.error(f"Error updating time window for user {user.id}: {e}")
-        await update.message.reply_text(
-            translator.translate('errors.settings_update_error')
-        )
+        await update.message.reply_text(translator.translate("errors.settings_update_error"))
 
 
 @rate_limit("settings")
@@ -114,7 +108,7 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             + translator.translate("config.freq_example_60")
             + translator.translate("config.freq_example_120_long")
             + translator.translate("config.freq_example_30"),
-            parse_mode='Markdown'
+            parse_mode="Markdown",
         )
         return
 
@@ -122,14 +116,12 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         interval_min = int(context.args[0])
         if interval_min < 5:
             await update.message.reply_text(
-                translator.translate("config.freq_min_error")
-                + translator.translate("config.freq_min_example")
+                translator.translate("config.freq_min_error") + translator.translate("config.freq_min_example")
             )
             return
         elif interval_min > 1440:  # 24 hours
             await update.message.reply_text(
-                translator.translate("config.freq_max_error")
-                + translator.translate("config.freq_example_120")
+                translator.translate("config.freq_max_error") + translator.translate("config.freq_example_120")
             )
             return
     except ValueError:
@@ -141,11 +133,12 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     # Initialize question manager and ensure user has default question
     from bot.questions import QuestionManager
+
     question_manager = QuestionManager(db_client, user_cache)
 
     try:
@@ -155,15 +148,12 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         # Get default question
         default_question = await question_manager.get_user_default_question(user.id)
         if not default_question:
-            await update.message.reply_text(
-                translator.translate('errors.default_question_error')
-            )
+            await update.message.reply_text(translator.translate("errors.default_question_error"))
             return
 
         # Update frequency for default question
         success = await question_manager.question_ops.update_question_schedule(
-            default_question['id'],
-            interval_minutes=interval_min
+            default_question["id"], interval_minutes=interval_min
         )
 
         if success:
@@ -186,23 +176,19 @@ async def freq_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 translator.translate("config.frequency_updated")
                 + f"📊 Новая частота: каждые {freq_text}\n\n"
                 + f"Следующее уведомление придёт через {freq_text}.",
-                parse_mode='Markdown'
+                parse_mode="Markdown",
             )
             logger.info(f"Frequency updated for user {user.id}: {interval_min} minutes")
         else:
-            await update.message.reply_text(
-                translator.translate('errors.frequency_update_error')
-            )
+            await update.message.reply_text(translator.translate("errors.frequency_update_error"))
     except Exception as e:
         logger.error(f"Error updating frequency for user {user.id}: {e}")
-        await update.message.reply_text(
-            translator.translate('errors.settings_update_error')
-        )
+        await update.message.reply_text(translator.translate("errors.settings_update_error"))
 
 
 def setup_config_commands(application: Application) -> None:
     """Регистрация команд настройки."""
     application.add_handler(CommandHandler("window", window_command))
     application.add_handler(CommandHandler("freq", freq_command))
-    
+
     logger.info("Config commands registered successfully")

@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Backend**: Python 3.8+ with python-telegram-bot==20.3, Supabase (PostgreSQL), APScheduler
 - **Frontend**: Next.js 15 with TypeScript, React 18.3.1, Tailwind CSS
 - **Infrastructure**: Docker, Railway (bot), Vercel (web app), GitHub Actions
-- **Development**: pytest, black, flake8, mypy, bandit, pre-commit
+- **Development**: pytest, ruff, mypy, bandit, pre-commit
 - **Monitoring**: Sentry, structured logging, health checks
 
 ## Development Commands
@@ -33,11 +33,11 @@ python3 -m pytest tests/ -m "integration"
 
 ### Code Quality
 ```bash
-# Linting
-flake8 . --max-line-length=127
-
-# Formatting
-black .
+# Linting and formatting with Ruff (replaces flake8, black, isort)
+ruff check .                    # Lint code
+ruff check . --fix              # Auto-fix issues
+ruff format .                   # Format code
+ruff format . --check           # Check formatting
 
 # Type checking
 mypy . --ignore-missing-imports
@@ -242,7 +242,7 @@ bot/
 ### Quality Requirements
 - **All new features** must have automated tests
 - **Code coverage** minimum 60% for new modules
-- **PEP 8 compliance** enforced by black formatter
+- **PEP 8 compliance** enforced by Ruff formatter
 - **Type checking** with mypy
 - **Security scanning** with bandit
 - **Documentation** updated before commits

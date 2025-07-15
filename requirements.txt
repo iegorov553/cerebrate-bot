@@ -20,8 +20,7 @@ sentry-sdk[logging]==1.45.0
 structlog==23.2.0
 
 # Development dependencies
-flake8==6.0.0
-black==23.12.1
+ruff==0.1.9
 mypy==1.8.0
 bandit==1.7.5
 

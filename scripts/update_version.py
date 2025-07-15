@@ -7,21 +7,22 @@
 import re
 from pathlib import Path
 
+
 def update_version():
     """Обновляет версию в файле VERSION."""
     version_file = Path(__file__).parent.parent / "VERSION"
 
     if not version_file.exists():
         print("Файл VERSION не найден!")
-        return
+        return None
 
     current_version = version_file.read_text().strip()
 
     # Парсим версию (major.minor.patch)
-    match = re.match(r'(\d+)\.(\d+)\.(\d+)', current_version)
+    match = re.match(r"(\d+)\.(\d+)\.(\d+)", current_version)
     if not match:
         print(f"Неверный формат версии: {current_version}")
-        return
+        return None
 
     major, minor, patch = map(int, match.groups())
 
@@ -34,6 +35,7 @@ def update_version():
 
     print(f"Версия обновлена: {current_version} -> {new_version}")
     return new_version
+
 
 if __name__ == "__main__":
     update_version()

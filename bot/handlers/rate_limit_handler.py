@@ -4,9 +4,9 @@ Rate limiting handler utilities.
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from bot.i18n.translator import get_translator
 from bot.utils.exceptions import RateLimitExceeded
 from bot.utils.rate_limiter import rate_limiter
-from bot.i18n.translator import get_translator
 from monitoring import get_logger
 
 logger = get_logger(__name__)
@@ -41,7 +41,7 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             "settings": translator.translate("rate_limit.settings_changes"),
             "discovery": translator.translate("rate_limit.friend_discovery"),
             "admin": translator.translate("rate_limit.admin_commands"),
-            "callback": translator.translate("rate_limit.button_clicks")
+            "callback": translator.translate("rate_limit.button_clicks"),
         }
 
         action_display = action_names.get(error.action, error.action)
@@ -50,47 +50,40 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         def escape_markdown_safe(text):
             if not text:
                 return ""
-            return (str(text).replace('_', '\\_').replace('*', '\\*')
-                    .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
-        
+            return (
+                str(text).replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[").replace("]", "\\]")
+            )
+
         safe_action = escape_markdown_safe(action_display)
         bold_limit_text = f"**Превышен лимит {safe_action}**"
-        message = f"🚫 {bold_limit_text}\n\n" \
-            f"{translator.translate('rate_limit.usage_count', current=stats['current_count'], max=stats['max_requests'])}\n" \
-            f"⏰ Попробуйте через: {time_msg}\n" \
-            f"{translator.translate('rate_limit.reset_window', seconds=stats['window_seconds'])}\n\n" \
+        message = (
+            f"🚫 {bold_limit_text}\n\n"
+            f"{translator.translate('rate_limit.usage_count', current=stats['current_count'], max=stats['max_requests'])}\n"
+            f"⏰ Попробуйте через: {time_msg}\n"
+            f"{translator.translate('rate_limit.reset_window', seconds=stats['window_seconds'])}\n\n"
             f"{translator.translate('rate_limit.protection_note')}"
+        )
 
         # Add helpful keyboard
         keyboard = [
             [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="menu_main")],
-            [InlineKeyboardButton(translator.translate("menu.help"), callback_data="menu_help")]
+            [InlineKeyboardButton(translator.translate("menu.help"), callback_data="menu_help")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         # Send message (try edit first, then send new)
         if update.callback_query:
             try:
-                await update.callback_query.edit_message_text(
-                    text=message,
-                    reply_markup=reply_markup,
-                    parse_mode='Markdown'
-                )
+                await update.callback_query.edit_message_text(text=message, reply_markup=reply_markup, parse_mode="Markdown")
             except Exception:
                 # If edit fails, answer callback and send new message
                 await update.callback_query.answer(translator.translate("rate_limit.exceeded_alert"))
                 await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text=message,
-                    reply_markup=reply_markup,
-                    parse_mode='Markdown'
+                    chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup, parse_mode="Markdown"
                 )
         else:
             await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=message,
-                reply_markup=reply_markup,
-                parse_mode='Markdown'
+                chat_id=update.effective_chat.id, text=message, reply_markup=reply_markup, parse_mode="Markdown"
             )
 
         logger.info(
@@ -98,8 +91,8 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
             user_id=user_id,
             action=error.action,
             retry_after=error.retry_after,
-            current_usage=stats['current_count'],
-            max_requests=stats['max_requests']
+            current_usage=stats["current_count"],
+            max_requests=stats["max_requests"],
         )
 
     except Exception as exc:
@@ -108,10 +101,8 @@ async def handle_rate_limit_error(update: Update, context: ContextTypes.DEFAULT_
         # Fallback simple message
         try:
             await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=f"🚫 Слишком много запросов. Попробуйте через {error.retry_after} сек."
+                chat_id=update.effective_chat.id, text=f"🚫 Слишком много запросов. Попробуйте через {error.retry_after} сек."
             )
         except Exception as e:
             # Log the error but don't raise - we've done our best to notify the user
-            logger.warning("Failed to send fallback rate limit message", 
-                          chat_id=update.effective_chat.id, error=str(e))
+            logger.warning("Failed to send fallback rate limit message", chat_id=update.effective_chat.id, error=str(e))

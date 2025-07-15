@@ -30,7 +30,7 @@ class QuestionTemplates:
                     "window_start": "09:00",
                     "window_end": "18:00",
                     "interval_minutes": 180,  # 3 hours
-                    "description": translator.translate("questions.work_description")
+                    "description": translator.translate("questions.work_description"),
                 },
                 {
                     "name": translator.translate("questions.learning"),
@@ -38,7 +38,7 @@ class QuestionTemplates:
                     "window_start": "10:00",
                     "window_end": "22:00",
                     "interval_minutes": 240,  # 4 hours
-                    "description": translator.translate("questions.learning_description")
+                    "description": translator.translate("questions.learning_description"),
                 },
                 {
                     "name": translator.translate("questions.daily_goals"),
@@ -46,8 +46,8 @@ class QuestionTemplates:
                     "window_start": "09:00",
                     "window_end": "19:00",
                     "interval_minutes": 300,  # 5 hours
-                    "description": "Контроль выполнения ежедневных целей"
-                }
+                    "description": "Контроль выполнения ежедневных целей",
+                },
             ],
             "personal": [
                 {
@@ -56,7 +56,7 @@ class QuestionTemplates:
                     "window_start": "10:00",
                     "window_end": "20:00",
                     "interval_minutes": 360,  # 6 hours
-                    "description": translator.translate("questions.emotions_description")
+                    "description": translator.translate("questions.emotions_description"),
                 },
                 {
                     "name": translator.translate("questions.sport"),
@@ -64,7 +64,7 @@ class QuestionTemplates:
                     "window_start": "07:00",
                     "window_end": "21:00",
                     "interval_minutes": 720,  # 12 hours
-                    "description": "Контроль физической активности"
+                    "description": "Контроль физической активности",
                 },
                 {
                     "name": "Достижения",
@@ -72,8 +72,8 @@ class QuestionTemplates:
                     "window_start": "12:00",
                     "window_end": "22:00",
                     "interval_minutes": 480,  # 8 hours
-                    "description": "Фиксация позитивных моментов"
-                }
+                    "description": "Фиксация позитивных моментов",
+                },
             ],
             "time_based": [
                 {
@@ -82,7 +82,7 @@ class QuestionTemplates:
                     "window_start": "07:00",
                     "window_end": "10:00",
                     "interval_minutes": 1440,  # 24 hours (once a day)
-                    "description": "Ежедневная утренняя проверка"
+                    "description": "Ежедневная утренняя проверка",
                 },
                 {
                     "name": "Обеденный перерыв",
@@ -90,7 +90,7 @@ class QuestionTemplates:
                     "window_start": "12:00",
                     "window_end": "14:00",
                     "interval_minutes": 1440,  # 24 hours
-                    "description": "Проверка в середине дня"
+                    "description": "Проверка в середине дня",
                 },
                 {
                     "name": "Вечерний отчёт",
@@ -98,8 +98,8 @@ class QuestionTemplates:
                     "window_start": "19:00",
                     "window_end": "22:00",
                     "interval_minutes": 1440,  # 24 hours
-                    "description": "Ежедневное подведение итогов"
-                }
+                    "description": "Ежедневное подведение итогов",
+                },
             ],
             "health": [
                 {
@@ -108,7 +108,7 @@ class QuestionTemplates:
                     "window_start": "09:00",
                     "window_end": "21:00",
                     "interval_minutes": 720,  # 12 hours
-                    "description": "Контроль состояния здоровья"
+                    "description": "Контроль состояния здоровья",
                 },
                 {
                     "name": "Питание",
@@ -116,7 +116,7 @@ class QuestionTemplates:
                     "window_start": "12:00",
                     "window_end": "20:00",
                     "interval_minutes": 480,  # 8 hours
-                    "description": "Отслеживание правильного питания"
+                    "description": "Отслеживание правильного питания",
                 },
                 {
                     "name": "Сон",
@@ -124,9 +124,9 @@ class QuestionTemplates:
                     "window_start": "08:00",
                     "window_end": "11:00",
                     "interval_minutes": 1440,  # 24 hours
-                    "description": "Контроль качества сна"
-                }
-            ]
+                    "description": "Контроль качества сна",
+                },
+            ],
         }
 
     @staticmethod
@@ -141,7 +141,7 @@ class QuestionTemplates:
             "work_study": "💼 Работа и учёба",
             "personal": "🌟 Личное развитие",
             "time_based": "⏰ По времени суток",
-            "health": "💪 Здоровье"
+            "health": "💪 Здоровье",
         }
 
     @staticmethod
@@ -181,9 +181,11 @@ class QuestionTemplates:
 
         for category_templates in templates.values():
             for template in category_templates:
-                if (query_lower in template["name"].lower()
+                if (
+                    query_lower in template["name"].lower()
                     or query_lower in template["text"].lower()
-                        or query_lower in template["description"].lower()):
+                    or query_lower in template["description"].lower()
+                ):
                     results.append(template)
 
         return results
@@ -201,7 +203,7 @@ class QuestionTemplates:
             "Настроение",
             translator.translate("questions.morning_checkin"),
             "Вечерний отчёт",
-            translator.translate("questions.learning")
+            translator.translate("questions.learning"),
         ]
 
         popular = []

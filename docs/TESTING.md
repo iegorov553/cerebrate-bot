@@ -869,11 +869,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Lint with flake8
+      - name: Lint with ruff
         run: |
-          pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          pip install ruff
+          ruff check .
       
       - name: Type check with mypy
         run: |
@@ -915,8 +914,7 @@ echo "🧪 Running full test suite..."
 
 # Linting
 echo "📝 Running linting..."
-flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+ruff check .
 
 # Type checking
 echo "🔍 Running type checks..."
@@ -1182,17 +1180,12 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
   
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
     hooks:
-      - id: black
-        language_version: python3.11
-  
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args: [--max-line-length=127]
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
   
   - repo: local
     hooks:

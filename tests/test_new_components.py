@@ -102,6 +102,7 @@ class TestConfigurationClass:
 
     def test_config_validation(self):
         """Test config validation logic."""
+
         # Mock config class
         class MockConfig:
             def __init__(self, bot_token="", supabase_url="", supabase_key="", admin_id=0):  # nosec B107
@@ -141,6 +142,7 @@ class TestCacheLogic:
 
     def test_basic_cache_operations(self):
         """Test basic cache get/set operations."""
+
         # Mock cache class
         class MockCache:
             def __init__(self):

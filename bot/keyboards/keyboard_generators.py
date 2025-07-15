@@ -26,10 +26,12 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         # Import WebAppInfo here to avoid circular imports
         from telegram import WebAppInfo
+
         from bot.config import Config
 
         # Get webapp URL from config
@@ -48,20 +50,17 @@ class KeyboardGenerator:
         if is_admin:
             keyboard.append([InlineKeyboardButton(translator.translate("menu.admin"), callback_data="menu_admin")])
 
-        keyboard.extend([
-            [InlineKeyboardButton(translator.translate("menu.language"), callback_data="menu_language")],
-            [InlineKeyboardButton(translator.translate("feedback.title"), callback_data="feedback_menu")]
-        ])
+        keyboard.extend(
+            [
+                [InlineKeyboardButton(translator.translate("menu.language"), callback_data="menu_language")],
+                [InlineKeyboardButton(translator.translate("feedback.title"), callback_data="feedback_menu")],
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
-
     @staticmethod
-    def friends_menu(
-        pending_requests: int = 0,
-        friends_count: int = 0,
-        translator=None
-    ) -> InlineKeyboardMarkup:
+    def friends_menu(pending_requests: int = 0, friends_count: int = 0, translator=None) -> InlineKeyboardMarkup:
         """
         Generate friends menu keyboard.
 
@@ -75,6 +74,7 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = [
@@ -93,20 +93,18 @@ class KeyboardGenerator:
             friends_text += f" ({friends_count})"
         keyboard.append([InlineKeyboardButton(friends_text, callback_data="friends_list")])
 
-        keyboard.extend([
-            [InlineKeyboardButton(translator.translate("friends.discover"), callback_data="friends_discover")],
-            [InlineKeyboardButton(translator.translate("friends.activities"), callback_data="friends_activities")],
-            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
-        ])
+        keyboard.extend(
+            [
+                [InlineKeyboardButton(translator.translate("friends.discover"), callback_data="friends_discover")],
+                [InlineKeyboardButton(translator.translate("friends.activities"), callback_data="friends_activities")],
+                [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")],
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def friend_requests_menu(
-        incoming_count: int = 0,
-        outgoing_count: int = 0,
-        translator=None
-    ) -> InlineKeyboardMarkup:
+    def friend_requests_menu(incoming_count: int = 0, outgoing_count: int = 0, translator=None) -> InlineKeyboardMarkup:
         """
         Generate friend requests menu keyboard.
 
@@ -121,21 +119,25 @@ class KeyboardGenerator:
         keyboard = []
 
         # Incoming requests with count
-        incoming_text = translator.translate('friends.incoming_requests') if translator else "📥 Incoming Requests"
+        incoming_text = translator.translate("friends.incoming_requests") if translator else "📥 Incoming Requests"
         if incoming_count > 0:
             incoming_text += f" ({incoming_count})"
         keyboard.append([InlineKeyboardButton(incoming_text, callback_data="requests_incoming")])
 
         # Outgoing requests with count
-        outgoing_text = translator.translate('friends.outgoing_requests') if translator else "📤 Outgoing Requests"
+        outgoing_text = translator.translate("friends.outgoing_requests") if translator else "📤 Outgoing Requests"
         if outgoing_count > 0:
             outgoing_text += f" ({outgoing_count})"
         keyboard.append([InlineKeyboardButton(outgoing_text, callback_data="requests_outgoing")])
 
-        keyboard.append([InlineKeyboardButton(
-            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
-            callback_data="back_friends"
-        )])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    translator.translate("friends.back_to_friends") if translator else "🔙 Back to Friends",
+                    callback_data="back_friends",
+                )
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -153,10 +155,12 @@ class KeyboardGenerator:
         """
         if not recommendations:
             keyboard = [
-                [InlineKeyboardButton(
-                    translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
-                    callback_data="back_friends"
-                )]
+                [
+                    InlineKeyboardButton(
+                        translator.translate("friends.back_to_friends") if translator else "🔙 Back to Friends",
+                        callback_data="back_friends",
+                    )
+                ]
             ]
             return InlineKeyboardMarkup(keyboard)
 
@@ -164,24 +168,23 @@ class KeyboardGenerator:
 
         # Add buttons for each recommendation (max 10)
         for i, rec in enumerate(recommendations[:10]):
-            user_name = rec.get('first_name', 'Unknown')
-            mutual_count = rec.get('mutual_friends_count', 0)
+            user_name = rec.get("first_name", "Unknown")
+            mutual_count = rec.get("mutual_friends_count", 0)
 
             button_text = f"➕ {user_name}"
             if mutual_count > 0:
                 button_text += f" ({mutual_count} mutual)"
 
-            keyboard.append([
-                InlineKeyboardButton(
-                    button_text,
-                    callback_data=f"add_friend:{rec['tg_id']}"
-                )
-            ])
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=f"add_friend:{rec['tg_id']}")])
 
-        keyboard.append([InlineKeyboardButton(
-            translator.translate('friends.back_to_friends') if translator else "🔙 Back to Friends",
-            callback_data="back_friends"
-        )])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    translator.translate("friends.back_to_friends") if translator else "🔙 Back to Friends",
+                    callback_data="back_friends",
+                )
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -189,22 +192,29 @@ class KeyboardGenerator:
     def admin_menu(translator=None) -> InlineKeyboardMarkup:
         """Generate admin menu keyboard."""
         keyboard = [
-            [InlineKeyboardButton(
-                translator.translate('admin.broadcast') if translator else "📢 Send Broadcast",
-                callback_data="admin_broadcast"
-            )],
-            [InlineKeyboardButton(
-                translator.translate('admin.user_statistics') if translator else "📊 User Statistics",
-                callback_data="admin_stats"
-            )],
-            [InlineKeyboardButton(
-                translator.translate('admin.health_check') if translator else "🏥 Health Check",
-                callback_data="admin_health"
-            )],
-            [InlineKeyboardButton(
-                translator.translate('menu.back_main') if translator else "🔙 Back to Main Menu",
-                callback_data="back_main"
-            )]
+            [
+                InlineKeyboardButton(
+                    translator.translate("admin.broadcast") if translator else "📢 Send Broadcast",
+                    callback_data="admin_broadcast",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    translator.translate("admin.user_statistics") if translator else "📊 User Statistics",
+                    callback_data="admin_stats",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    translator.translate("admin.health_check") if translator else "🏥 Health Check",
+                    callback_data="admin_health",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    translator.translate("menu.back_main") if translator else "🔙 Back to Main Menu", callback_data="back_main"
+                )
+            ],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -214,7 +224,7 @@ class KeyboardGenerator:
         keyboard = [
             [
                 InlineKeyboardButton("✅ Send", callback_data="broadcast_confirm"),
-                InlineKeyboardButton("❌ Cancel", callback_data="broadcast_cancel")
+                InlineKeyboardButton("❌ Cancel", callback_data="broadcast_cancel"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -233,7 +243,7 @@ class KeyboardGenerator:
         keyboard = [
             [
                 InlineKeyboardButton("✅ Accept", callback_data=f"accept_friend:{requester_id}"),
-                InlineKeyboardButton("❌ Decline", callback_data=f"decline_friend:{requester_id}")
+                InlineKeyboardButton("❌ Decline", callback_data=f"decline_friend:{requester_id}"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -255,16 +265,13 @@ class KeyboardGenerator:
 
         keyboard = [
             [InlineKeyboardButton(text, callback_data=f"notifications_{action}")],
-            [InlineKeyboardButton("🔙 Back to Settings", callback_data="back_settings")]
+            [InlineKeyboardButton("🔙 Back to Settings", callback_data="back_settings")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def pagination_keyboard(
-        current_page: int,
-        total_pages: int,
-        callback_prefix: str,
-        back_callback: str = "back_main"
+        current_page: int, total_pages: int, callback_prefix: str, back_callback: str = "back_main"
     ) -> InlineKeyboardMarkup:
         """
         Generate pagination keyboard.
@@ -285,23 +292,14 @@ class KeyboardGenerator:
 
             # Previous page button
             if current_page > 0:
-                pagination_row.append(
-                    InlineKeyboardButton("◀️", callback_data=f"{callback_prefix}:{current_page - 1}")
-                )
+                pagination_row.append(InlineKeyboardButton("◀️", callback_data=f"{callback_prefix}:{current_page - 1}"))
 
             # Page indicator
-            pagination_row.append(
-                InlineKeyboardButton(
-                    f"{current_page + 1}/{total_pages}",
-                    callback_data="page_info"
-                )
-            )
+            pagination_row.append(InlineKeyboardButton(f"{current_page + 1}/{total_pages}", callback_data="page_info"))
 
             # Next page button
             if current_page < total_pages - 1:
-                pagination_row.append(
-                    InlineKeyboardButton("▶️", callback_data=f"{callback_prefix}:{current_page + 1}")
-                )
+                pagination_row.append(InlineKeyboardButton("▶️", callback_data=f"{callback_prefix}:{current_page + 1}"))
 
             keyboard.append(pagination_row)
 
@@ -312,10 +310,7 @@ class KeyboardGenerator:
 
     @staticmethod
     def yes_no_keyboard(
-        yes_callback: str,
-        no_callback: str,
-        yes_text: str = "✅ Yes",
-        no_text: str = "❌ No"
+        yes_callback: str, no_callback: str, yes_text: str = "✅ Yes", no_text: str = "❌ No"
     ) -> InlineKeyboardMarkup:
         """
         Generate yes/no confirmation keyboard.
@@ -332,7 +327,7 @@ class KeyboardGenerator:
         keyboard = [
             [
                 InlineKeyboardButton(yes_text, callback_data=yes_callback),
-                InlineKeyboardButton(no_text, callback_data=no_callback)
+                InlineKeyboardButton(no_text, callback_data=no_callback),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -368,12 +363,12 @@ class KeyboardGenerator:
 
         keyboard = [
             [InlineKeyboardButton(text, web_app=WebAppInfo(url=url))],
-            [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")]
+            [InlineKeyboardButton("🔙 Back to Main Menu", callback_data="back_main")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def language_menu(current_language: str = 'ru', translator=None) -> InlineKeyboardMarkup:
+    def language_menu(current_language: str = "ru", translator=None) -> InlineKeyboardMarkup:
         """
         Generate language selection keyboard.
 
@@ -386,31 +381,34 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = [
-            [InlineKeyboardButton(
-                translator.translate('language.russian') + (" ✓" if current_language == 'ru' else ""),
-                callback_data="language_ru"
-            )],
-            [InlineKeyboardButton(
-                translator.translate('language.english') + (" ✓" if current_language == 'en' else ""),
-                callback_data="language_en"
-            )],
-            [InlineKeyboardButton(
-                translator.translate('language.spanish') + (" ✓" if current_language == 'es' else ""),
-                callback_data="language_es"
-            )],
-            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
+            [
+                InlineKeyboardButton(
+                    translator.translate("language.russian") + (" ✓" if current_language == "ru" else ""),
+                    callback_data="language_ru",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    translator.translate("language.english") + (" ✓" if current_language == "en" else ""),
+                    callback_data="language_en",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    translator.translate("language.spanish") + (" ✓" if current_language == "es" else ""),
+                    callback_data="language_es",
+                )
+            ],
+            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def questions_menu(
-        questions_summary: Dict,
-        notifications_enabled: bool = True,
-        translator=None
-    ) -> InlineKeyboardMarkup:
+    def questions_menu(questions_summary: Dict, notifications_enabled: bool = True, translator=None) -> InlineKeyboardMarkup:
         """
         Generate questions menu keyboard.
 
@@ -424,6 +422,7 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = []
@@ -436,50 +435,61 @@ class KeyboardGenerator:
         keyboard.append([])  # Empty row separator
 
         # Default question
-        default_q = questions_summary.get('default_question')
+        default_q = questions_summary.get("default_question")
         if default_q:
-            status = "✅" if default_q.get('active', True) else "❌"
+            status = "✅" if default_q.get("active", True) else "❌"
             text = f"🔸 {translator.translate('questions.default_question')} {status}"
             keyboard.append([InlineKeyboardButton(text, callback_data=f"questions_edit:{default_q['id']}")])
 
         # Custom questions
-        custom_questions = questions_summary.get('custom_questions', [])
+        custom_questions = questions_summary.get("custom_questions", [])
         if custom_questions:
             keyboard.append([])  # Separator
-            keyboard.append([InlineKeyboardButton(
-                translator.translate("questions.custom_section"),
-                callback_data="questions_noop"
-            )])
+            keyboard.append(
+                [InlineKeyboardButton(translator.translate("questions.custom_section"), callback_data="questions_noop")]
+            )
 
             for question in custom_questions:
-                status = "✅" if question.get('active', True) else "❌"
-                name = question.get('question_name', translator.translate("common.question"))[:15]  # Limit length
+                status = "✅" if question.get("active", True) else "❌"
+                name = question.get("question_name", translator.translate("common.question"))[:15]  # Limit length
                 text = f"• {name} {status}"
-                keyboard.append([
-                    InlineKeyboardButton(text, callback_data=f"questions_edit:{question['id']}"),
-                    InlineKeyboardButton("🗑️", callback_data=f"questions_delete:{question['id']}")
-                ])
+                keyboard.append(
+                    [
+                        InlineKeyboardButton(text, callback_data=f"questions_edit:{question['id']}"),
+                        InlineKeyboardButton("🗑️", callback_data=f"questions_delete:{question['id']}"),
+                    ]
+                )
 
         # Add new question button
-        can_add = questions_summary.get('can_add_more', True)
-        stats = questions_summary.get('stats', {})
-        active_count = stats.get('active_questions', 0)
-        max_count = stats.get('max_questions', 5)
+        can_add = questions_summary.get("can_add_more", True)
+        stats = questions_summary.get("stats", {})
+        active_count = stats.get("active_questions", 0)
+        max_count = stats.get("max_questions", 5)
 
         if can_add:
             keyboard.append([])  # Separator
-            keyboard.append([InlineKeyboardButton(
-                translator.translate("questions.add_new", count=f"{active_count}/{max_count}"),
-                callback_data="questions_create"
-            )])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.add_new", count=f"{active_count}/{max_count}"),
+                        callback_data="questions_create",
+                    )
+                ]
+            )
 
         # Additional options
-        keyboard.extend([
-            [],  # Separator
-            [InlineKeyboardButton(translator.translate("questions.templates"), callback_data="questions_templates")],
-            [InlineKeyboardButton(translator.translate("questions.show_all_settings"), callback_data="questions_show_all")],
-            [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")]
-        ])
+        keyboard.extend(
+            [
+                [],  # Separator
+                [InlineKeyboardButton(translator.translate("questions.templates"), callback_data="questions_templates")],
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.show_all_settings"), callback_data="questions_show_all"
+                    )
+                ],
+                [InlineKeyboardButton(translator.translate("menu.back_main"), callback_data="back_main")],
+            ]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -497,27 +507,51 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = []
 
         # Edit options
-        keyboard.extend([
-            [InlineKeyboardButton(translator.translate("questions.edit_text"), callback_data=f"questions_edit_text:{question['id']}")],
-            [InlineKeyboardButton(translator.translate("questions.edit_schedule"), callback_data=f"questions_edit_schedule:{question['id']}")],
-        ])
+        keyboard.extend(
+            [
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.edit_text"), callback_data=f"questions_edit_text:{question['id']}"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.edit_schedule"),
+                        callback_data=f"questions_edit_schedule:{question['id']}",
+                    )
+                ],
+            ]
+        )
 
         # Toggle status (only for non-default questions)
-        if not question.get('is_default', False):
-            status_text = translator.translate("questions.disable") if question.get('active') else translator.translate("questions.enable")
+        if not question.get("is_default", False):
+            status_text = (
+                translator.translate("questions.disable")
+                if question.get("active")
+                else translator.translate("questions.enable")
+            )
             keyboard.append([InlineKeyboardButton(status_text, callback_data=f"questions_toggle:{question['id']}")])
 
         # Test question
-        keyboard.append([InlineKeyboardButton(translator.translate("questions.test"), callback_data=f"questions_test:{question['id']}")])
+        keyboard.append(
+            [InlineKeyboardButton(translator.translate("questions.test"), callback_data=f"questions_test:{question['id']}")]
+        )
 
         # Delete (only for non-default questions)
-        if not question.get('is_default', False):
-            keyboard.append([InlineKeyboardButton(translator.translate("questions.delete"), callback_data=f"questions_delete_confirm:{question['id']}")])
+        if not question.get("is_default", False):
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.delete"), callback_data=f"questions_delete_confirm:{question['id']}"
+                    )
+                ]
+            )
 
         # Back button
         keyboard.append([InlineKeyboardButton(translator.translate("questions.back"), callback_data="menu_questions")])
@@ -538,6 +572,7 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = []
@@ -545,19 +580,20 @@ class KeyboardGenerator:
         if category is None:
             # Show categories
             from bot.questions.question_templates import QuestionTemplates
+
             categories = QuestionTemplates.get_category_names()
 
             for cat_key, cat_name in categories.items():
-                keyboard.append([InlineKeyboardButton(
-                    cat_name,
-                    callback_data=f"questions_templates_cat:{cat_key}"
-                )])
+                keyboard.append([InlineKeyboardButton(cat_name, callback_data=f"questions_templates_cat:{cat_key}")])
 
             # Popular templates shortcut
-            keyboard.append([InlineKeyboardButton(
-                translator.translate("questions.popular_templates"),
-                callback_data="questions_templates_cat:popular"
-            )])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.popular_templates"), callback_data="questions_templates_cat:popular"
+                    )
+                ]
+            )
 
         else:
             # Show templates in category
@@ -570,23 +606,22 @@ class KeyboardGenerator:
                 templates = all_templates.get(category, [])
 
             for template in templates:
-                name = template['name'][:25]  # Limit length
-                keyboard.append([InlineKeyboardButton(
-                    f"➕ {name}",
-                    callback_data=f"questions_use_template:{template['name']}"
-                )])
+                name = template["name"][:25]  # Limit length
+                keyboard.append(
+                    [InlineKeyboardButton(f"➕ {name}", callback_data=f"questions_use_template:{template['name']}")]
+                )
 
             # Back to categories
-            keyboard.append([InlineKeyboardButton(
-                translator.translate("questions.back_to_categories"),
-                callback_data="questions_templates"
-            )])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        translator.translate("questions.back_to_categories"), callback_data="questions_templates"
+                    )
+                ]
+            )
 
         # Back to questions menu
-        keyboard.append([InlineKeyboardButton(
-            translator.translate("questions.back"),
-            callback_data="menu_questions"
-        )])
+        keyboard.append([InlineKeyboardButton(translator.translate("questions.back"), callback_data="menu_questions")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -604,18 +639,17 @@ class KeyboardGenerator:
         """
         if translator is None:
             from bot.i18n.translator import Translator
+
             translator = Translator()
 
         keyboard = [
             [
                 InlineKeyboardButton(
-                    translator.translate("questions.delete_confirm"),
-                    callback_data=f"questions_delete_yes:{question_id}"
+                    translator.translate("questions.delete_confirm"), callback_data=f"questions_delete_yes:{question_id}"
                 ),
                 InlineKeyboardButton(
-                    translator.translate("questions.delete_cancel"),
-                    callback_data=f"questions_edit:{question_id}"
-                )
+                    translator.translate("questions.delete_cancel"), callback_data=f"questions_edit:{question_id}"
+                ),
             ]
         ]
 
@@ -624,11 +658,10 @@ class KeyboardGenerator:
 
 # Convenience functions for common keyboards
 
+
 def get_main_menu_keyboard(is_admin: bool = False, translator=None) -> InlineKeyboardMarkup:
     """Get main menu keyboard."""
     return KeyboardGenerator.main_menu(is_admin, translator)
-
-
 
 
 def get_friends_keyboard(pending_requests: int = 0, friends_count: int = 0, translator=None) -> InlineKeyboardMarkup:

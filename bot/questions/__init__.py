@@ -7,4 +7,4 @@ This module provides functionality for custom user questions with versioning sup
 from .question_manager import QuestionManager
 from .question_templates import QuestionTemplates
 
-__all__ = ['QuestionManager', 'QuestionTemplates']
+__all__ = ["QuestionManager", "QuestionTemplates"]

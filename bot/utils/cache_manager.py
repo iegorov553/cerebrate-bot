@@ -62,10 +62,7 @@ class CacheManager:
     def cleanup_expired(self) -> int:
         """Очистить истекшие записи и вернуть количество удаленных."""
         now = datetime.now()
-        expired_keys = [
-            key for key, timeout in self._cache_timeout.items()
-            if now >= timeout
-        ]
+        expired_keys = [key for key, timeout in self._cache_timeout.items() if now >= timeout]
 
         for key in expired_keys:
             self.invalidate(key)

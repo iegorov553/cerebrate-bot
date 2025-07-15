@@ -18,18 +18,18 @@ from bot.handlers.admin_conversations import setup_admin_conversations
 from bot.handlers.admin_handlers import setup_admin_handlers
 from bot.handlers.base.callback_router import CallbackRouter
 from bot.handlers.callbacks import (
-    NavigationCallbackHandler,
+    AdminCallbackHandler,
     FeedbackCallbackHandler,
     FriendsCallbackHandler,
-    AdminCallbackHandler,
+    NavigationCallbackHandler,
     QuestionsCallbackHandler,
 )
 from bot.handlers.commands import (
-    setup_user_commands,
-    setup_social_commands,
     setup_config_commands,
     setup_history_commands,
-    setup_system_commands
+    setup_social_commands,
+    setup_system_commands,
+    setup_user_commands,
 )
 from bot.handlers.error_handler import setup_error_handler
 from bot.handlers.message_handlers import setup_message_handlers
@@ -85,12 +85,9 @@ async def create_application() -> Application:
     logger.info("Error handling configured")
 
     # Store dependencies in bot_data for access in handlers
-    application.bot_data.update({
-        'db_client': db_client,
-        'user_cache': user_cache,
-        'rate_limiter': rate_limiter,
-        'config': config
-    })
+    application.bot_data.update(
+        {"db_client": db_client, "user_cache": user_cache, "rate_limiter": rate_limiter, "config": config}
+    )
 
     # Setup all command handlers modularly
     setup_user_commands(application)
@@ -126,7 +123,7 @@ async def create_application() -> Application:
     logger.info("Multi-question scheduler service started")
 
     # Store scheduler in application for proper shutdown
-    application.bot_data['multi_question_scheduler'] = multi_question_scheduler
+    application.bot_data["multi_question_scheduler"] = multi_question_scheduler
 
     return application
 
@@ -144,8 +141,8 @@ async def main() -> None:
         await application.run_polling()
     finally:
         # Cleanup scheduler on shutdown
-        if 'multi_question_scheduler' in application.bot_data:
-            scheduler = application.bot_data['multi_question_scheduler']
+        if "multi_question_scheduler" in application.bot_data:
+            scheduler = application.bot_data["multi_question_scheduler"]
             scheduler.stop()
             logger.info("Multi-question scheduler stopped")
 

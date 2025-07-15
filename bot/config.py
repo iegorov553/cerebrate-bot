@@ -45,7 +45,7 @@ class Config:
     whisper_model: str = "whisper-1"
     max_voice_file_size_mb: int = 25
     max_voice_duration_seconds: int = 120
-    
+
     # Groq API Configuration
     groq_api_key: Optional[str] = None
     groq_primary_model: str = "whisper-large-v3"
@@ -67,35 +67,28 @@ class Config:
             bot_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
             supabase_url=os.getenv("SUPABASE_URL", ""),
             supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
-
             # Admin
             admin_user_id=admin_user_id,
-
             # Optional with defaults
             cache_ttl_seconds=int(os.getenv("CACHE_TTL_SECONDS", "300")),
             broadcast_batch_size=int(os.getenv("BROADCAST_BATCH_SIZE", "10")),
             broadcast_delay_between_batches=float(os.getenv("BROADCAST_DELAY_BATCHES", "2.0")),
             broadcast_delay_between_messages=float(os.getenv("BROADCAST_DELAY_MESSAGES", "0.1")),
-
             # Monitoring
             sentry_dsn=os.getenv("SENTRY_DSN"),
             environment=os.getenv("ENVIRONMENT", "development"),
             release_version=os.getenv("RELEASE_VERSION", "unknown"),
-
             # Web app
             webapp_url=os.getenv("WEBAPP_URL", "https://doyobi-diary.vercel.app"),
-
             # GitHub Feedback
             github_feedback_token=os.getenv("GITHUB_FEEDBACK_TOKEN"),
             github_repo=os.getenv("GITHUB_REPO", "iegorov553/cerebrate-bot"),
             feedback_rate_limit=int(os.getenv("FEEDBACK_RATE_LIMIT", "3")),
-
             # Whisper Voice Recognition
             openai_api_key=os.getenv("OPENAI_API_KEY"),
             whisper_model=os.getenv("WHISPER_MODEL", "whisper-1"),
             max_voice_file_size_mb=int(os.getenv("MAX_VOICE_FILE_SIZE_MB", "25")),
             max_voice_duration_seconds=int(os.getenv("MAX_VOICE_DURATION_SECONDS", "120")),
-            
             # Groq API
             groq_api_key=os.getenv("GROQ_API_KEY"),
             groq_primary_model=os.getenv("GROQ_PRIMARY_MODEL", "whisper-large-v3"),
@@ -129,11 +122,11 @@ class Config:
     def is_whisper_enabled(self) -> bool:
         """Check if Whisper voice recognition is enabled."""
         return self.openai_api_key is not None
-    
+
     def is_groq_enabled(self) -> bool:
         """Check if Groq API is enabled."""
         return self.groq_api_key is not None
-    
+
     def is_voice_recognition_enabled(self) -> bool:
         """Check if any voice recognition provider is enabled."""
         return self.is_groq_enabled() or self.is_whisper_enabled()

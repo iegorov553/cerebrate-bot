@@ -11,12 +11,11 @@ from bot.handlers.base.base_handler import BaseCallbackHandler
 from bot.i18n.translator import Translator
 from bot.keyboards.keyboard_generators import (
     KeyboardGenerator,
-    create_questions_menu,
     create_question_delete_confirm,
-    create_question_edit_menu
+    create_question_edit_menu,
+    create_questions_menu,
 )
 from monitoring import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -35,20 +34,13 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
     def can_handle(self, data: str) -> bool:
         """Check if this handler can process the callback data."""
-        questions_callbacks = {
-            'menu_questions',
-            'questions',
-            'questions_noop'
-        }
+        questions_callbacks = {"menu_questions", "questions", "questions_noop"}
 
-        return (data in questions_callbacks
-                or data.startswith('questions_'))
+        return data in questions_callbacks or data.startswith("questions_")
 
-    async def handle_callback(self,
-                            query: CallbackQuery,
-                            data: str,
-                            translator: Translator,
-                            context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def handle_callback(
+        self, query: CallbackQuery, data: str, translator: Translator, context: ContextTypes.DEFAULT_TYPE
+    ) -> None:
         """Handle questions callback queries."""
 
         if data in ["menu_questions", "questions"]:
@@ -64,15 +56,14 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
         else:
             self.logger.warning("Unhandled questions callback", callback_data=data)
 
-    async def _handle_questions_menu(self,
-                                   query: CallbackQuery,
-                                   translator: Translator) -> None:
+    async def _handle_questions_menu(self, query: CallbackQuery, translator: Translator) -> None:
         """Handle questions menu display."""
         user = query.from_user
 
         try:
             # Initialize question manager
             from bot.questions import QuestionManager
+
             question_manager = QuestionManager(self.db_client, self.user_cache)
 
             # Get user questions summary
@@ -80,52 +71,40 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
             # Get notifications status from user settings
             from bot.database.user_operations import UserOperations
+
             user_ops = UserOperations(self.db_client, self.user_cache)
             user_data = await user_ops.get_user_settings(user.id)
-            notifications_enabled = user_data.get('enabled', True) if user_data else True
+            notifications_enabled = user_data.get("enabled", True) if user_data else True
 
             # Create keyboard
             keyboard = create_questions_menu(questions_summary, notifications_enabled, translator)
 
             # Create menu text
             menu_text = f"{translator.translate('questions.title')}\n\n"
-            menu_text += translator.translate('questions.description')
+            menu_text += translator.translate("questions.description")
 
-            await query.edit_message_text(
-                menu_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
+            await query.edit_message_text(menu_text, reply_markup=keyboard, parse_mode="Markdown")
+
+            self.logger.debug(
+                "Questions menu displayed", user_id=user.id, questions_count=len(questions_summary.get("questions", []))
             )
-
-            self.logger.debug("Questions menu displayed",
-                            user_id=user.id,
-                            questions_count=len(questions_summary.get('questions', [])))
 
         except Exception as e:
-            self.logger.error("Error displaying questions menu",
-                            user_id=user.id,
-                            error=str(e))
+            self.logger.error("Error displaying questions menu", user_id=user.id, error=str(e))
 
             # Show error message
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_questions_action(self,
-                                     query: CallbackQuery,
-                                     data: str,
-                                     translator: Translator) -> None:
+    async def _handle_questions_action(self, query: CallbackQuery, data: str, translator: Translator) -> None:
         """Handle specific questions actions."""
         user = query.from_user
 
-        self.logger.debug("Processing questions action",
-                         user_id=user.id,
-                         action=data)
+        self.logger.debug("Processing questions action", user_id=user.id, action=data)
 
         try:
             # Initialize question manager
             from bot.questions import QuestionManager
+
             question_manager = QuestionManager(self.db_client, self.user_cache)
 
             if data == "questions_create":
@@ -168,55 +147,39 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
                 await self._handle_show_all_settings(query, question_manager, translator)
 
             else:
-                self.logger.warning("Unknown questions action",
-                                  user_id=user.id,
-                                  action=data)
-                # Only show different error message to avoid "Message is not modified" 
+                self.logger.warning("Unknown questions action", user_id=user.id, action=data)
+                # Only show different error message to avoid "Message is not modified"
                 from bot.keyboards.keyboard_generators import KeyboardGenerator
+
                 error_keyboard = KeyboardGenerator.single_button_keyboard(
-                    translator.translate('questions.back'), 
-                    'menu_questions'
+                    translator.translate("questions.back"), "menu_questions"
                 )
                 await query.edit_message_text(
                     f"❌ {translator.translate('errors.unknown_action')}\n\n{translator.translate('questions.try_again')}",
                     reply_markup=error_keyboard,
-                    parse_mode='Markdown'
+                    parse_mode="Markdown",
                 )
 
         except Exception as e:
-            self.logger.error("Error in questions action",
-                            user_id=user.id,
-                            action=data,
-                            error=str(e))
+            self.logger.error("Error in questions action", user_id=user.id, action=data, error=str(e))
 
             # Show error with back button to avoid "Message is not modified"
             from bot.keyboards.keyboard_generators import KeyboardGenerator
-            error_keyboard = KeyboardGenerator.single_button_keyboard(
-                translator.translate('questions.back'), 
-                'menu_questions'
-            )
+
+            error_keyboard = KeyboardGenerator.single_button_keyboard(translator.translate("questions.back"), "menu_questions")
             await query.edit_message_text(
                 f"❌ {translator.translate('errors.general')}\n\n{translator.translate('questions.try_again')}",
                 reply_markup=error_keyboard,
-                parse_mode='Markdown'
+                parse_mode="Markdown",
             )
 
-    async def _handle_create_question(self,
-                                    query: CallbackQuery,
-                                    translator: Translator) -> None:
+    async def _handle_create_question(self, query: CallbackQuery, translator: Translator) -> None:
         """Handle question creation instruction."""
-        await query.edit_message_text(
-            translator.translate('questions.create_instruction'),
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(translator.translate("questions.create_instruction"), parse_mode="Markdown")
 
-        self.logger.debug("Create question instruction shown",
-                         user_id=query.from_user.id)
+        self.logger.debug("Create question instruction shown", user_id=query.from_user.id)
 
-    async def _handle_list_questions(self,
-                                   query: CallbackQuery,
-                                   question_manager,
-                                   translator: Translator) -> None:
+    async def _handle_list_questions(self, query: CallbackQuery, question_manager, translator: Translator) -> None:
         """Handle questions list display."""
         user = query.from_user
 
@@ -225,79 +188,59 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
         if not questions:
             # No questions found
-            await query.edit_message_text(
-                translator.translate('questions.list_empty'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("questions.list_empty"), parse_mode="Markdown")
             return
 
         # Create questions list text
         list_text = f"{translator.translate('questions.list_title')}\n\n"
 
         for i, question in enumerate(questions[:10], 1):  # Show max 10
-            status_emoji = "✅" if question['active'] else "❌"
-            question_text = question['question_text'][:50] + "..." if len(question['question_text']) > 50 else question['question_text']
+            status_emoji = "✅" if question["active"] else "❌"
+            question_text = (
+                question["question_text"][:50] + "..." if len(question["question_text"]) > 50 else question["question_text"]
+            )
 
             list_text += f"{i}. {status_emoji} {question_text}\n"
             list_text += f"   ⏰ {question['window_start']}-{question['window_end']}, "
             list_text += f"{translator.translate('questions.interval_minutes', minutes=question['interval_minutes'])}\n\n"
 
         if len(questions) > 10:
-            list_text += translator.translate('questions.and_more', count=len(questions) - 10)
+            list_text += translator.translate("questions.and_more", count=len(questions) - 10)
 
-        await query.edit_message_text(
-            list_text,
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(list_text, parse_mode="Markdown")
 
-        self.logger.debug("Questions list displayed",
-                         user_id=user.id,
-                         questions_count=len(questions))
+        self.logger.debug("Questions list displayed", user_id=user.id, questions_count=len(questions))
 
-    async def _handle_templates_menu(self,
-                                   query: CallbackQuery,
-                                   translator: Translator) -> None:
+    async def _handle_templates_menu(self, query: CallbackQuery, translator: Translator) -> None:
         """Handle templates menu display."""
         try:
             # Create templates menu keyboard with categories
             from bot.keyboards.keyboard_generators import create_question_templates_menu
+
             keyboard = create_question_templates_menu(None, translator)
-            
+
             # Create templates menu text
             menu_text = f"{translator.translate('questions.templates_title')}\n\n"
-            menu_text += translator.translate('questions.templates_description')
-            
-            await query.edit_message_text(
-                menu_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
+            menu_text += translator.translate("questions.templates_description")
 
-            self.logger.debug("Templates menu displayed",
-                             user_id=query.from_user.id)
-                             
+            await query.edit_message_text(menu_text, reply_markup=keyboard, parse_mode="Markdown")
+
+            self.logger.debug("Templates menu displayed", user_id=query.from_user.id)
+
         except Exception as e:
-            self.logger.error("Error displaying templates menu",
-                            user_id=query.from_user.id,
-                            error=str(e))
-            
+            self.logger.error("Error displaying templates menu", user_id=query.from_user.id, error=str(e))
+
             # Fallback with back button
             from bot.keyboards.keyboard_generators import KeyboardGenerator
-            error_keyboard = KeyboardGenerator.single_button_keyboard(
-                translator.translate('questions.back'), 
-                'menu_questions'
-            )
+
+            error_keyboard = KeyboardGenerator.single_button_keyboard(translator.translate("questions.back"), "menu_questions")
             await query.edit_message_text(
                 f"❌ {translator.translate('errors.general')}\n\n{translator.translate('questions.try_again')}",
                 reply_markup=error_keyboard,
-                parse_mode='Markdown'
+                parse_mode="Markdown",
             )
 
-    async def _handle_edit_question(self,
-                                  query: CallbackQuery,
-                                  data: str,
-                                  question_manager,
-                                  translator: Translator) -> None:
+    async def _handle_edit_question(self, query: CallbackQuery, data: str, question_manager, translator: Translator) -> None:
         """Handle question editing interface."""
         user = query.from_user
 
@@ -307,10 +250,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             question = await question_manager.question_ops.get_question_by_id(question_id)
 
             if not question:
-                await query.edit_message_text(
-                    translator.translate('questions.error_not_found'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.error_not_found"), parse_mode="Markdown")
                 return
 
             # Create edit menu
@@ -318,42 +258,35 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
             # Create edit text
             edit_text = f"{translator.translate('questions.edit_title')}\n\n"
-            edit_text += translator.translate('questions.current_text', text=question['question_text']) + "\n"
-            edit_text += translator.translate('questions.current_schedule',
-                start=question['window_start'],
-                end=question['window_end'],
-                interval=question['interval_minutes']) + "\n"
-
-            status = translator.translate('questions.enable') if question['active'] else translator.translate('questions.disable')
-            edit_text += translator.translate('questions.current_status', status=status) + "\n\n"
-            edit_text += translator.translate('questions.edit_instructions')
-
-            await query.edit_message_text(
-                edit_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
+            edit_text += translator.translate("questions.current_text", text=question["question_text"]) + "\n"
+            edit_text += (
+                translator.translate(
+                    "questions.current_schedule",
+                    start=question["window_start"],
+                    end=question["window_end"],
+                    interval=question["interval_minutes"],
+                )
+                + "\n"
             )
 
-            self.logger.debug("Question edit interface shown",
-                            user_id=user.id,
-                            question_id=question_id)
+            status = (
+                translator.translate("questions.enable") if question["active"] else translator.translate("questions.disable")
+            )
+            edit_text += translator.translate("questions.current_status", status=status) + "\n\n"
+            edit_text += translator.translate("questions.edit_instructions")
+
+            await query.edit_message_text(edit_text, reply_markup=keyboard, parse_mode="Markdown")
+
+            self.logger.debug("Question edit interface shown", user_id=user.id, question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question edit callback data",
-                            user_id=user.id,
-                            data=data,
-                            error=str(e))
+            self.logger.error("Invalid question edit callback data", user_id=user.id, data=data, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_delete_question_confirm(self,
-                                            query: CallbackQuery,
-                                            data: str,
-                                            question_manager,
-                                            translator: Translator) -> None:
+    async def _handle_delete_question_confirm(
+        self, query: CallbackQuery, data: str, question_manager, translator: Translator
+    ) -> None:
         """Handle question deletion confirmation."""
         user = query.from_user
 
@@ -363,10 +296,7 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             question = await question_manager.question_ops.get_question_by_id(question_id)
 
             if not question:
-                await query.edit_message_text(
-                    translator.translate('questions.error_not_found'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.error_not_found"), parse_mode="Markdown")
                 return
 
             # Create confirmation keyboard
@@ -376,41 +306,33 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             def escape_markdown_safe(text):
                 if not text:
                     return ""
-                return (str(text).replace('_', '\\_').replace('*', '\\*')
-                        .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
-            
+                return (
+                    str(text)
+                    .replace("_", "\\_")
+                    .replace("*", "\\*")
+                    .replace("`", "\\`")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                )
+
             confirm_text = f"{translator.translate('questions.delete_confirm')}\n\n"
-            safe_question_text = escape_markdown_safe(question['question_text'])
+            safe_question_text = escape_markdown_safe(question["question_text"])
             question_bold = f"**{safe_question_text}**"
             confirm_text += f"❓ {question_bold}\n\n"
-            confirm_text += translator.translate('questions.delete_warning')
+            confirm_text += translator.translate("questions.delete_warning")
 
-            await query.edit_message_text(
-                confirm_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(confirm_text, reply_markup=keyboard, parse_mode="Markdown")
 
-            self.logger.debug("Question delete confirmation shown",
-                            user_id=user.id,
-                            question_id=question_id)
+            self.logger.debug("Question delete confirmation shown", user_id=user.id, question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question delete callback data",
-                            user_id=user.id,
-                            data=data,
-                            error=str(e))
+            self.logger.error("Invalid question delete callback data", user_id=user.id, data=data, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_delete_question_execute(self,
-                                            query: CallbackQuery,
-                                            data: str,
-                                            question_manager,
-                                            translator: Translator) -> None:
+    async def _handle_delete_question_execute(
+        self, query: CallbackQuery, data: str, question_manager, translator: Translator
+    ) -> None:
         """Execute question deletion."""
         user = query.from_user
 
@@ -422,40 +344,20 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             success = await question_manager.question_ops.delete_question(question_id)
 
             if success:
-                await query.edit_message_text(
-                    translator.translate('questions.delete_success'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.delete_success"), parse_mode="Markdown")
 
-                self.logger.info("Question deleted",
-                               user_id=user.id,
-                               question_id=question_id)
+                self.logger.info("Question deleted", user_id=user.id, question_id=question_id)
             else:
-                await query.edit_message_text(
-                    translator.translate('questions.delete_error'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.delete_error"), parse_mode="Markdown")
 
-                self.logger.error("Failed to delete question",
-                                user_id=user.id,
-                                question_id=question_id)
+                self.logger.error("Failed to delete question", user_id=user.id, question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question delete execute callback data",
-                            user_id=user.id,
-                            data=data,
-                            error=str(e))
+            self.logger.error("Invalid question delete execute callback data", user_id=user.id, data=data, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_toggle_question(self,
-                                    query: CallbackQuery,
-                                    data: str,
-                                    question_manager,
-                                    translator: Translator) -> None:
+    async def _handle_toggle_question(self, query: CallbackQuery, data: str, question_manager, translator: Translator) -> None:
         """Handle question status toggle (active/inactive)."""
         user = query.from_user
 
@@ -467,40 +369,20 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             success = await question_manager.question_ops.toggle_question_status(question_id)
 
             if success:
-                await query.edit_message_text(
-                    translator.translate('questions.toggle_success'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.toggle_success"), parse_mode="Markdown")
 
-                self.logger.info("Question status toggled",
-                               user_id=user.id,
-                               question_id=question_id)
+                self.logger.info("Question status toggled", user_id=user.id, question_id=question_id)
             else:
-                await query.edit_message_text(
-                    translator.translate('questions.toggle_error'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.toggle_error"), parse_mode="Markdown")
 
-                self.logger.error("Failed to toggle question status",
-                                user_id=user.id,
-                                question_id=question_id)
+                self.logger.error("Failed to toggle question status", user_id=user.id, question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question toggle callback data",
-                            user_id=user.id,
-                            data=data,
-                            error=str(e))
+            self.logger.error("Invalid question toggle callback data", user_id=user.id, data=data, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_test_question(self,
-                                  query: CallbackQuery,
-                                  data: str,
-                                  question_manager,
-                                  translator: Translator) -> None:
+    async def _handle_test_question(self, query: CallbackQuery, data: str, question_manager, translator: Translator) -> None:
         """Handle question testing."""
         user = query.from_user
 
@@ -512,86 +394,43 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             success = await question_manager.send_test_question(user.id, question_id)
 
             if success:
-                await query.edit_message_text(
-                    translator.translate('questions.test_sent'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.test_sent"), parse_mode="Markdown")
 
-                self.logger.info("Test question sent",
-                               user_id=user.id,
-                               question_id=question_id)
+                self.logger.info("Test question sent", user_id=user.id, question_id=question_id)
             else:
-                await query.edit_message_text(
-                    translator.translate('questions.test_error'),
-                    parse_mode='Markdown'
-                )
+                await query.edit_message_text(translator.translate("questions.test_error"), parse_mode="Markdown")
 
-                self.logger.error("Failed to send test question",
-                                user_id=user.id,
-                                question_id=question_id)
+                self.logger.error("Failed to send test question", user_id=user.id, question_id=question_id)
 
         except (ValueError, IndexError) as e:
-            self.logger.error("Invalid question test callback data",
-                            user_id=user.id,
-                            data=data,
-                            error=str(e))
+            self.logger.error("Invalid question test callback data", user_id=user.id, data=data, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_templates_category(self,
-                                       query: CallbackQuery,
-                                       data: str,
-                                       translator: Translator) -> None:
+    async def _handle_templates_category(self, query: CallbackQuery, data: str, translator: Translator) -> None:
         """Handle template category selection."""
         # This would show templates in specific category
-        await query.edit_message_text(
-            translator.translate('questions.templates_category_help'),
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(translator.translate("questions.templates_category_help"), parse_mode="Markdown")
 
-        self.logger.debug("Template category accessed",
-                         user_id=query.from_user.id,
-                         category=data)
+        self.logger.debug("Template category accessed", user_id=query.from_user.id, category=data)
 
-    async def _handle_use_template(self,
-                                 query: CallbackQuery,
-                                 data: str,
-                                 question_manager,
-                                 translator: Translator) -> None:
+    async def _handle_use_template(self, query: CallbackQuery, data: str, question_manager, translator: Translator) -> None:
         """Handle template usage."""
         # This would show template details and options
-        await query.edit_message_text(
-            translator.translate('questions.template_use_help'),
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(translator.translate("questions.template_use_help"), parse_mode="Markdown")
 
-        self.logger.debug("Template use interface shown",
-                         user_id=query.from_user.id,
-                         template=data)
+        self.logger.debug("Template use interface shown", user_id=query.from_user.id, template=data)
 
-    async def _handle_create_from_template(self,
-                                         query: CallbackQuery,
-                                         data: str,
-                                         question_manager,
-                                         translator: Translator) -> None:
+    async def _handle_create_from_template(
+        self, query: CallbackQuery, data: str, question_manager, translator: Translator
+    ) -> None:
         """Handle question creation from template."""
         # This would create a question from the selected template
-        await query.edit_message_text(
-            translator.translate('questions.template_create_help'),
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(translator.translate("questions.template_create_help"), parse_mode="Markdown")
 
-        self.logger.debug("Question creation from template initiated",
-                         user_id=query.from_user.id,
-                         template=data)
+        self.logger.debug("Question creation from template initiated", user_id=query.from_user.id, template=data)
 
-    async def _handle_show_all_settings(self,
-                                      query: CallbackQuery,
-                                      question_manager,
-                                      translator: Translator) -> None:
+    async def _handle_show_all_settings(self, query: CallbackQuery, question_manager, translator: Translator) -> None:
         """Handle showing all user question settings."""
         user = query.from_user
 
@@ -601,9 +440,10 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
 
             # Get user settings for notifications status
             from bot.database.user_operations import UserOperations
+
             user_ops = UserOperations(self.db_client, self.user_cache)
             user_data = await user_ops.get_user_settings(user.id)
-            notifications_enabled = user_data.get('enabled', True) if user_data else True
+            notifications_enabled = user_data.get("enabled", True) if user_data else True
 
             # Build comprehensive settings text
             settings_text = f"{translator.translate('questions.all_settings_title')}\n\n"
@@ -613,79 +453,69 @@ class QuestionsCallbackHandler(BaseCallbackHandler):
             settings_text += f"{translator.translate('questions.notifications_status', status=notif_status)}\n"
 
             # Questions count
-            stats = questions_summary.get('stats', {})
-            active_count = stats.get('active_questions', 0)
-            max_count = stats.get('max_questions', 5)
-            settings_text += f"{translator.translate('questions.active_questions_count', count=active_count, max=max_count)}\n\n"
+            stats = questions_summary.get("stats", {})
+            active_count = stats.get("active_questions", 0)
+            max_count = stats.get("max_questions", 5)
+            settings_text += (
+                f"{translator.translate('questions.active_questions_count', count=active_count, max=max_count)}\n\n"
+            )
 
             # Questions list
             settings_text += f"{translator.translate('questions.questions_list')}\n"
 
             # Default question
-            default_q = questions_summary.get('default_question')
+            default_q = questions_summary.get("default_question")
             if default_q:
-                status = "✅" if default_q.get('active', True) else "❌"
-                settings_text += translator.translate('questions.default_marker') + " " + translator.translate('questions.default_question') + " " + status + "\n"
+                status = "✅" if default_q.get("active", True) else "❌"
+                settings_text += (
+                    translator.translate("questions.default_marker")
+                    + " "
+                    + translator.translate("questions.default_question")
+                    + " "
+                    + status
+                    + "\n"
+                )
                 settings_text += f"   ⏰ {default_q.get('window_start', '09:00')}-{default_q.get('window_end', '22:00')}\n"
                 settings_text += f"   📊 {translator.translate('questions.interval_minutes', minutes=default_q.get('interval_minutes', 120))}\n\n"
 
             # Custom questions
-            custom_questions = questions_summary.get('custom_questions', [])
+            custom_questions = questions_summary.get("custom_questions", [])
             if custom_questions:
                 for question in custom_questions:
-                    status = "✅" if question.get('active', True) else "❌"
-                    name = question.get('question_name', translator.translate("common.question"))
+                    status = "✅" if question.get("active", True) else "❌"
+                    name = question.get("question_name", translator.translate("common.question"))
                     settings_text += f"{translator.translate('questions.custom_marker')} {name} {status}\n"
                     settings_text += f"   ⏰ {question.get('window_start', '09:00')}-{question.get('window_end', '22:00')}\n"
                     settings_text += f"   📊 {translator.translate('questions.interval_minutes', minutes=question.get('interval_minutes', 120))}\n\n"
 
             # Back button
-            keyboard = KeyboardGenerator.single_button_keyboard(
-                translator.translate('questions.back'),
-                'menu_questions'
-            )
+            keyboard = KeyboardGenerator.single_button_keyboard(translator.translate("questions.back"), "menu_questions")
 
-            await query.edit_message_text(
-                settings_text,
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(settings_text, reply_markup=keyboard, parse_mode="Markdown")
 
-            self.logger.debug("All settings shown",
-                            user_id=user.id,
-                            questions_count=len(custom_questions) + (1 if default_q else 0))
+            self.logger.debug(
+                "All settings shown", user_id=user.id, questions_count=len(custom_questions) + (1 if default_q else 0)
+            )
 
         except Exception as e:
-            self.logger.error("Error showing all settings",
-                            user_id=user.id,
-                            error=str(e))
+            self.logger.error("Error showing all settings", user_id=user.id, error=str(e))
 
-            await query.edit_message_text(
-                translator.translate('errors.general'),
-                parse_mode='Markdown'
-            )
+            await query.edit_message_text(translator.translate("errors.general"), parse_mode="Markdown")
 
-    async def _handle_back_to_main(self,
-                                 query: CallbackQuery,
-                                 translator: Translator) -> None:
+    async def _handle_back_to_main(self, query: CallbackQuery, translator: Translator) -> None:
         """Handle back to main menu."""
         user = query.from_user
 
         # Check if user is admin
-        is_admin = (self.config.is_admin_configured()
-                    and user.id == self.config.admin_user_id)
+        is_admin = self.config.is_admin_configured() and user.id == self.config.admin_user_id
 
         # Generate main menu
         keyboard = KeyboardGenerator.main_menu(is_admin, translator)
 
         # Create welcome message
         welcome_text = f"👋 {translator.translate('welcome.greeting', name=user.first_name)}\n\n"
-        welcome_text += translator.translate('welcome.description')
+        welcome_text += translator.translate("welcome.description")
 
-        await query.edit_message_text(
-            welcome_text,
-            reply_markup=keyboard,
-            parse_mode='Markdown'
-        )
+        await query.edit_message_text(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
 
         self.logger.debug("Returned to main menu from questions", user_id=user.id)

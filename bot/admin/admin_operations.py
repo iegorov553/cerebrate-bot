@@ -26,15 +26,15 @@ class AdminOperations:
         try:
             # Try using the optimized SQL function first
             try:
-                result = self.db.client.rpc('get_user_stats').execute()
+                result = self.db.client.rpc("get_user_stats").execute()
 
                 if result.data and len(result.data) > 0:
                     stats = result.data[0]
                     return {
-                        "total": stats['total_users'],
-                        "active": stats['active_users'],
-                        "new_week": stats['new_users_week'],
-                        "active_percentage": float(stats['active_percentage'])
+                        "total": stats["total_users"],
+                        "active": stats["active_users"],
+                        "new_week": stats["new_users_week"],
+                        "active_percentage": float(stats["active_percentage"]),
                     }
 
             except Exception as sql_error:
@@ -58,7 +58,8 @@ class AdminOperations:
 
             # New users in last 7 days
             from datetime import datetime, timedelta
-            week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+
+            week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
             new_result = self.db.table("users").select("tg_id", count="exact").gte("created_at", week_ago).execute()
             new_users = new_result.count or 0
 
@@ -69,7 +70,7 @@ class AdminOperations:
                 "total": total_users,
                 "active": active_users,
                 "new_week": new_users,
-                "active_percentage": round(active_percentage, 2)
+                "active_percentage": round(active_percentage, 2),
             }
 
         except Exception as exc:
@@ -81,7 +82,7 @@ class AdminOperations:
         """Get all user IDs for broadcasting."""
         try:
             result = self.db.table("users").select("tg_id").execute()
-            user_ids = [user['tg_id'] for user in result.data or []]
+            user_ids = [user["tg_id"] for user in result.data or []]
 
             logger.info("Retrieved user IDs for broadcasting", count=len(user_ids))
             return user_ids

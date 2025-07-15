@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 @dataclass
 class CacheEntry:
     """Cache entry with TTL support."""
+
     value: Any
     expires_at: float
     created_at: float
@@ -79,11 +80,7 @@ class TTLCache:
         ttl_to_use = ttl if ttl is not None else self.ttl_seconds
         now = time.time()
 
-        entry = CacheEntry(
-            value=value,
-            expires_at=now + ttl_to_use,
-            created_at=now
-        )
+        entry = CacheEntry(value=value, expires_at=now + ttl_to_use, created_at=now)
 
         self._cache[key] = entry
         logger.debug(f"Cache set for key: {key}, TTL: {ttl_to_use}s")
@@ -121,10 +118,7 @@ class TTLCache:
             Number of entries removed
         """
         now = time.time()
-        expired_keys = [
-            key for key, entry in self._cache.items()
-            if entry.expires_at <= now
-        ]
+        expired_keys = [key for key, entry in self._cache.items() if entry.expires_at <= now]
 
         for key in expired_keys:
             del self._cache[key]
@@ -143,24 +137,22 @@ class TTLCache:
         """
         now = time.time()
         total_entries = len(self._cache)
-        expired_entries = sum(
-            1 for entry in self._cache.values()
-            if entry.expires_at <= now
-        )
+        expired_entries = sum(1 for entry in self._cache.values() if entry.expires_at <= now)
         active_entries = total_entries - expired_entries
 
         return {
             "total_entries": total_entries,
             "active_entries": active_entries,
             "expired_entries": expired_entries,
-            "hit_rate": getattr(self, '_hit_rate', 0.0),
-            "memory_usage_bytes": self._estimate_memory_usage()
+            "hit_rate": getattr(self, "_hit_rate", 0.0),
+            "memory_usage_bytes": self._estimate_memory_usage(),
         }
 
     def _estimate_memory_usage(self) -> int:
         """Estimate memory usage of cache entries."""
         # Simple estimation - in production you might want more accurate calculation
         import sys
+
         total_size = 0
         for key, entry in self._cache.items():
             total_size += sys.getsizeof(key)

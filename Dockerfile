@@ -84,7 +84,7 @@ ENV ENVIRONMENT=production \
     LOG_LEVEL=INFO
 
 # Удаляем development зависимости (если есть отдельный requirements-prod.txt)
-# RUN pip uninstall -y flake8 black mypy bandit pytest pytest-asyncio pytest-mock pytest-cov coverage
+# RUN pip uninstall -y ruff mypy bandit pytest pytest-asyncio pytest-mock pytest-cov coverage
 
 # Оптимизируем образ
 RUN pip cache purge && \

@@ -9,13 +9,16 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 # Set test environment variables
-os.environ.update({
-    "TELEGRAM_BOT_TOKEN": "test_token",
-    "SUPABASE_URL": "https://test.supabase.co",
-    "SUPABASE_SERVICE_ROLE_KEY": "test_key",
-    "ADMIN_USER_ID": "123456789",
-    "WEBAPP_URL": "https://test.vercel.app"
-})
+os.environ.update(
+    {
+        "TELEGRAM_BOT_TOKEN": "test_token",
+        "SUPABASE_URL": "https://test.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "test_key",
+        "ADMIN_USER_ID": "123456789",
+        "WEBAPP_URL": "https://test.vercel.app",
+    }
+)
+
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
@@ -23,6 +26,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 @pytest.fixture
 def mock_supabase():
@@ -49,6 +53,7 @@ def mock_supabase():
 
     return mock_client
 
+
 @pytest.fixture
 def sample_user_data():
     """Sample user data for testing."""
@@ -63,8 +68,9 @@ def sample_user_data():
         "interval_min": 60,
         "created_at": "2023-01-01T00:00:00+00:00",
         "updated_at": "2023-01-01T00:00:00+00:00",
-        "last_notification_sent": None
+        "last_notification_sent": None,
     }
+
 
 @pytest.fixture
 def sample_friendship_data():
@@ -74,8 +80,9 @@ def sample_friendship_data():
         "requester_id": 123456789,
         "addressee_id": 987654321,
         "status": "pending",
-        "created_at": "2023-01-01T00:00:00+00:00"
+        "created_at": "2023-01-01T00:00:00+00:00",
     }
+
 
 @pytest.fixture
 def mock_telegram_update():
@@ -97,6 +104,7 @@ def mock_telegram_update():
     update.callback_query = callback_query
 
     return update
+
 
 @pytest.fixture
 def mock_telegram_context():

@@ -14,10 +14,11 @@ import pytest
 def track_errors_mock(error_type):
     def decorator(func):
         return func  # Return function unchanged
+
     return decorator
 
-with patch('monitoring.get_logger'), \
-        patch('monitoring.track_errors', track_errors_mock):
+
+with patch("monitoring.get_logger"), patch("monitoring.track_errors", track_errors_mock):
     from bot.utils.exceptions import RateLimitExceeded
     from bot.utils.rate_limiter import MultiTierRateLimiter, RateLimiter, rate_limit
 
@@ -136,6 +137,7 @@ class TestRateLimitDecorator:
     @pytest.mark.skip(reason="Mock conflicts need to be resolved")
     async def test_decorator_allows_normal_execution(self):
         """Test that decorator allows normal function execution."""
+
         @rate_limit(action="test", error_message="Test limit exceeded")
         async def test_function(user_id: int):
             return f"Success for user {user_id}"
@@ -148,7 +150,7 @@ class TestRateLimitDecorator:
     async def test_decorator_raises_rate_limit_error(self):
         """Test that decorator raises RateLimitExceeded when limit hit."""
         # Create a very restrictive limiter for testing
-        with patch('bot.utils.rate_limiter.rate_limiter') as mock_limiter:
+        with patch("bot.utils.rate_limiter.rate_limiter") as mock_limiter:
             mock_limiter.check_limit.return_value = (False, 30)  # Not allowed, retry after 30s
 
             @rate_limit(action="test", error_message="Test limit exceeded")
@@ -166,6 +168,7 @@ class TestRateLimitDecorator:
     @pytest.mark.skip(reason="Mock conflicts need to be resolved")
     async def test_decorator_handles_missing_user_id(self):
         """Test that decorator handles functions without user_id gracefully."""
+
         @rate_limit(action="test")
         async def test_function():
             return "No user_id function"

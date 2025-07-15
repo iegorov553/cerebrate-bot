@@ -58,8 +58,7 @@ class RateLimiter:
                 retry_after = int((oldest_request + timedelta(seconds=self.window_seconds) - now).total_seconds())
                 retry_after = max(1, retry_after)  # At least 1 second
 
-                logger.warning("Rate limit exceeded",
-                             key=key, count=len(user_requests), retry_after=retry_after)
+                logger.warning("Rate limit exceeded", key=key, count=len(user_requests), retry_after=retry_after)
                 return False, retry_after
 
     def get_usage(self, key: str) -> Dict[str, int]:
@@ -75,7 +74,7 @@ class RateLimiter:
             "current_count": recent_count,
             "max_requests": self.max_requests,
             "window_seconds": self.window_seconds,
-            "remaining": max(0, self.max_requests - recent_count)
+            "remaining": max(0, self.max_requests - recent_count),
         }
 
     def cleanup_old_entries(self) -> int:
@@ -111,25 +110,18 @@ class MultiTierRateLimiter:
         self.limiters = {
             # General commands - 20 per minute
             "general": RateLimiter(max_requests=20, window_seconds=60),
-
             # Friend requests - 5 per hour (prevent spam)
             "friend_request": RateLimiter(max_requests=5, window_seconds=3600),
-
             # Settings changes - 10 per minute
             "settings": RateLimiter(max_requests=10, window_seconds=60),
-
             # Friend discovery - 3 per minute (expensive operation)
             "discovery": RateLimiter(max_requests=3, window_seconds=60),
-
             # Admin commands - 50 per minute
             "admin": RateLimiter(max_requests=50, window_seconds=60),
-
             # Callback queries - 30 per minute
             "callback": RateLimiter(max_requests=30, window_seconds=60),
-
             # Feedback submissions - configurable rate limit per hour
             "feedback": RateLimiter(max_requests=feedback_rate_limit, window_seconds=3600),
-
             # Voice messages - 10 per hour (API costs money)
             "voice_message": RateLimiter(max_requests=10, window_seconds=3600),
         }
@@ -179,6 +171,7 @@ def rate_limit(action: str = "general", error_message: str = None):
         action: Action type for rate limiting
         error_message: Custom error message when rate limited
     """
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             # Try to extract user_id from args
@@ -190,47 +183,53 @@ def rate_limit(action: str = "general", error_message: str = None):
                 for arg in args:
                     if user_id is not None:
                         break
-                    
+
                     # Check if arg is Update object
-                    if hasattr(arg, 'effective_user') and arg.effective_user:
+                    if hasattr(arg, "effective_user") and arg.effective_user:
                         user_id = arg.effective_user.id
                     # Check if it's a callback query
-                    elif hasattr(arg, 'callback_query') and arg.callback_query and arg.callback_query.from_user:
+                    elif hasattr(arg, "callback_query") and arg.callback_query and arg.callback_query.from_user:
                         user_id = arg.callback_query.from_user.id
                     # Check if it's a message
-                    elif hasattr(arg, 'message') and arg.message and arg.message.from_user:
+                    elif hasattr(arg, "message") and arg.message and arg.message.from_user:
                         user_id = arg.message.from_user.id
                     elif isinstance(arg, int):
                         user_id = arg
 
             # Look in kwargs
             if user_id is None:
-                user_id = kwargs.get('user_id') or kwargs.get('tg_id')
+                user_id = kwargs.get("user_id") or kwargs.get("tg_id")
 
             if user_id is None:
-                logger.warning("Rate limiting skipped - no user_id found", function=func.__name__, 
-                             args_types=[type(arg).__name__ for arg in args[:2]] if args else [])
+                logger.warning(
+                    "Rate limiting skipped - no user_id found",
+                    function=func.__name__,
+                    args_types=[type(arg).__name__ for arg in args[:2]] if args else [],
+                )
                 return await func(*args, **kwargs)
 
             # Check rate limit
             is_allowed, retry_after = await rate_limiter.check_limit(user_id, action)
 
             if not is_allowed:
-                logger.warning("Rate limit exceeded",
-                             user_id=user_id, action=action, retry_after=retry_after, function=func.__name__)
+                logger.warning(
+                    "Rate limit exceeded", user_id=user_id, action=action, retry_after=retry_after, function=func.__name__
+                )
 
                 # Raise custom exception or return error
                 from bot.utils.exceptions import RateLimitExceeded
+
                 raise RateLimitExceeded(
                     message=error_message or f"Too many {action} requests. Try again in {retry_after} seconds.",
                     retry_after=retry_after,
-                    action=action
+                    action=action,
                 )
 
             # Execute function if allowed
             return await func(*args, **kwargs)
 
         return wrapper
+
     return decorator
 
 

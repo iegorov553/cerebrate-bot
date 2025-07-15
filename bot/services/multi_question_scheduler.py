@@ -48,26 +48,14 @@ class MultiQuestionScheduler:
                 self._check_and_send_question_notifications,
                 "cron",
                 minute="*",  # Every minute
-                id="multi_question_check"
+                id="multi_question_check",
             )
 
             # Schedule cleanup of expired notifications at 4 AM daily
-            self.scheduler.add_job(
-                self._cleanup_expired_notifications,
-                "cron",
-                hour=4,
-                minute=0,
-                id="notification_cleanup"
-            )
+            self.scheduler.add_job(self._cleanup_expired_notifications, "cron", hour=4, minute=0, id="notification_cleanup")
 
             # Schedule daily statistics update at 3 AM
-            self.scheduler.add_job(
-                self._daily_maintenance,
-                "cron",
-                hour=3,
-                minute=0,
-                id="daily_maintenance"
-            )
+            self.scheduler.add_job(self._daily_maintenance, "cron", hour=3, minute=0, id="daily_maintenance")
 
             self.scheduler.start()
             logger.info("Multi-question scheduler service started successfully")
@@ -101,7 +89,7 @@ class MultiQuestionScheduler:
 
             for user in active_users:
                 try:
-                    user_id = user.get('tg_id')
+                    user_id = user.get("tg_id")
                     if not user_id:
                         continue
 
@@ -130,26 +118,26 @@ class MultiQuestionScheduler:
     async def _should_send_question_notification(self, question: Dict, current_time: datetime) -> bool:
         """Determine if a specific question should trigger a notification."""
         try:
-            question_id = question.get('id')
+            question_id = question.get("id")
 
             # Check if question is active
-            if not question.get('active', False):
+            if not question.get("active", False):
                 return False
 
             # Check time window
-            window_start_str = question.get('window_start', '09:00')
-            window_end_str = question.get('window_end', '22:00')
+            window_start_str = question.get("window_start", "09:00")
+            window_end_str = question.get("window_end", "22:00")
 
             # Convert to time objects for comparison
 
             try:
-                window_start = datetime.strptime(window_start_str, '%H:%M').time()
-                window_end = datetime.strptime(window_end_str, '%H:%M').time()
+                window_start = datetime.strptime(window_start_str, "%H:%M").time()
+                window_end = datetime.strptime(window_end_str, "%H:%M").time()
             except ValueError:
                 # Fallback for time with seconds
                 try:
-                    window_start = datetime.strptime(window_start_str, '%H:%M:%S').time()
-                    window_end = datetime.strptime(window_end_str, '%H:%M:%S').time()
+                    window_start = datetime.strptime(window_start_str, "%H:%M:%S").time()
+                    window_end = datetime.strptime(window_end_str, "%H:%M:%S").time()
                 except ValueError:
                     logger.warning(f"Invalid time format for question {question_id}")
                     return False
@@ -167,7 +155,7 @@ class MultiQuestionScheduler:
                     return False
 
             # Check interval since last notification for this specific question
-            interval_minutes = question.get('interval_minutes', 120)
+            interval_minutes = question.get("interval_minutes", 120)
 
             # Check our local tracking
             last_notification = self.last_notifications.get(question_id)
@@ -194,18 +182,20 @@ class MultiQuestionScheduler:
     async def _get_last_notification_for_question(self, question_id: int) -> Optional[datetime]:
         """Get the last notification time for a specific question."""
         try:
-            result = self.question_manager.question_ops.db_client.table('question_notifications')\
-                .select('sent_at')\
-                .eq('question_id', question_id)\
-                .order('sent_at', desc=True)\
-                .limit(1)\
+            result = (
+                self.question_manager.question_ops.db_client.table("question_notifications")
+                .select("sent_at")
+                .eq("question_id", question_id)
+                .order("sent_at", desc=True)
+                .limit(1)
                 .execute()
+            )
 
             if result.data and len(result.data) > 0:
-                sent_at_str = result.data[0]['sent_at']
+                sent_at_str = result.data[0]["sent_at"]
                 # Handle different datetime formats
                 try:
-                    return datetime.fromisoformat(sent_at_str.replace('Z', '+00:00'))
+                    return datetime.fromisoformat(sent_at_str.replace("Z", "+00:00"))
                 except ValueError:
                     # Try parsing as ISO format without timezone, then add UTC
                     dt = datetime.fromisoformat(sent_at_str)
@@ -223,59 +213,45 @@ class MultiQuestionScheduler:
     async def _send_question_notification(self, user_id: int, question: Dict) -> bool:
         """Send notification for a specific question."""
         try:
-            question_id = question.get('id')
-            question_text = question.get('question_text', translator.translate("questions.default_question"))
+            question_id = question.get("id")
+            question_text = question.get("question_text", translator.translate("questions.default_question"))
 
             # Apply template variables
             formatted_text = await self._format_question_text(question_text, user_id)
 
             # Send the notification
-            message = await self.application.bot.send_message(
-                chat_id=user_id,
-                text=formatted_text
-            )
+            message = await self.application.bot.send_message(chat_id=user_id, text=formatted_text)
 
             # Save notification for reply tracking
-            await self.question_manager.save_notification_for_reply(
-                user_id, question_id, message.message_id
-            )
+            await self.question_manager.save_notification_for_reply(user_id, question_id, message.message_id)
 
             # Update our local tracking
             self.last_notifications[question_id] = datetime.now(timezone.utc)
 
-            logger.info("Question notification sent",
-                       user_id=user_id,
-                       question_id=question_id,
-                       message_id=message.message_id)
+            logger.info("Question notification sent", user_id=user_id, question_id=question_id, message_id=message.message_id)
 
             return True
 
         except Exception as e:
-            logger.error(f"Error sending question notification: {e}",
-                        user_id=user_id,
-                        question_id=question.get('id'))
+            logger.error(f"Error sending question notification: {e}", user_id=user_id, question_id=question.get("id"))
             return False
 
     async def _format_question_text(self, question_text: str, user_id: int) -> str:
         """Format question text with template variables."""
         try:
             # Get user info for formatting
-            user_result = self.user_ops.db.table('users')\
-                .select('tg_first_name')\
-                .eq('tg_id', user_id)\
-                .single()\
-                .execute()
+            user_result = self.user_ops.db.table("users").select("tg_first_name").eq("tg_id", user_id).single().execute()
 
             user_name = translator.translate("questions.friend")  # Default fallback
             if user_result.data:
-                user_name = user_result.data.get('tg_first_name', translator.translate("questions.friend"))
+                user_name = user_result.data.get("tg_first_name", translator.translate("questions.friend"))
 
             # Current time for {time} variable
-            current_time = datetime.now(timezone.utc).strftime('%H:%M')
+            current_time = datetime.now(timezone.utc).strftime("%H:%M")
 
             # Apply template variables
-            formatted_text = question_text.replace('{name}', user_name)
-            formatted_text = formatted_text.replace('{time}', current_time)
+            formatted_text = question_text.replace("{name}", user_name)
+            formatted_text = formatted_text.replace("{time}", current_time)
 
             return formatted_text
 
@@ -318,7 +294,7 @@ class MultiQuestionScheduler:
             default_questions_created = 0
 
             for user in active_users:
-                user_id = user.get('tg_id')
+                user_id = user.get("tg_id")
                 if user_id:
                     try:
                         # This will create default question if missing
@@ -339,7 +315,7 @@ class MultiQuestionScheduler:
             user_questions = await self.question_manager.question_ops.get_active_user_questions(user_id)
 
             for question in user_questions:
-                question_id = question.get('id')
+                question_id = question.get("id")
                 if question_id in self.last_notifications:
                     del self.last_notifications[question_id]
 
@@ -351,9 +327,7 @@ class MultiQuestionScheduler:
 
 # Factory function for creating the scheduler
 def create_multi_question_scheduler(
-    application: Application,
-    db_client: DatabaseClient,
-    config: Config
+    application: Application, db_client: DatabaseClient, config: Config
 ) -> MultiQuestionScheduler:
     """Create and configure the multi-question scheduler."""
     return MultiQuestionScheduler(application, db_client, config)

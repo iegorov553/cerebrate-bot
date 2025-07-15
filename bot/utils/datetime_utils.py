@@ -15,7 +15,7 @@ def safe_parse_datetime(dt_string: str) -> Optional[datetime]:
     """Безопасный парсинг datetime строки."""
     try:
         if dt_string:
-            return datetime.fromisoformat(dt_string.replace('Z', '+00:00'))
+            return datetime.fromisoformat(dt_string.replace("Z", "+00:00"))
         return None
     except (ValueError, AttributeError, TypeError):
         logger.warning("Не удалось распарсить дату: %s", dt_string)
@@ -25,7 +25,7 @@ def safe_parse_datetime(dt_string: str) -> Optional[datetime]:
 @track_errors("time_validation")
 def validate_time_window(time_range: str) -> Tuple[bool, str, Optional[time], Optional[time]]:
     """Улучшенная валидация временного окна."""
-    pattern = r'^([0-2][0-9]):([0-5][0-9])-([0-2][0-9]):([0-5][0-9])$'
+    pattern = r"^([0-2][0-9]):([0-5][0-9])-([0-2][0-9]):([0-5][0-9])$"
     match = re.match(pattern, time_range)
 
     if not match:
@@ -94,7 +94,7 @@ def validate_username(username: str) -> Tuple[bool, str]:
         return False, "Имя пользователя не может быть пустым"
 
     # Remove @ if present
-    clean_username = username.lstrip('@').strip()
+    clean_username = username.lstrip("@").strip()
 
     if not clean_username:
         return False, "Имя пользователя не может быть пустым"
@@ -106,7 +106,7 @@ def validate_username(username: str) -> Tuple[bool, str]:
         return False, "Имя пользователя не может быть длиннее 32 символов"
 
     # Check for valid characters (letters, numbers, underscores)
-    if not clean_username.replace('_', '').replace('-', '').isalnum():
+    if not clean_username.replace("_", "").replace("-", "").isalnum():
         return False, "Имя пользователя может содержать только буквы, цифры, _ и -"
 
     return True, ""

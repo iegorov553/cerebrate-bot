@@ -38,13 +38,15 @@ class QuestionOperations:
             List of active question dictionaries
         """
         try:
-            result = self.db_client.table('user_questions')\
-                .select('*')\
-                .eq('user_id', user_id)\
-                .eq('active', True)\
-                .order('is_default', desc=True)\
-                .order('created_at')\
+            result = (
+                self.db_client.table("user_questions")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("active", True)
+                .order("is_default", desc=True)
+                .order("created_at")
                 .execute()
+            )
 
             return result.data if result.data else []
 
@@ -64,13 +66,15 @@ class QuestionOperations:
             Default question dictionary or None
         """
         try:
-            result = self.db_client.table('user_questions')\
-                .select('*')\
-                .eq('user_id', user_id)\
-                .eq('is_default', True)\
-                .eq('active', True)\
-                .single()\
+            result = (
+                self.db_client.table("user_questions")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("is_default", True)
+                .eq("active", True)
+                .single()
                 .execute()
+            )
 
             return result.data if result.data else None
 
@@ -90,11 +94,7 @@ class QuestionOperations:
             Question dictionary or None
         """
         try:
-            result = self.db_client.table('user_questions')\
-                .select('*')\
-                .eq('id', question_id)\
-                .single()\
-                .execute()
+            result = self.db_client.table("user_questions").select("*").eq("id", question_id).single().execute()
 
             return result.data if result.data else None
 
@@ -114,9 +114,7 @@ class QuestionOperations:
             Created question dictionary or None
         """
         try:
-            result = self.db_client.table('user_questions')\
-                .insert(question_data)\
-                .execute()
+            result = self.db_client.table("user_questions").insert(question_data).execute()
 
             if result.data and len(result.data) > 0:
                 logger.info(f"Created question for user {question_data.get('user_id')}: {question_data.get('question_name')}")
@@ -141,10 +139,7 @@ class QuestionOperations:
             True if successful
         """
         try:
-            result = self.db_client.table('user_questions')\
-                .update(updates)\
-                .eq('id', question_id)\
-                .execute()
+            result = self.db_client.table("user_questions").update(updates).eq("id", question_id).execute()
 
             success = result.data is not None
             if success:
@@ -176,33 +171,33 @@ class QuestionOperations:
                 return None
 
             # Check if text actually changed
-            if old_question['question_text'] == new_text:
+            if old_question["question_text"] == new_text:
                 return question_id  # No change needed
 
             # Deactivate old question
-            await self.update_question(question_id, {
-                'active': False,
-                'is_default': False if old_question['is_default'] else old_question['is_default']
-            })
+            await self.update_question(
+                question_id,
+                {"active": False, "is_default": False if old_question["is_default"] else old_question["is_default"]},
+            )
 
             # Create new version
             new_question_data = {
-                'user_id': old_question['user_id'],
-                'question_name': old_question['question_name'],
-                'question_text': new_text,
-                'window_start': old_question['window_start'],
-                'window_end': old_question['window_end'],
-                'interval_minutes': old_question['interval_minutes'],
-                'is_default': old_question['is_default'],
-                'active': True,
-                'parent_question_id': question_id
+                "user_id": old_question["user_id"],
+                "question_name": old_question["question_name"],
+                "question_text": new_text,
+                "window_start": old_question["window_start"],
+                "window_end": old_question["window_end"],
+                "interval_minutes": old_question["interval_minutes"],
+                "is_default": old_question["is_default"],
+                "active": True,
+                "parent_question_id": question_id,
             }
 
             new_question = await self.create_question(new_question_data)
 
             if new_question:
                 logger.info(f"Created new version of question {question_id} -> {new_question['id']}")
-                return new_question['id']
+                return new_question["id"]
 
             return None
 
@@ -223,7 +218,7 @@ class QuestionOperations:
         """
         try:
             # Just deactivate, don't actually delete for history preservation
-            success = await self.update_question(question_id, {'active': False})
+            success = await self.update_question(question_id, {"active": False})
 
             if success:
                 logger.info(f"Deactivated question {question_id}")
@@ -235,12 +230,7 @@ class QuestionOperations:
             return False
 
     @track_errors_async("save_notification")
-    async def save_notification(
-        self,
-        user_id: int,
-        question_id: int,
-        telegram_message_id: int
-    ) -> bool:
+    async def save_notification(self, user_id: int, question_id: int, telegram_message_id: int) -> bool:
         """
         Save notification record for reply tracking.
 
@@ -254,16 +244,14 @@ class QuestionOperations:
         """
         try:
             notification_data = {
-                'user_id': user_id,
-                'question_id': question_id,
-                'telegram_message_id': telegram_message_id,
-                'sent_at': datetime.now(timezone.utc).isoformat(),
-                'expires_at': (datetime.now(timezone.utc) + timedelta(days=90)).isoformat()  # 3 months
+                "user_id": user_id,
+                "question_id": question_id,
+                "telegram_message_id": telegram_message_id,
+                "sent_at": datetime.now(timezone.utc).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),  # 3 months
             }
 
-            result = self.db_client.table('question_notifications')\
-                .insert(notification_data)\
-                .execute()
+            result = self.db_client.table("question_notifications").insert(notification_data).execute()
 
             success = result.data is not None
             if success:
@@ -276,11 +264,7 @@ class QuestionOperations:
             return False
 
     @track_errors_async("get_notification_by_message_id")
-    async def get_notification_by_message_id(
-        self,
-        user_id: int,
-        telegram_message_id: int
-    ) -> Optional[Dict]:
+    async def get_notification_by_message_id(self, user_id: int, telegram_message_id: int) -> Optional[Dict]:
         """
         Get notification by telegram message ID.
 
@@ -292,14 +276,16 @@ class QuestionOperations:
             Notification dictionary or None
         """
         try:
-            result = self.db_client.table('question_notifications')\
-                .select('*, user_questions(*)')\
-                .eq('user_id', user_id)\
-                .eq('telegram_message_id', telegram_message_id)\
-                .gt('expires_at', datetime.now(timezone.utc).isoformat())\
-                .order('sent_at', desc=True)\
-                .limit(1)\
+            result = (
+                self.db_client.table("question_notifications")
+                .select("*, user_questions(*)")
+                .eq("user_id", user_id)
+                .eq("telegram_message_id", telegram_message_id)
+                .gt("expires_at", datetime.now(timezone.utc).isoformat())
+                .order("sent_at", desc=True)
+                .limit(1)
                 .execute()
+            )
 
             if result.data and len(result.data) > 0:
                 return result.data[0]
@@ -321,18 +307,14 @@ class QuestionOperations:
         try:
             # Get count before deletion
             now_iso = datetime.now(timezone.utc).isoformat()
-            count_result = self.db_client.table('question_notifications')\
-                .select('id', count='exact')\
-                .lt('expires_at', now_iso)\
-                .execute()
+            count_result = (
+                self.db_client.table("question_notifications").select("id", count="exact").lt("expires_at", now_iso).execute()
+            )
 
             count_before = count_result.count if count_result.count else 0
 
             # Delete expired notifications
-            self.db_client.table('question_notifications')\
-                .delete()\
-                .lt('expires_at', now_iso)\
-                .execute()
+            self.db_client.table("question_notifications").delete().lt("expires_at", now_iso).execute()
 
             logger.info(f"Cleaned up {count_before} expired notifications")
             return count_before
@@ -354,29 +336,29 @@ class QuestionOperations:
         """
         try:
             # Get active questions count
-            active_result = self.db_client.table('user_questions')\
-                .select('id', count='exact')\
-                .eq('user_id', user_id)\
-                .eq('active', True)\
+            active_result = (
+                self.db_client.table("user_questions")
+                .select("id", count="exact")
+                .eq("user_id", user_id)
+                .eq("active", True)
                 .execute()
+            )
 
             # Get total activities for active questions
-            activities_result = self.db_client.table('tg_jobs')\
-                .select('id', count='exact')\
-                .eq('tg_id', user_id)\
-                .not_.is_('question_id', 'null')\
+            activities_result = (
+                self.db_client.table("tg_jobs")
+                .select("id", count="exact")
+                .eq("tg_id", user_id)
+                .not_.is_("question_id", "null")
                 .execute()
+            )
 
             return {
-                'active_questions': active_result.count if active_result.count else 0,
-                'total_activities': activities_result.count if activities_result.count else 0,
-                'max_questions': 5  # 1 default + 4 custom
+                "active_questions": active_result.count if active_result.count else 0,
+                "total_activities": activities_result.count if activities_result.count else 0,
+                "max_questions": 5,  # 1 default + 4 custom
             }
 
         except Exception as e:
             logger.error(f"Error getting question stats for user {user_id}: {e}")
-            return {
-                'active_questions': 0,
-                'total_activities': 0,
-                'max_questions': 5
-            }
+            return {"active_questions": 0, "total_activities": 0, "max_questions": 5}

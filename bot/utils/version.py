@@ -21,6 +21,7 @@ def get_bot_version() -> str:
     except Exception as e:
         # Log the error for debugging but continue with fallback
         import logging
+
         logging.getLogger(__name__).debug(f"Could not read VERSION file: {e}")
 
     # Fallback to environment variable
@@ -41,11 +42,7 @@ def get_version_info() -> dict:
     if commit_hash != "unknown" and len(commit_hash) > 7:
         commit_hash = commit_hash[:7]  # Short hash
 
-    return {
-        "version": version,
-        "commit": commit_hash,
-        "environment": os.getenv("ENVIRONMENT", "production")
-    }
+    return {"version": version, "commit": commit_hash, "environment": os.getenv("ENVIRONMENT", "production")}
 
 
 def format_version_string() -> str:

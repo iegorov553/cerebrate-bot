@@ -10,9 +10,9 @@ Health Check Service для мониторинга состояния бота.
 
 import json
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, Optional
 
 from bot.database.client import DatabaseClient
 from monitoring import get_logger
@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 @dataclass
 class HealthStatus:
     """Статус здоровья компонента."""
+
     status: str  # "healthy", "degraded", "unhealthy"
     latency_ms: Optional[float] = None
     error: Optional[str] = None
@@ -32,6 +33,7 @@ class HealthStatus:
 @dataclass
 class SystemHealth:
     """Общий статус здоровья системы."""
+
     status: str  # "healthy", "degraded", "unhealthy"
     timestamp: str
     version: str
@@ -42,9 +44,7 @@ class SystemHealth:
         """Преобразовать в словарь для JSON."""
         result = asdict(self)
         # Преобразуем HealthStatus в словари
-        result['components'] = {
-            name: asdict(status) for name, status in self.components.items()
-        }
+        result["components"] = {name: asdict(status) for name, status in self.components.items()}
         return result
 
 
@@ -77,7 +77,7 @@ class HealthService:
                     status="unhealthy",
                     latency_ms=latency_ms,
                     error="Database client not connected",
-                    details={"connection": "failed", "client_initialized": False}
+                    details={"connection": "failed", "client_initialized": False},
                 )
 
             # Простой запрос для проверки соединения
@@ -89,30 +89,21 @@ class HealthService:
                 return HealthStatus(
                     status="healthy",
                     latency_ms=latency_ms,
-                    details={
-                        "connection": "active",
-                        "query_success": True,
-                        "client_initialized": True
-                    }
+                    details={"connection": "active", "query_success": True, "client_initialized": True},
                 )
             else:
                 return HealthStatus(
                     status="degraded",
                     latency_ms=latency_ms,
                     error="Query returned None",
-                    details={"connection": "active", "query_success": False}
+                    details={"connection": "active", "query_success": False},
                 )
 
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000
             logger.error(f"Database health check failed: {e}")
 
-            return HealthStatus(
-                status="unhealthy",
-                latency_ms=latency_ms,
-                error=str(e),
-                details={"connection": "failed"}
-            )
+            return HealthStatus(status="unhealthy", latency_ms=latency_ms, error=str(e), details={"connection": "failed"})
 
     async def check_telegram_api(self, application) -> HealthStatus:
         """Проверить доступность Telegram API."""
@@ -128,66 +119,43 @@ class HealthService:
                 return HealthStatus(
                     status="healthy",
                     latency_ms=latency_ms,
-                    details={
-                        "bot_id": bot_info.id,
-                        "bot_username": bot_info.username,
-                        "api_accessible": True
-                    }
+                    details={"bot_id": bot_info.id, "bot_username": bot_info.username, "api_accessible": True},
                 )
             else:
                 return HealthStatus(
                     status="degraded",
                     latency_ms=latency_ms,
                     error="Invalid bot info received",
-                    details={"api_accessible": False}
+                    details={"api_accessible": False},
                 )
 
         except Exception as e:
             latency_ms = (time.time() - start_time) * 1000
             logger.error(f"Telegram API health check failed: {e}")
 
-            return HealthStatus(
-                status="unhealthy",
-                latency_ms=latency_ms,
-                error=str(e),
-                details={"api_accessible": False}
-            )
+            return HealthStatus(status="unhealthy", latency_ms=latency_ms, error=str(e), details={"api_accessible": False})
 
     async def check_scheduler(self, application) -> HealthStatus:
         """Проверить состояние планировщика."""
         try:
-            scheduler = application.bot_data.get('multi_question_scheduler')
+            scheduler = application.bot_data.get("multi_question_scheduler")
 
             if scheduler is None:
                 return HealthStatus(
-                    status="unhealthy",
-                    error="Scheduler not found in bot_data",
-                    details={"scheduler_exists": False}
+                    status="unhealthy", error="Scheduler not found in bot_data", details={"scheduler_exists": False}
                 )
 
             # Проверим, что планировщик запущен
-            if hasattr(scheduler, 'running') and scheduler.running:
+            if hasattr(scheduler, "running") and scheduler.running:
                 return HealthStatus(
-                    status="healthy",
-                    details={
-                        "scheduler_running": True,
-                        "scheduler_type": type(scheduler).__name__
-                    }
+                    status="healthy", details={"scheduler_running": True, "scheduler_type": type(scheduler).__name__}
                 )
             else:
-                return HealthStatus(
-                    status="degraded",
-                    error="Scheduler not running",
-                    details={"scheduler_running": False}
-                )
+                return HealthStatus(status="degraded", error="Scheduler not running", details={"scheduler_running": False})
 
         except Exception as e:
             logger.error(f"Scheduler health check failed: {e}")
-            return HealthStatus(
-                status="unhealthy",
-                error=str(e),
-                details={"scheduler_exists": False}
-            )
+            return HealthStatus(status="unhealthy", error=str(e), details={"scheduler_exists": False})
 
     async def get_system_health(self, application=None) -> SystemHealth:
         """Получить общий статус здоровья системы."""
@@ -195,12 +163,12 @@ class HealthService:
 
         # Выполним все проверки параллельно
         tasks = {
-            'database': self.check_database(),
+            "database": self.check_database(),
         }
 
         if application:
-            tasks['telegram_api'] = self.check_telegram_api(application)
-            tasks['scheduler'] = self.check_scheduler(application)
+            tasks["telegram_api"] = self.check_telegram_api(application)
+            tasks["scheduler"] = self.check_scheduler(application)
 
         # Ожидаем все проверки
         results = {}
@@ -209,10 +177,7 @@ class HealthService:
                 results[name] = await task
             except Exception as e:
                 logger.error(f"Health check failed for {name}: {e}")
-                results[name] = HealthStatus(
-                    status="unhealthy",
-                    error=f"Check failed: {e}"
-                )
+                results[name] = HealthStatus(status="unhealthy", error=f"Check failed: {e}")
 
         # Определяем общий статус
         overall_status = self._determine_overall_status(results)
@@ -225,7 +190,7 @@ class HealthService:
             timestamp=datetime.now(timezone.utc).isoformat(),
             version=self.version,
             uptime_seconds=uptime_seconds,
-            components=results
+            components=results,
         )
 
         logger.info(f"System health check completed: {overall_status}")
@@ -259,11 +224,6 @@ class HealthService:
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 version=self.version,
                 uptime_seconds=time.time() - self.start_time,
-                components={
-                    "health_service": HealthStatus(
-                        status="unhealthy",
-                        error=f"Health check failed: {e}"
-                    )
-                }
+                components={"health_service": HealthStatus(status="unhealthy", error=f"Health check failed: {e}")},
             )
             return json.dumps(fallback_health.to_dict(), indent=2, ensure_ascii=False)

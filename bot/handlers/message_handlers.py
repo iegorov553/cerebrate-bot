@@ -17,12 +17,7 @@ logger = get_logger(__name__)
 
 
 async def send_response_by_status(
-    message,
-    status: str,
-    translator,
-    question_text: str = None,
-    user_response_text: str = None,
-    is_voice: bool = False
+    message, status: str, translator, question_text: str = None, user_response_text: str = None, is_voice: bool = False
 ):
     """
     Send comprehensive response showing question, user answer, and status.
@@ -54,15 +49,15 @@ async def send_response_by_status(
 
         # 3. Статус операции
         if status == "reply_success":
-            response_parts.append("✅ " + translator.translate('activity.recorded'))
+            response_parts.append("✅ " + translator.translate("activity.recorded"))
         elif status == "old_notification_active_question":
-            response_parts.append("😅 " + translator.translate('activity.recorded_old_notification'))
+            response_parts.append("😅 " + translator.translate("activity.recorded_old_notification"))
         elif status == "old_notification_inactive_question":
-            response_parts.append("🕰️ " + translator.translate('activity.recorded_old_question'))
+            response_parts.append("🕰️ " + translator.translate("activity.recorded_old_question"))
         elif status == "default_question":
-            response_parts.append("✅ " + translator.translate('activity.recorded'))
+            response_parts.append("✅ " + translator.translate("activity.recorded"))
         else:
-            response_parts.append("✅ " + translator.translate('activity.recorded'))
+            response_parts.append("✅ " + translator.translate("activity.recorded"))
 
         # Объединяем все части
         response_text = "\n".join(response_parts)
@@ -72,9 +67,9 @@ async def send_response_by_status(
         logger.error(f"Error sending status response: {e}")
         # Fallback response
         try:
-            await message.reply_text("✅ " + translator.translate('activity.recorded'))
+            await message.reply_text("✅ " + translator.translate("activity.recorded"))
         except BaseException:
-            await message.reply_text(translator.translate('common.recorded'))
+            await message.reply_text(translator.translate("common.recorded"))
 
 
 @rate_limit("general")
@@ -88,18 +83,18 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # Skip if message is a command (starts with /)
-    if message.text.startswith('/'):
+    if message.text.startswith("/"):
         return
 
     set_user_context(user.id, user.username, user.first_name)
 
     # Get dependencies
-    db_client: DatabaseClient = context.bot_data['db_client']
-    user_cache: TTLCache = context.bot_data['user_cache']
+    db_client: DatabaseClient = context.bot_data["db_client"]
+    user_cache: TTLCache = context.bot_data["user_cache"]
 
     try:
         # Check if user has active feedback session first
-        config: Config = context.bot_data['config']
+        config: Config = context.bot_data["config"]
 
         if config.is_feedback_enabled():
             from bot.handlers.feedback_handlers import handle_feedback_message
@@ -121,18 +116,17 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         # Ensure user exists in database first
         from bot.database.user_operations import UserOperations
+
         user_ops = UserOperations(db_client, user_cache)
 
         # Register/update user
         await user_ops.ensure_user_exists(
-            tg_id=user.id,
-            username=user.username,
-            first_name=user.first_name,
-            last_name=user.last_name
+            tg_id=user.id, username=user.username, first_name=user.first_name, last_name=user.last_name
         )
 
         # Initialize question manager and ensure user has default question
         from bot.questions import QuestionManager
+
         question_manager = QuestionManager(db_client, user_cache)
         await question_manager.ensure_user_has_default_question(user.id)
 
@@ -141,27 +135,25 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         if message.reply_to_message:
             reply_to_message_id = message.reply_to_message.message_id
 
-        question_id, status = await question_manager.determine_question_for_message(
-            user.id, reply_to_message_id
-        )
+        question_id, status = await question_manager.determine_question_for_message(user.id, reply_to_message_id)
 
         if question_id:
             # Log the activity with question linkage
             success = await user_ops.log_activity(user.id, message.text, question_id=question_id)
 
             if success:
-                logger.info("Activity logged successfully",
-                           user_id=user.id,
-                           question_id=question_id,
-                           message_length=len(message.text))
+                logger.info(
+                    "Activity logged successfully", user_id=user.id, question_id=question_id, message_length=len(message.text)
+                )
 
                 # Get user translator for response
                 from bot.utils.translation_helpers import get_user_translator
+
                 translator = await get_user_translator(user.id, db_client, user_cache)
 
                 # Получаем текст вопроса
                 question = await question_manager.question_ops.get_question_by_id(question_id)
-                question_text = question.get('question_text') if question else None
+                question_text = question.get("question_text") if question else None
 
                 # Send status-specific response with question and answer info
                 await send_response_by_status(
@@ -170,19 +162,15 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
                     translator=translator,
                     question_text=question_text,
                     user_response_text=message.text,  # Всегда дублируем ответ
-                    is_voice=False
+                    is_voice=False,
                 )
 
             else:
                 logger.warning("Failed to log activity", user_id=user.id)
-                await message.reply_text(
-                    translator.translate('common.error_save')
-                )
+                await message.reply_text(translator.translate("common.error_save"))
         else:
             logger.error("No question found for user", user_id=user.id)
-            await message.reply_text(
-                translator.translate('common.error_system')
-            )
+            await message.reply_text(translator.translate("common.error_system"))
 
     except Exception as e:
         logger.error(f"Error handling text message: {e}", user_id=user.id)
@@ -193,23 +181,17 @@ def setup_message_handlers(
     db_client: DatabaseClient,
     user_cache: TTLCache,
     rate_limiter: MultiTierRateLimiter,
-    config: Config
+    config: Config,
 ) -> None:
     """Setup message handlers."""
 
     # Ensure bot_data is populated (may be redundant but safe)
-    application.bot_data.update({
-        'db_client': db_client,
-        'user_cache': user_cache,
-        'rate_limiter': rate_limiter,
-        'config': config
-    })
+    application.bot_data.update(
+        {"db_client": db_client, "user_cache": user_cache, "rate_limiter": rate_limiter, "config": config}
+    )
 
     # Register text message handler (excluding commands)
-    text_handler = MessageHandler(
-        filters.TEXT & ~filters.COMMAND,
-        handle_text_message
-    )
+    text_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message)
     application.add_handler(text_handler, group=1)  # Lower priority than conversations
 
     logger.info("Message handlers registered successfully")

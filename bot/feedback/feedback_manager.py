@@ -17,12 +17,7 @@ logger = get_logger(__name__)
 class FeedbackManager:
     """Manages user feedback and GitHub integration."""
 
-    def __init__(
-        self,
-        config: Config,
-        rate_limiter: MultiTierRateLimiter,
-        user_cache: TTLCache
-    ):
+    def __init__(self, config: Config, rate_limiter: MultiTierRateLimiter, user_cache: TTLCache):
         """
         Initialize feedback manager.
 
@@ -37,10 +32,7 @@ class FeedbackManager:
 
         # Initialize GitHub client if token is available
         if config.is_feedback_enabled():
-            self.github_client = GitHubFeedbackClient(
-                token=config.github_feedback_token,
-                repo=config.github_repo
-            )
+            self.github_client = GitHubFeedbackClient(token=config.github_feedback_token, repo=config.github_repo)
         else:
             self.github_client = None
             logger.warning("GitHub feedback not configured - feedback will be logged only")
@@ -63,12 +55,7 @@ class FeedbackManager:
         return is_allowed
 
     @track_errors_async("feedback_session")
-    async def start_feedback_session(
-        self,
-        user_id: int,
-        feedback_type: str,
-        user_language: str = "ru"
-    ) -> bool:
+    async def start_feedback_session(self, user_id: int, feedback_type: str, user_language: str = "ru") -> bool:
         """
         Start a feedback session for user.
 
@@ -86,25 +73,17 @@ class FeedbackManager:
             return False
 
         # Store feedback session in cache
-        session_data = {
-            "feedback_type": feedback_type,
-            "user_language": user_language,
-            "status": "awaiting_description"
-        }
+        session_data = {"feedback_type": feedback_type, "user_language": user_language, "status": "awaiting_description"}
 
         await self.user_cache.set(
             f"feedback_session_{user_id}",
             session_data,
-            ttl=3600  # 1 hour timeout for feedback session
+            ttl=3600,  # 1 hour timeout for feedback session
         )
 
         logger.info(
             f"Started feedback session for user {user_id}",
-            extra={
-                "user_id": user_id,
-                "feedback_type": feedback_type,
-                "user_language": user_language
-            }
+            extra={"user_id": user_id, "feedback_type": feedback_type, "user_language": user_language},
         )
 
         return True
@@ -118,12 +97,7 @@ class FeedbackManager:
         await self.user_cache.invalidate(f"feedback_session_{user_id}")
 
     @track_errors_async("submit_feedback")
-    async def submit_feedback(
-        self,
-        user_id: int,
-        username: Optional[str],
-        description: str
-    ) -> Optional[str]:
+    async def submit_feedback(self, user_id: int, username: Optional[str], description: str) -> Optional[str]:
         """
         Submit user feedback to GitHub.
 
@@ -154,55 +128,36 @@ class FeedbackManager:
                     "user_id": user_id,
                     "username": username,
                     "feedback_type": feedback_type,
-                    "description": description[:100] + "..." if len(description) > 100 else description
-                }
+                    "description": description[:100] + "..." if len(description) > 100 else description,
+                },
             )
             return None
 
         # Format issue based on feedback type
         if feedback_type == "bug_report":
-            issue_data = self.github_client.format_bug_report(
-                description, user_id, username, user_language
-            )
+            issue_data = self.github_client.format_bug_report(description, user_id, username, user_language)
         elif feedback_type == "feature_request":
-            issue_data = self.github_client.format_feature_request(
-                description, user_id, username, user_language
-            )
+            issue_data = self.github_client.format_feature_request(description, user_id, username, user_language)
         elif feedback_type == "general":
-            issue_data = self.github_client.format_general_feedback(
-                description, user_id, username, user_language
-            )
+            issue_data = self.github_client.format_general_feedback(description, user_id, username, user_language)
         else:
             logger.error(f"Unknown feedback type: {feedback_type}")
             return None
 
         # Create GitHub issue
         issue_url = await self.github_client.create_issue(
-            title=issue_data["title"],
-            body=issue_data["body"],
-            labels=issue_data["labels"],
-            user_id=user_id,
-            username=username
+            title=issue_data["title"], body=issue_data["body"], labels=issue_data["labels"], user_id=user_id, username=username
         )
 
         if issue_url:
             logger.info(
                 f"Successfully submitted feedback to GitHub: {issue_url}",
-                extra={
-                    "user_id": user_id,
-                    "username": username,
-                    "feedback_type": feedback_type,
-                    "issue_url": issue_url
-                }
+                extra={"user_id": user_id, "username": username, "feedback_type": feedback_type, "issue_url": issue_url},
             )
         else:
             logger.error(
                 "Failed to submit feedback to GitHub",
-                extra={
-                    "user_id": user_id,
-                    "username": username,
-                    "feedback_type": feedback_type
-                }
+                extra={"user_id": user_id, "username": username, "feedback_type": feedback_type},
             )
 
         return issue_url

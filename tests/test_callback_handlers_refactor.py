@@ -7,21 +7,22 @@ Tests the new modular callback handler architecture including:
 - NavigationCallbackHandler specifics
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from telegram import CallbackQuery, User, Update
+
+import pytest
+from telegram import CallbackQuery, Update, User
 from telegram.ext import ContextTypes
 
-from bot.handlers.base.base_handler import BaseCallbackHandler
-from bot.handlers.base.callback_router import CallbackRouter
-from bot.handlers.callbacks.navigation_callbacks import NavigationCallbackHandler
-from bot.handlers.callbacks.feedback_callbacks import FeedbackCallbackHandler
-from bot.handlers.callbacks.friends_callbacks import FriendsCallbackHandler
-from bot.handlers.callbacks.admin_callbacks import AdminCallbackHandler
-from bot.handlers.callbacks.questions_callbacks import QuestionsCallbackHandler
+from bot.cache.ttl_cache import TTLCache
 from bot.config import Config
 from bot.database.client import DatabaseClient
-from bot.cache.ttl_cache import TTLCache
+from bot.handlers.base.base_handler import BaseCallbackHandler
+from bot.handlers.base.callback_router import CallbackRouter
+from bot.handlers.callbacks.admin_callbacks import AdminCallbackHandler
+from bot.handlers.callbacks.feedback_callbacks import FeedbackCallbackHandler
+from bot.handlers.callbacks.friends_callbacks import FriendsCallbackHandler
+from bot.handlers.callbacks.navigation_callbacks import NavigationCallbackHandler
+from bot.handlers.callbacks.questions_callbacks import QuestionsCallbackHandler
 from bot.i18n.translator import Translator
 
 
@@ -53,38 +54,36 @@ class TestBaseCallbackHandler:
     @pytest.mark.asyncio
     async def test_get_user_language_success(self, concrete_handler):
         """Test successful user language retrieval."""
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops:
+        with patch("bot.database.user_operations.UserOperations") as mock_user_ops:
             # Mock successful language retrieval
             mock_instance = mock_user_ops.return_value
-            mock_instance.get_user_settings = AsyncMock(return_value={
-                'language': 'en'
-            })
+            mock_instance.get_user_settings = AsyncMock(return_value={"language": "en"})
 
             language = await concrete_handler.get_user_language(123456789)
 
-            assert language == 'en'
+            assert language == "en"
             mock_instance.get_user_settings.assert_called_once_with(123456789, force_refresh=False)
 
     @pytest.mark.asyncio
     async def test_get_user_language_fallback(self, concrete_handler):
         """Test fallback to default language when retrieval fails."""
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops:
+        with patch("bot.database.user_operations.UserOperations") as mock_user_ops:
             # Mock failed language retrieval
             mock_instance = mock_user_ops.return_value
             mock_instance.get_user_settings = AsyncMock(side_effect=Exception("DB error"))
 
             language = await concrete_handler.get_user_language(123456789)
 
-            assert language == 'ru'  # Default fallback
+            assert language == "ru"  # Default fallback
 
     @pytest.mark.asyncio
     async def test_get_user_translator(self, concrete_handler):
         """Test translator creation with user's language."""
-        with patch.object(concrete_handler, 'get_user_language', return_value='es'):
+        with patch.object(concrete_handler, "get_user_language", return_value="es"):
             translator = await concrete_handler.get_user_translator(123456789)
 
             assert isinstance(translator, Translator)
-            assert translator.current_language == 'es'
+            assert translator.current_language == "es"
 
     def test_setup_user_context(self, concrete_handler):
         """Test user context setup for monitoring."""
@@ -93,7 +92,7 @@ class TestBaseCallbackHandler:
         user.username = "testuser"
         user.first_name = "Test"
 
-        with patch('bot.handlers.base.base_handler.set_user_context') as mock_set_context:
+        with patch("bot.handlers.base.base_handler.set_user_context") as mock_set_context:
             concrete_handler.setup_user_context(user)
 
             mock_set_context.assert_called_once_with(123456789, "testuser", "Test")
@@ -107,21 +106,15 @@ class TestBaseCallbackHandler:
         user.first_name = "Test"
         user.last_name = "User"
 
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops:
+        with patch("bot.database.user_operations.UserOperations") as mock_user_ops:
             mock_instance = mock_user_ops.return_value
-            mock_instance.ensure_user_exists = AsyncMock(return_value={
-                'tg_id': 123456789,
-                'tg_username': 'testuser'
-            })
+            mock_instance.ensure_user_exists = AsyncMock(return_value={"tg_id": 123456789, "tg_username": "testuser"})
 
             user_data = await concrete_handler.ensure_user_exists(user)
 
-            assert user_data['tg_id'] == 123456789
+            assert user_data["tg_id"] == 123456789
             mock_instance.ensure_user_exists.assert_called_once_with(
-                tg_id=123456789,
-                username="testuser",
-                first_name="Test",
-                last_name="User"
+                tg_id=123456789, username="testuser", first_name="Test", last_name="User"
             )
 
     def test_should_force_language_refresh(self, concrete_handler):
@@ -246,8 +239,8 @@ class TestCallbackRouter:
 
         stats = router.get_handler_stats()
 
-        assert stats['total_handlers'] == 1
-        assert 'MockHandler' in stats['handler_classes']
+        assert stats["total_handlers"] == 1
+        assert "MockHandler" in stats["handler_classes"]
 
 
 class TestNavigationCallbackHandler:
@@ -276,7 +269,7 @@ class TestNavigationCallbackHandler:
         assert handler.can_handle("menu_language")
         assert handler.can_handle("language_en")
         assert handler.can_handle("menu_history") is False  # Now handled by WebApp directly
-        assert handler.can_handle("history") is False       # Now handled by WebApp directly
+        assert handler.can_handle("history") is False  # Now handled by WebApp directly
         assert handler.can_handle("settings_enable") is False
 
     @pytest.mark.asyncio
@@ -293,7 +286,7 @@ class TestNavigationCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.handlers.callbacks.navigation_callbacks.KeyboardGenerator') as mock_keyboard:
+        with patch("bot.handlers.callbacks.navigation_callbacks.KeyboardGenerator") as mock_keyboard:
             mock_keyboard.main_menu.return_value = "mock_keyboard"
 
             await handler.handle_callback(query, "back_main", translator, context)
@@ -310,24 +303,20 @@ class TestNavigationCallbackHandler:
         query.edit_message_text = AsyncMock()
 
         translator = MagicMock(spec=Translator)
-        translator.current_language = 'ru'
+        translator.current_language = "ru"
 
         context = MagicMock()
 
-        with patch('bot.database.user_operations.UserOperations') as mock_user_ops, \
-                patch('bot.i18n.translator.Translator') as mock_translator_class, \
-                patch('bot.handlers.callbacks.navigation_callbacks.KeyboardGenerator') as mock_keyboard:
-
+        with patch("bot.database.user_operations.UserOperations") as mock_user_ops, patch(
+            "bot.i18n.translator.Translator"
+        ) as mock_translator_class, patch("bot.handlers.callbacks.navigation_callbacks.KeyboardGenerator") as mock_keyboard:
             # Mock user operations
             mock_instance = mock_user_ops.return_value
             mock_instance.update_user_settings = AsyncMock(return_value=True)
 
             # Mock new translator
             mock_new_translator = MagicMock()
-            mock_new_translator.get_language_info.return_value = {
-                'native': 'English',
-                'flag': '🇺🇸'
-            }
+            mock_new_translator.get_language_info.return_value = {"native": "English", "flag": "🇺🇸"}
             mock_new_translator.translate.return_value = "Language changed"
             mock_translator_class.return_value = mock_new_translator
 
@@ -337,13 +326,8 @@ class TestNavigationCallbackHandler:
             await handler.handle_callback(query, "language_en", translator, context)
 
             # Verify language update
-            mock_instance.update_user_settings.assert_called_once_with(
-                123456789,
-                {'language': 'en'}
-            )
+            mock_instance.update_user_settings.assert_called_once_with(123456789, {"language": "en"})
             query.edit_message_text.assert_called_once()
-
-
 
 
 class TestFeedbackCallbackHandler:
@@ -416,7 +400,7 @@ class TestFeedbackCallbackHandler:
 
         # Verify disabled message is shown
         query.edit_message_text.assert_called_once()
-        translator.translate.assert_called_with('feedback.disabled')
+        translator.translate.assert_called_with("feedback.disabled")
 
     @pytest.mark.asyncio
     async def test_start_feedback_session(self, handler):
@@ -431,9 +415,9 @@ class TestFeedbackCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.feedback.FeedbackManager') as mock_feedback_manager, \
-                patch('bot.utils.rate_limiter.MultiTierRateLimiter'):
-
+        with patch("bot.feedback.FeedbackManager") as mock_feedback_manager, patch(
+            "bot.utils.rate_limiter.MultiTierRateLimiter"
+        ):
             # Mock feedback manager
             mock_manager_instance = mock_feedback_manager.return_value
             mock_manager_instance.check_rate_limit = AsyncMock(return_value=True)
@@ -488,7 +472,7 @@ class TestFriendsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.handlers.callbacks.friends_callbacks.create_friends_menu') as mock_menu:
+        with patch("bot.handlers.callbacks.friends_callbacks.create_friends_menu") as mock_menu:
             mock_menu.return_value = "mock_friends_menu"
 
             await handler.handle_callback(query, "friends", translator, context)
@@ -510,9 +494,9 @@ class TestFriendsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.database.friend_operations.FriendOperations') as mock_friend_ops, \
-                patch('bot.handlers.callbacks.friends_callbacks.create_friends_menu') as mock_menu:
-
+        with patch("bot.database.friend_operations.FriendOperations") as mock_friend_ops, patch(
+            "bot.handlers.callbacks.friends_callbacks.create_friends_menu"
+        ) as mock_menu:
             # Mock empty friends list
             mock_instance = mock_friend_ops.return_value
             mock_instance.get_friends_list_optimized = AsyncMock(return_value=[])
@@ -523,7 +507,7 @@ class TestFriendsCallbackHandler:
 
             # Verify empty message is shown
             query.edit_message_text.assert_called_once()
-            translator.translate.assert_called_with('friends.list_empty')
+            translator.translate.assert_called_with("friends.list_empty")
 
     @pytest.mark.asyncio
     async def test_handle_friends_list_with_friends(self, handler):
@@ -538,15 +522,17 @@ class TestFriendsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.database.friend_operations.FriendOperations') as mock_friend_ops, \
-                patch('bot.handlers.callbacks.friends_callbacks.create_friends_menu') as mock_menu:
-
+        with patch("bot.database.friend_operations.FriendOperations") as mock_friend_ops, patch(
+            "bot.handlers.callbacks.friends_callbacks.create_friends_menu"
+        ) as mock_menu:
             # Mock friends list
             mock_instance = mock_friend_ops.return_value
-            mock_instance.get_friends_list_optimized = AsyncMock(return_value=[
-                {'tg_username': 'friend1', 'tg_first_name': 'Friend One'},
-                {'tg_username': 'friend2', 'tg_first_name': 'Friend Two'}
-            ])
+            mock_instance.get_friends_list_optimized = AsyncMock(
+                return_value=[
+                    {"tg_username": "friend1", "tg_first_name": "Friend One"},
+                    {"tg_username": "friend2", "tg_first_name": "Friend Two"},
+                ]
+            )
 
             mock_menu.return_value = "mock_friends_menu"
 
@@ -576,7 +562,7 @@ class TestFriendsCallbackHandler:
         context = MagicMock()
         context.bot_data = {}  # No rate limiter for simplicity
 
-        with patch('bot.database.friend_operations.FriendOperations') as mock_friend_ops:
+        with patch("bot.database.friend_operations.FriendOperations") as mock_friend_ops:
             # Mock successful friend request
             mock_instance = mock_friend_ops.return_value
             mock_instance.send_friend_request_by_id = AsyncMock(return_value=(True, "Success"))
@@ -631,18 +617,18 @@ class TestAdminCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.admin.admin_operations.AdminOperations') as mock_admin_ops, \
-                patch('bot.utils.version.format_version_string') as mock_version, \
-                patch('bot.utils.version.get_version_info') as mock_version_info, \
-                patch('bot.handlers.callbacks.admin_callbacks.KeyboardGenerator') as mock_keyboard:
-
+        with patch("bot.admin.admin_operations.AdminOperations") as mock_admin_ops, patch(
+            "bot.utils.version.format_version_string"
+        ) as mock_version, patch("bot.utils.version.get_version_info") as mock_version_info, patch(
+            "bot.handlers.callbacks.admin_callbacks.KeyboardGenerator"
+        ) as mock_keyboard:
             # Mock admin operations
             mock_admin_instance = mock_admin_ops.return_value
             mock_admin_instance.is_admin.return_value = True
 
             # Mock version info
             mock_version.return_value = "2.1.19"
-            mock_version_info.return_value = {'environment': 'test'}
+            mock_version_info.return_value = {"environment": "test"}
 
             # Mock keyboard
             mock_keyboard.admin_menu.return_value = "mock_admin_menu"
@@ -666,9 +652,9 @@ class TestAdminCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.admin.admin_operations.AdminOperations') as mock_admin_ops, \
-                patch('bot.handlers.callbacks.admin_callbacks.KeyboardGenerator') as mock_keyboard:
-
+        with patch("bot.admin.admin_operations.AdminOperations") as mock_admin_ops, patch(
+            "bot.handlers.callbacks.admin_callbacks.KeyboardGenerator"
+        ) as mock_keyboard:
             # Mock admin operations - access denied
             mock_admin_instance = mock_admin_ops.return_value
             mock_admin_instance.is_admin.return_value = False
@@ -696,11 +682,11 @@ class TestAdminCallbackHandler:
         context = MagicMock()
         context.application = MagicMock()
 
-        with patch('bot.admin.admin_operations.AdminOperations') as mock_admin_ops, \
-                patch('bot.services.health_service.HealthService') as mock_health_service, \
-                patch('bot.utils.version.get_bot_version') as mock_get_version, \
-                patch('bot.handlers.callbacks.admin_callbacks.KeyboardGenerator') as mock_keyboard:
-
+        with patch("bot.admin.admin_operations.AdminOperations") as mock_admin_ops, patch(
+            "bot.services.health_service.HealthService"
+        ) as mock_health_service, patch("bot.utils.version.get_bot_version") as mock_get_version, patch(
+            "bot.handlers.callbacks.admin_callbacks.KeyboardGenerator"
+        ) as mock_keyboard:
             # Mock admin access
             mock_admin_instance = mock_admin_ops.return_value
             mock_admin_instance.is_admin.return_value = True
@@ -769,21 +755,18 @@ class TestQuestionsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.questions.QuestionManager') as mock_question_manager, \
-                patch('bot.database.user_operations.UserOperations') as mock_user_ops, \
-                patch('bot.handlers.callbacks.questions_callbacks.create_questions_menu') as mock_menu:
-
+        with patch("bot.questions.QuestionManager") as mock_question_manager, patch(
+            "bot.database.user_operations.UserOperations"
+        ) as mock_user_ops, patch("bot.handlers.callbacks.questions_callbacks.create_questions_menu") as mock_menu:
             # Mock question manager
             mock_manager_instance = mock_question_manager.return_value
-            mock_manager_instance.get_user_questions_summary = AsyncMock(return_value={
-                'questions': [{'id': 1, 'text': 'Test question'}]
-            })
+            mock_manager_instance.get_user_questions_summary = AsyncMock(
+                return_value={"questions": [{"id": 1, "text": "Test question"}]}
+            )
 
             # Mock user operations
             mock_user_instance = mock_user_ops.return_value
-            mock_user_instance.get_user_settings = AsyncMock(return_value={
-                'enabled': True
-            })
+            mock_user_instance.get_user_settings = AsyncMock(return_value={"enabled": True})
 
             # Mock menu creation
             mock_menu.return_value = "mock_questions_menu"
@@ -807,7 +790,7 @@ class TestQuestionsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.questions.QuestionManager') as mock_question_manager:
+        with patch("bot.questions.QuestionManager") as mock_question_manager:
             # Mock empty questions list
             mock_manager_instance = mock_question_manager.return_value
             mock_manager_instance.question_ops.get_user_questions = AsyncMock(return_value=[])
@@ -816,7 +799,7 @@ class TestQuestionsCallbackHandler:
 
             # Verify empty message is shown
             query.edit_message_text.assert_called_once()
-            translator.translate.assert_called_with('questions.list_empty')
+            translator.translate.assert_called_with("questions.list_empty")
 
     @pytest.mark.asyncio
     async def test_handle_question_toggle(self, handler):
@@ -831,7 +814,7 @@ class TestQuestionsCallbackHandler:
 
         context = MagicMock()
 
-        with patch('bot.questions.QuestionManager') as mock_question_manager:
+        with patch("bot.questions.QuestionManager") as mock_question_manager:
             # Mock successful toggle
             mock_manager_instance = mock_question_manager.return_value
             mock_manager_instance.question_ops.toggle_question_status = AsyncMock(return_value=True)

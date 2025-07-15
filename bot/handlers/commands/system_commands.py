@@ -21,7 +21,7 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     set_user_context(user.id, user.username, user.first_name)
 
     # Get dependencies from context
-    db_client: DatabaseClient = context.bot_data['db_client']
+    db_client: DatabaseClient = context.bot_data["db_client"]
 
     # Импортируем HealthService
     from bot.services.health_service import HealthService
@@ -36,25 +36,22 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         health_status = await health_service.get_system_health(context.application)
 
         # Формируем сообщение
-        status_emoji = {
-            "healthy": "✅",
-            "degraded": "⚠️",
-            "unhealthy": "❌"
-        }
+        status_emoji = {"healthy": "✅", "degraded": "⚠️", "unhealthy": "❌"}
 
         # Безопасное экранирование для Markdown
         def escape_markdown_safe(text):
             if not text:
                 return ""
-            return (str(text).replace('_', '\\_').replace('*', '\\*')
-                    .replace('`', '\\`').replace('[', '\\[').replace(']', '\\]'))
+            return (
+                str(text).replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[").replace("]", "\\]")
+            )
 
         message = "🏥 **System Health Check**\n\n"
         safe_status = escape_markdown_safe(health_status.status)
         message += f"{status_emoji.get(health_status.status, '❓')} **Overall Status:** {safe_status}\n"
 
         # Безопасное время
-        timestamp_safe = health_status.timestamp.split('T')[0] + ' ' + health_status.timestamp.split('T')[1][:8]
+        timestamp_safe = health_status.timestamp.split("T")[0] + " " + health_status.timestamp.split("T")[1][:8]
         timestamp_code = f"`{timestamp_safe}`"
         message += f"📅 **Timestamp:** {timestamp_code}\n"
         safe_version = escape_markdown_safe(health_status.version)
@@ -63,7 +60,7 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         message += "**Components:**\n"
         for name, component in health_status.components.items():
-            emoji = status_emoji.get(component.status, '❓')
+            emoji = status_emoji.get(component.status, "❓")
             safe_name = escape_markdown_safe(name.title())
             component_name = f"**{safe_name}**"
             message += f"{emoji} {component_name}: {component.status}"
@@ -78,23 +75,17 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
             message += "\n"
 
-        await update.message.reply_text(
-            message,
-            parse_mode='Markdown'
-        )
+        await update.message.reply_text(message, parse_mode="Markdown")
 
         logger.info(f"Health check command executed for user {user.id}, status: {health_status.status}")
 
     except Exception as e:
         logger.error(f"Health command failed for user {user.id}: {e}")
-        await update.message.reply_text(
-            "❌ Failed to check system health. Please try again later.",
-            parse_mode='Markdown'
-        )
+        await update.message.reply_text("❌ Failed to check system health. Please try again later.", parse_mode="Markdown")
 
 
 def setup_system_commands(application: Application) -> None:
     """Регистрация системных команд."""
     application.add_handler(CommandHandler("health", health_command))
-    
+
     logger.info("System commands registered successfully")

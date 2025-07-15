@@ -17,9 +17,9 @@ class UserOperations:
         self.cache = cache
 
     @track_errors_async("user_registration")
-    async def ensure_user_exists(self, tg_id: int, username: str = None,
-                                 first_name: str = None, last_name: str = None,
-                                 language: str = 'ru') -> Dict[str, Any]:
+    async def ensure_user_exists(
+        self, tg_id: int, username: str = None, first_name: str = None, last_name: str = None, language: str = "ru"
+    ) -> Dict[str, Any]:
         """Ensure user exists in database, create if not."""
 
         # Set user context for monitoring
@@ -46,7 +46,7 @@ class UserOperations:
                 "window_start": "09:00:00",
                 "window_end": "23:00:00",
                 "interval_min": 60,
-                "language": language
+                "language": language,
             }
 
             result = self.db.table("users").insert(new_user).execute()
@@ -107,11 +107,11 @@ class UserOperations:
             error_msg = str(exc)
 
             # Check if it's a missing column error (language column not yet added)
-            if "Could not find the 'language' column" in error_msg and 'language' in updates:
+            if "Could not find the 'language' column" in error_msg and "language" in updates:
                 logger.warning("Language column not found, trying without language update", user_id=user_id)
 
                 # Retry without language field
-                updates_without_language = {k: v for k, v in updates.items() if k != 'language'}
+                updates_without_language = {k: v for k, v in updates.items() if k != "language"}
 
                 if updates_without_language:
                     try:
@@ -122,7 +122,11 @@ class UserOperations:
                             await self.cache.invalidate(f"user_settings_{user_id}")
                             await self.cache.invalidate(f"user_{user_id}")
 
-                        logger.info("User settings updated (without language)", user_id=user_id, updates=list(updates_without_language.keys()))
+                        logger.info(
+                            "User settings updated (without language)",
+                            user_id=user_id,
+                            updates=list(updates_without_language.keys()),
+                        )
                         return True
                     except Exception as exc2:
                         logger.error("Error updating user settings (fallback)", user_id=user_id, error=str(exc2))
@@ -139,12 +143,12 @@ class UserOperations:
         """Find user by username in database."""
         try:
             # Remove @ if present
-            clean_username = username.lstrip('@')
+            clean_username = username.lstrip("@")
             result = self.db.table("users").select("*").eq("tg_username", clean_username).execute()
 
             user = result.data[0] if result.data else None
             if user:
-                logger.debug("User found by username", username=clean_username, user_id=user.get('tg_id'))
+                logger.debug("User found by username", username=clean_username, user_id=user.get("tg_id"))
             else:
                 logger.debug("User not found by username", username=clean_username)
 
@@ -158,11 +162,7 @@ class UserOperations:
     async def log_activity(self, user_id: int, activity_text: str, question_id: Optional[int] = None) -> bool:
         """Log user activity to database with optional question linkage."""
         try:
-            activity_data = {
-                "tg_id": user_id,
-                "job_text": activity_text,
-                "jobs_timestamp": "now()"
-            }
+            activity_data = {"tg_id": user_id, "job_text": activity_text, "jobs_timestamp": "now()"}
 
             # Add question_id if provided
             if question_id is not None:
@@ -201,9 +201,7 @@ class UserOperations:
         """Update last notification timestamp for user."""
         try:
             # Use PostgreSQL's NOW() function to get current timestamp
-            self.db.table("users").update({
-                "last_notification_sent": "now()"
-            }).eq("tg_id", user_id).execute()
+            self.db.table("users").update({"last_notification_sent": "now()"}).eq("tg_id", user_id).execute()
 
             # Invalidate cache for this user (if cache is available)
             if self.cache:
@@ -223,7 +221,7 @@ class UserOperations:
         try:
             result = self.db.table("users").select("tg_id").execute()
 
-            user_ids = [user['tg_id'] for user in result.data] if result.data else []
+            user_ids = [user["tg_id"] for user in result.data] if result.data else []
             logger.debug("Retrieved user IDs for broadcast", count=len(user_ids))
 
             return user_ids

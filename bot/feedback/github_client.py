@@ -34,7 +34,7 @@ class GitHubFeedbackClient:
         body: str,
         labels: Optional[List[str]] = None,
         user_id: Optional[int] = None,
-        username: Optional[str] = None
+        username: Optional[str] = None,
     ) -> Optional[str]:
         """
         Create a GitHub issue.
@@ -56,14 +56,11 @@ class GitHubFeedbackClient:
         headers = {
             "Authorization": f"token {self.token}",
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "Doyobi-Diary-Bot/1.0"
+            "User-Agent": "Doyobi-Diary-Bot/1.0",
         }
 
         # Build issue data
-        issue_data = {
-            "title": title,
-            "body": body
-        }
+        issue_data = {"title": title, "body": body}
 
         if labels:
             issue_data["labels"] = labels
@@ -84,8 +81,8 @@ class GitHubFeedbackClient:
                                 "user_id": user_id,
                                 "username": username,
                                 "issue_number": issue_number,
-                                "issue_url": issue_url
-                            }
+                                "issue_url": issue_url,
+                            },
                         )
 
                         return issue_url
@@ -93,32 +90,18 @@ class GitHubFeedbackClient:
                         error_text = await response.text()
                         logger.error(
                             f"Failed to create GitHub issue: {response.status} - {error_text}",
-                            extra={
-                                "status_code": response.status,
-                                "user_id": user_id,
-                                "username": username
-                            }
+                            extra={"status_code": response.status, "user_id": user_id, "username": username},
                         )
                         return None
 
         except Exception as e:
             logger.error(
-                f"Error creating GitHub issue: {e}",
-                extra={
-                    "user_id": user_id,
-                    "username": username,
-                    "error": str(e)
-                }
+                f"Error creating GitHub issue: {e}", extra={"user_id": user_id, "username": username, "error": str(e)}
             )
             return None
 
     def format_bug_report(
-        self,
-        user_description: str,
-        user_id: int,
-        username: Optional[str],
-        user_language: str,
-        bot_version: str = "2.1.0"
+        self, user_description: str, user_id: int, username: Optional[str], user_language: str, bot_version: str = "2.1.0"
     ) -> Dict[str, str]:
         """Format bug report for GitHub issue."""
         timestamp = datetime.now().isoformat()
@@ -142,19 +125,10 @@ class GitHubFeedbackClient:
             f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
         )
 
-        return {
-            "title": title,
-            "body": body,
-            "labels": ["user-feedback", "bug-report"]
-        }
+        return {"title": title, "body": body, "labels": ["user-feedback", "bug-report"]}
 
     def format_feature_request(
-        self,
-        user_description: str,
-        user_id: int,
-        username: Optional[str],
-        user_language: str,
-        bot_version: str = "2.1.0"
+        self, user_description: str, user_id: int, username: Optional[str], user_language: str, bot_version: str = "2.1.0"
     ) -> Dict[str, str]:
         """Format feature request for GitHub issue."""
         timestamp = datetime.now().isoformat()
@@ -178,19 +152,10 @@ class GitHubFeedbackClient:
             f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
         )
 
-        return {
-            "title": title,
-            "body": body,
-            "labels": ["user-feedback", "enhancement"]
-        }
+        return {"title": title, "body": body, "labels": ["user-feedback", "enhancement"]}
 
     def format_general_feedback(
-        self,
-        user_description: str,
-        user_id: int,
-        username: Optional[str],
-        user_language: str,
-        bot_version: str = "2.1.0"
+        self, user_description: str, user_id: int, username: Optional[str], user_language: str, bot_version: str = "2.1.0"
     ) -> Dict[str, str]:
         """Format general feedback for GitHub issue."""
         timestamp = datetime.now().isoformat()
@@ -214,8 +179,4 @@ class GitHubFeedbackClient:
             f"*This issue was automatically created from user feedback in the Doyobi Diary Telegram bot.*"
         )
 
-        return {
-            "title": title,
-            "body": body,
-            "labels": ["user-feedback", "feedback"]
-        }
+        return {"title": title, "body": body, "labels": ["user-feedback", "feedback"]}
