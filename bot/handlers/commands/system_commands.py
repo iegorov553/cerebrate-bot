@@ -56,7 +56,8 @@ async def health_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         message += f"📅 **Timestamp:** {timestamp_code}\n"
         safe_version = escape_markdown_safe(health_status.version)
         message += f"🔢 **Version:** {safe_version}\n"
-        message += f"⏱️ **Uptime:** {health_status.uptime_seconds:.1f}s\n\n"
+        uptime_safe = f"{health_status.uptime_seconds:.1f}"
+        message += f"⏱️ **Uptime:** {uptime_safe}s\n\n"
 
         message += "**Components:**\n"
         for name, component in health_status.components.items():
