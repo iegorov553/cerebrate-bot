@@ -163,7 +163,18 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
                 f"⏱️ Время выполнения: {result.duration_seconds:.1f} сек"
             )
 
-            await query.edit_message_text(success_text, parse_mode="Markdown")
+            # Show results with return to main menu
+            admin_ops: AdminOperations = context.bot_data["admin_ops"]
+            is_admin = admin_ops.is_admin(query.from_user.id)
+            
+            from bot.keyboards.keyboard_generators import KeyboardGenerator
+            keyboard = KeyboardGenerator.main_menu(is_admin, translator)
+            
+            await query.edit_message_text(
+                success_text, 
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
 
         except Exception as e:
             logger.error(f"Error sending broadcast: {e}")
@@ -174,10 +185,33 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
                 + "\n\n"
                 + translator.translate("errors.general_error")
             )
-            await query.edit_message_text(error_message)
+            
+            # Show error with return to main menu
+            admin_ops: AdminOperations = context.bot_data["admin_ops"]
+            is_admin = admin_ops.is_admin(query.from_user.id)
+            
+            from bot.keyboards.keyboard_generators import KeyboardGenerator
+            keyboard = KeyboardGenerator.main_menu(is_admin, translator)
+            
+            await query.edit_message_text(
+                error_message,
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
 
     elif query.data == "broadcast_confirm_no":
-        await query.edit_message_text(translator.translate("broadcast.cancelled_message"))
+        # Show cancellation message with return to main menu
+        admin_ops: AdminOperations = context.bot_data["admin_ops"]
+        is_admin = admin_ops.is_admin(query.from_user.id)
+        
+        from bot.keyboards.keyboard_generators import KeyboardGenerator
+        keyboard = KeyboardGenerator.main_menu(is_admin, translator)
+        
+        await query.edit_message_text(
+            translator.translate("broadcast.cancelled_message"),
+            reply_markup=keyboard,
+            parse_mode="Markdown"
+        )
 
     # Clear user data and end conversation
     context.user_data.clear()
@@ -187,9 +221,22 @@ async def handle_broadcast_confirmation(update: Update, context: ContextTypes.DE
 @track_errors_async("cancel_broadcast")
 async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancel broadcast conversation."""
+    user = update.effective_user
     context.user_data.clear()
 
-    await update.message.reply_text(translator.translate("broadcast.creation_cancelled"))
+    # Check if user is admin for main menu
+    admin_ops: AdminOperations = context.bot_data["admin_ops"]
+    is_admin = admin_ops.is_admin(user.id)
+    
+    # Show cancellation message with return to main menu
+    from bot.keyboards.keyboard_generators import KeyboardGenerator
+    keyboard = KeyboardGenerator.main_menu(is_admin, translator)
+    
+    await update.message.reply_text(
+        translator.translate("broadcast.creation_cancelled"),
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
 
     return ConversationHandler.END
 
