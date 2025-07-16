@@ -94,6 +94,16 @@ class CallbackRouter:
 
         self.logger.debug("Routing callback query", user_id=user.id, callback_data=data)
 
+        # Skip callbacks that should be handled by ConversationHandler
+        conversation_callbacks = [
+            "broadcast_confirm_yes",
+            "broadcast_confirm_no",
+        ]
+        
+        if data in conversation_callbacks:
+            self.logger.debug("Skipping callback for ConversationHandler", callback_data=data)
+            return
+
         # Find appropriate handler
         handler = self.find_handler(data)
 
