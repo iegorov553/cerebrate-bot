@@ -30,7 +30,10 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         """Check if this handler can process the callback data."""
         navigation_callbacks = {
             "back_main",  # Standard "back to main menu" button
+            "back_friends",  # Back to friends menu
+            "back_settings",  # Back to settings menu
             "menu_language",  # Language selection menu
+            "page_info",  # Page information/help
         }
 
         return data in navigation_callbacks or data.startswith("language_")
@@ -42,6 +45,15 @@ class NavigationCallbackHandler(BaseCallbackHandler):
 
         if data == "back_main":
             await self._handle_main_menu(query, translator)
+
+        elif data == "back_friends":
+            await self._handle_friends_menu(query, translator)
+
+        elif data == "back_settings":
+            await self._handle_settings_menu(query, translator)
+
+        elif data == "page_info":
+            await self._handle_page_info(query, translator)
 
         elif data == "menu_language":
             await self._handle_language_menu(query, translator)
@@ -174,3 +186,40 @@ class NavigationCallbackHandler(BaseCallbackHandler):
         await query.edit_message_text(message_text, reply_markup=keyboard, parse_mode="Markdown")
 
         self.logger.debug("History menu displayed", user_id=user.id)
+
+    async def _handle_friends_menu(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle back to friends menu."""
+        # Use the friends callback handler to show the friends menu
+        from bot.handlers.callbacks.friends_callbacks import FriendsCallbackHandler
+        friends_handler = FriendsCallbackHandler(
+            self.db_client, self.user_cache, self.scheduler, self.config
+        )
+        await friends_handler.handle_callback(query, "menu_friends", translator, None)
+        self.logger.debug("Back to friends menu", user_id=query.from_user.id)
+
+    async def _handle_settings_menu(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle back to settings menu (redirects to questions menu)."""
+        # Settings menu was removed - redirect to questions menu
+        from bot.handlers.callbacks.questions_callbacks import QuestionsCallbackHandler
+        questions_handler = QuestionsCallbackHandler(
+            self.db_client, self.user_cache, self.scheduler, self.config
+        )
+        await questions_handler.handle_callback(query, "menu_questions", translator, None)
+        self.logger.debug("Back to questions menu (was settings)", user_id=query.from_user.id)
+
+    async def _handle_page_info(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle page information display."""
+        user = query.from_user
+        
+        # Show general info about the current page/feature
+        info_text = translator.format_title(translator.translate("page_info.title"))
+        info_text += translator.translate("page_info.description")
+        
+        # Create back button
+        keyboard = KeyboardGenerator.main_menu(
+            self.config.is_admin_configured() and user.id == self.config.admin_user_id,
+            translator
+        )
+        
+        await query.edit_message_text(info_text, reply_markup=keyboard, parse_mode="Markdown")
+        self.logger.debug("Page info displayed", user_id=user.id)

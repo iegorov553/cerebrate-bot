@@ -29,7 +29,7 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
     def can_handle(self, data: str) -> bool:
         """Check if this handler can process the callback data."""
-        admin_callbacks = {"menu_admin", "admin_panel"}
+        admin_callbacks = {"menu_admin", "admin_panel", "broadcast_cancel", "broadcast_confirm"}
 
         return data in admin_callbacks or data.startswith("admin_")
 
@@ -40,6 +40,12 @@ class AdminCallbackHandler(BaseCallbackHandler):
 
         if data in ["menu_admin", "admin_panel"]:
             await self._handle_admin_panel(query, translator)
+
+        elif data == "broadcast_cancel":
+            await self._handle_broadcast_cancel(query, translator)
+
+        elif data == "broadcast_confirm":
+            await self._handle_broadcast_confirm(query, translator)
 
         elif data.startswith("admin_"):
             await self._handle_admin_action(query, data, translator, context)
@@ -324,3 +330,31 @@ class AdminCallbackHandler(BaseCallbackHandler):
         await query.edit_message_text(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
 
         self.logger.debug("Returned to main menu from admin", user_id=user.id)
+
+    async def _handle_broadcast_cancel(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle broadcast cancellation."""
+        user = query.from_user
+        
+        # Check admin access
+        if not await self._check_admin_access(user.id, query, translator):
+            return
+            
+        # Return to admin panel
+        await self._handle_admin_panel(query, translator)
+        self.logger.info("Broadcast cancelled", user_id=user.id)
+
+    async def _handle_broadcast_confirm(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle broadcast confirmation."""
+        user = query.from_user
+        
+        # Check admin access
+        if not await self._check_admin_access(user.id, query, translator):
+            return
+            
+        # Show confirmation message - actual broadcast is handled by ConversationHandler
+        await query.edit_message_text(
+            translator.translate("admin.broadcast_confirmed"),
+            reply_markup=KeyboardGenerator.admin_menu(translator),
+            parse_mode="Markdown"
+        )
+        self.logger.info("Broadcast confirmed", user_id=user.id)

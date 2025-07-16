@@ -145,6 +145,7 @@
     "title": "🔧 Admin Panel",
     "admin_only": "🔒 This command is available only to administrators",
     "broadcast_starting": "📢 Starting message broadcast...",
+    "broadcast_confirmed": "✅ Broadcast confirmed",
     "version": "🤖 Version: {version}",
     "environment": "🌍 Environment: {env}",
     "choose_action": "Choose action:",
@@ -508,5 +509,9 @@
     "usage_count": "📊 Used: {current}/{max}",
     "reset_window": "🔄 Reset window: {seconds} sec.",
     "exceeded_alert": "Rate limit exceeded!"
+  },
+  "page_info": {
+    "title": "ℹ️ Page Information",
+    "description": "Here you can find additional information about bot features."
   }
 }

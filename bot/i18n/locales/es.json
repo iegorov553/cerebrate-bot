@@ -145,6 +145,7 @@
     "title": "🔧 Panel de Administración",
     "admin_only": "🔒 Este comando está disponible solo para administradores",
     "broadcast_starting": "📢 Iniciando difusión de mensaje...",
+    "broadcast_confirmed": "✅ Difusión confirmada",
     "version": "🤖 Versión: {version}",
     "environment": "🌍 Entorno: {env}",
     "choose_action": "Elige acción:",
@@ -508,5 +509,9 @@
     "usage_count": "📊 Usado: {current}/{max}",
     "reset_window": "🔄 Ventana de reinicio: {seconds} seg.",
     "exceeded_alert": "¡Límite de solicitudes excedido!"
+  },
+  "page_info": {
+    "title": "ℹ️ Información de la Página",
+    "description": "Aquí puedes encontrar información adicional sobre las funciones del bot."
   }
 }

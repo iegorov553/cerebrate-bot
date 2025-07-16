@@ -29,7 +29,7 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
     def can_handle(self, data: str) -> bool:
         """Check if this handler can process the callback data."""
-        friends_callbacks = {"menu_friends", "friends"}
+        friends_callbacks = {"menu_friends", "friends", "requests_incoming", "requests_outgoing"}
 
         return (
             data in friends_callbacks
@@ -46,6 +46,12 @@ class FriendsCallbackHandler(BaseCallbackHandler):
 
         if data in ["menu_friends", "friends"]:
             await self._handle_friends_menu(query, translator)
+
+        elif data == "requests_incoming":
+            await self._handle_requests_incoming(query, translator)
+
+        elif data == "requests_outgoing":
+            await self._handle_requests_outgoing(query, translator)
 
         elif data.startswith("friends_"):
             await self._handle_friends_action(query, data, translator, context)
@@ -795,3 +801,15 @@ class FriendsCallbackHandler(BaseCallbackHandler):
         except Exception as e:
             self.logger.error("Error querying friend activities", error=str(e))
             return []
+
+    async def _handle_requests_incoming(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle incoming friend requests display."""
+        # Use the existing requests help method to show full requests list
+        await self._handle_requests_help(query, translator)
+        self.logger.debug("Incoming requests shown", user_id=query.from_user.id)
+
+    async def _handle_requests_outgoing(self, query: CallbackQuery, translator: Translator) -> None:
+        """Handle outgoing friend requests display."""
+        # Use the existing requests help method to show full requests list
+        await self._handle_requests_help(query, translator)
+        self.logger.debug("Outgoing requests shown", user_id=query.from_user.id)

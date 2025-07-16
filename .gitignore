@@ -37,6 +37,9 @@ coverage.xml
 *.cover
 htmlcov/
 
+# Ruff cache
+.ruff_cache/
+
 # Temporary files
 *.tmp
 *.temp
