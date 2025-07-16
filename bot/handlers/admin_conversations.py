@@ -279,7 +279,7 @@ def create_broadcast_conversation() -> ConversationHandler:
             MessageHandler(filters.COMMAND, cancel_broadcast),  # любая команда отменяет
         ],
         per_user=True,  # отдельный диалог для каждого пользователя
-        per_message=True,  # отслеживать для каждого сообщения
+        per_message=False,  # НЕ отслеживаем per_message - конфликт с MessageHandler
         conversation_timeout=300,  # 5 минут
         name="broadcast_conversation",
         persistent=False,  # не сохраняем между перезапусками
