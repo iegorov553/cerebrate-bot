@@ -121,6 +121,19 @@ class UnnecessaryHandler(BaseCallbackHandler):  # Лишний handler!
 # admin_* → AdminCallbackHandler
 ```
 
+### 🚫 Добавление handlers без изучения существующих flows
+```python
+# ❌ НЕ добавлять handlers не изучив ConversationHandler
+elif data == "admin_broadcast":
+    # Этот callback уже обрабатывается в admin_conversations.py!
+    await self._handle_broadcast_start(query, translator)
+    
+# ✅ СНАЧАЛА изучить существующие flows
+# 1. Поиск в коде: grep -r "callback_data" 
+# 2. Проверка ConversationHandler patterns
+# 3. Изучение UI flow в реальном использовании
+```
+
 ## 💾 DATABASE ЗАПРЕТЫ
 
 ### 🚫 Забывать cache invalidation
