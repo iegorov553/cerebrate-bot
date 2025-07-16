@@ -78,6 +78,8 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
     await query.answer()  # Acknowledge the callback
     set_user_context(user.id, user.username, user.first_name)
 
+    logger.info("Broadcast conversation started from callback", user_id=user.id, username=user.username)
+
     await query.edit_message_text(
         translator.translate("broadcast.create_title")
         + translator.translate("broadcast.enter_message")
@@ -93,6 +95,9 @@ async def start_broadcast_from_callback(update: Update, context: ContextTypes.DE
 async def handle_broadcast_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle broadcast text input and show confirmation."""
     message_text = update.message.text
+    user = update.effective_user
+
+    logger.info("Broadcast text received", user_id=user.id, username=user.username, text_length=len(message_text))
 
     # Store broadcast text in user_data
     context.user_data["broadcast_text"] = message_text
@@ -224,6 +229,8 @@ async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     user = update.effective_user
     context.user_data.clear()
 
+    logger.info("Broadcast conversation cancelled", user_id=user.id, username=user.username)
+
     # Check if user is admin for main menu
     admin_ops: AdminOperations = context.bot_data["admin_ops"]
     is_admin = admin_ops.is_admin(user.id)
@@ -266,6 +273,7 @@ def create_broadcast_conversation() -> ConversationHandler:
         },
         fallbacks=[
             CommandHandler("cancel", cancel_broadcast),
+            CommandHandler("start", cancel_broadcast),  # /start также отменяет
             MessageHandler(filters.COMMAND, cancel_broadcast),  # любая команда отменяет
         ],
         per_user=True,  # отдельный диалог для каждого пользователя
@@ -295,6 +303,7 @@ def setup_admin_conversations(
 
     # Add broadcast conversation with HIGH PRIORITY
     broadcast_conv = create_broadcast_conversation()
-    application.add_handler(broadcast_conv, group=-1)  # Negative group = high priority
+    # ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ТЕСТИРОВАНИЯ
+    # application.add_handler(broadcast_conv, group=-1)  # Negative group = high priority
 
     logger.info("Admin conversation handlers registered successfully")
