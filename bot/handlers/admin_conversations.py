@@ -266,7 +266,9 @@ def create_broadcast_conversation() -> ConversationHandler:
             CallbackQueryHandler(start_broadcast_from_callback, pattern="^admin_broadcast$"),
         ],
         states={
-            WAITING_BROADCAST_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_broadcast_text)],
+            WAITING_BROADCAST_TEXT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_broadcast_text)
+            ],
             WAITING_BROADCAST_CONFIRMATION: [
                 CallbackQueryHandler(handle_broadcast_confirmation, pattern="^broadcast_confirm_(yes|no)$")
             ],
@@ -301,9 +303,8 @@ def setup_admin_conversations(
         {"db_client": db_client, "config": config, "admin_ops": admin_ops, "rate_limiter": rate_limiter}
     )
 
-    # Add broadcast conversation with HIGH PRIORITY
+    # Add broadcast conversation with NORMAL PRIORITY
     broadcast_conv = create_broadcast_conversation()
-    # ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ТЕСТИРОВАНИЯ
-    # application.add_handler(broadcast_conv, group=-1)  # Negative group = high priority
+    application.add_handler(broadcast_conv, group=0)  # Normal group = same priority as other handlers
 
     logger.info("Admin conversation handlers registered successfully")
