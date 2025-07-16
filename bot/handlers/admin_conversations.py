@@ -303,8 +303,8 @@ def setup_admin_conversations(
         {"db_client": db_client, "config": config, "admin_ops": admin_ops, "rate_limiter": rate_limiter}
     )
 
-    # Add broadcast conversation with NORMAL PRIORITY
+    # Add broadcast conversation with HIGH PRIORITY
     broadcast_conv = create_broadcast_conversation()
-    application.add_handler(broadcast_conv, group=0)  # Normal group = same priority as other handlers
+    application.add_handler(broadcast_conv, group=-1)  # High priority = processed before message handlers
 
     logger.info("Admin conversation handlers registered successfully")
